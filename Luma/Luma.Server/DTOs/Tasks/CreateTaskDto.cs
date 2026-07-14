@@ -1,3 +1,5 @@
+using TaskStatus = Luma.Server.Models.TaskStatus;
+using TaskPriority = Luma.Server.Models.TaskPriority;
 using System.ComponentModel.DataAnnotations;
 
 namespace Luma.Server.DTOs.Tasks;

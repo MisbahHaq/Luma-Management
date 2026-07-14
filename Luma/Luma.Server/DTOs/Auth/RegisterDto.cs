@@ -1,3 +1,4 @@
+using Luma.Server.Models;
 using System.ComponentModel.DataAnnotations;
 
 namespace Luma.Server.DTOs.Auth;

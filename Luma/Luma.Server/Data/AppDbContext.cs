@@ -22,8 +22,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
         builder.Entity<ApplicationUser>(entity =>
         {
             entity.Property(u => u.Role)
-                .HasConversion<string>()
-                .HasDefaultValue(UserRole.Member);
+                .HasConversion<string>();
         });
 
         builder.Entity<Project>(entity =>
