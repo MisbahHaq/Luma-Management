@@ -1,3 +1,5 @@
+using Luma.Server.Models;
+
 namespace Luma.Server.DTOs.Auth;
 
 public class AuthResponseDto

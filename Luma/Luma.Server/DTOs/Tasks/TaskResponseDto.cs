@@ -1,3 +1,6 @@
+using TaskStatus = Luma.Server.Models.TaskStatus;
+using TaskPriority = Luma.Server.Models.TaskPriority;
+
 namespace Luma.Server.DTOs.Tasks;
 
 public class TaskResponseDto
