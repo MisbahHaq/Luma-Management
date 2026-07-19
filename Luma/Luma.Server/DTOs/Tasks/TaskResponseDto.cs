@@ -12,6 +12,7 @@ public class TaskResponseDto
     public TaskPriority Priority { get; set; }
     public DateTime? DueDate { get; set; }
     public Guid ProjectId { get; set; }
+    public Guid? SprintId { get; set; }
     public string? AssigneeId { get; set; }
     public string? AssigneeFullName { get; set; }
     public DateTime CreatedAt { get; set; }

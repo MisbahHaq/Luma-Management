@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Luma.Server")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f644974670cfb8e9dafd21faaa9fe43f36842946")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8152b6a3fb4e0323cf8ef981e2940ff93ec3493d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Luma.Server")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Luma.Server")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

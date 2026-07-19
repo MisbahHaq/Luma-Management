@@ -1,6 +1,8 @@
 using Luma.Server.Data;
 using Luma.Server.DTOs.Projects;
+using Luma.Server.DTOs.Users;
 using Luma.Server.Models;
+using Luma.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +15,17 @@ namespace Luma.Server.Controllers;
 public class ProjectsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly ActivityService _activity;
+    private readonly NotificationService _notifications;
 
-    public ProjectsController(AppDbContext context)
+    public ProjectsController(
+        AppDbContext context,
+        ActivityService activity,
+        NotificationService notifications)
     {
         _context = context;
+        _activity = activity;
+        _notifications = notifications;
     }
 
     [HttpGet]
@@ -77,7 +86,10 @@ public class ProjectsController : ControllerBase
         };
 
         _context.Projects.Add(project);
+        _context.ProjectMembers.Add(new ProjectMember { Project = project, UserId = userId });
         await _context.SaveChangesAsync();
+
+        await _activity.LogAsync(ActivityAction.ProjectCreated, $"Project '{project.Name}' was created", userId, project.Id);
 
         var created = await _context.Projects
             .Include(p => p.CreatedByUser)
@@ -95,6 +107,7 @@ public class ProjectsController : ControllerBase
             return BadRequest(ModelState);
         }
 
+        var userId = GetCurrentUserId();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
@@ -105,6 +118,10 @@ public class ProjectsController : ControllerBase
         project.Description = dto.Description;
 
         await _context.SaveChangesAsync();
+        if (userId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Project '{project.Name}' was updated", userId, project.Id);
+        }
         return NoContent();
     }
 
@@ -119,6 +136,87 @@ public class ProjectsController : ControllerBase
         }
 
         _context.Projects.Remove(project);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpGet("{id}/members")]
+    public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetMembers(Guid id)
+    {
+        var members = await _context.ProjectMembers
+            .Where(m => m.ProjectId == id)
+            .Include(m => m.User)
+            .OrderBy(m => m.User!.FullName)
+            .Select(m => new UserSummaryDto
+            {
+                Id = m.User!.Id,
+                FullName = m.User.FullName,
+                Email = m.User.Email,
+                Role = m.User.Role
+            })
+            .ToListAsync();
+
+        return Ok(members);
+    }
+
+    [HttpPost("{id}/members")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> AddMember(Guid id, AddMemberDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.UserId))
+        {
+            return BadRequest(new { message = "UserId is required." });
+        }
+
+        var project = await _context.Projects.FindAsync(id);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        var user = await _context.Users.FindAsync(dto.UserId);
+        if (user is null)
+        {
+            return BadRequest(new { message = "Invalid user." });
+        }
+
+        var exists = await _context.ProjectMembers
+            .AnyAsync(m => m.ProjectId == id && m.UserId == dto.UserId);
+        if (exists)
+        {
+            return BadRequest(new { message = "User is already a member." });
+        }
+
+        var actorId = GetCurrentUserId();
+        _context.ProjectMembers.Add(new ProjectMember { ProjectId = id, UserId = dto.UserId });
+        await _context.SaveChangesAsync();
+
+        if (actorId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.MemberAdded, $"{user.FullName} was added to '{project.Name}'", actorId, project.Id);
+            await _notifications.NotifyAsync(
+                NotificationType.MemberAdded,
+                $"You were added to project '{project.Name}'",
+                dto.UserId,
+                project.Id,
+                link: $"/projects/{project.Id}");
+        }
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}/members/{userId}")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> RemoveMember(Guid id, string userId)
+    {
+        var member = await _context.ProjectMembers
+            .FirstOrDefaultAsync(m => m.ProjectId == id && m.UserId == userId);
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        _context.ProjectMembers.Remove(member);
         await _context.SaveChangesAsync();
         return NoContent();
     }
