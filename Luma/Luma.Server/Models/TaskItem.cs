@@ -24,6 +24,10 @@ public class TaskItem
 
     public Project? Project { get; set; }
 
+    public Guid? SprintId { get; set; }
+
+    public Sprint? Sprint { get; set; }
+
     public string? AssigneeId { get; set; }
 
     public ApplicationUser? Assignee { get; set; }
@@ -31,4 +35,6 @@ public class TaskItem
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    public ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
 }

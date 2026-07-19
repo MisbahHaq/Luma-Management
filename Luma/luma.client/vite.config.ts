@@ -52,6 +52,12 @@ export default defineConfig({
                 secure: false,
                 changeOrigin: true
             },
+            '^/hubs': {
+                target,
+                secure: false,
+                changeOrigin: true,
+                ws: true
+            },
             '^/weatherforecast': {
                 target,
                 secure: false

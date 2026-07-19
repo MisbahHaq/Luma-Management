@@ -1,6 +1,7 @@
 using Luma.Server.Data;
 using Luma.Server.DTOs.Comments;
 using Luma.Server.Models;
+using Luma.Server.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +14,17 @@ namespace Luma.Server.Controllers;
 public class CommentsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly ActivityService _activity;
+    private readonly NotificationService _notifications;
 
-    public CommentsController(AppDbContext context)
+    public CommentsController(
+        AppDbContext context,
+        ActivityService activity,
+        NotificationService notifications)
     {
         _context = context;
+        _activity = activity;
+        _notifications = notifications;
     }
 
     [HttpGet("task/{taskId}")]
@@ -54,7 +62,9 @@ public class CommentsController : ControllerBase
             return Unauthorized();
         }
 
-        var task = await _context.Tasks.FindAsync(dto.TaskId);
+        var task = await _context.Tasks
+            .Include(t => t.Project)
+            .FirstOrDefaultAsync(t => t.Id == dto.TaskId);
         if (task is null)
         {
             return BadRequest(new { message = "Invalid task." });
@@ -69,6 +79,20 @@ public class CommentsController : ControllerBase
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+
+        await _activity.LogAsync(ActivityAction.CommentAdded, $"Comment added to '{task.Title}'", userId, task.ProjectId, task.Id);
+
+        if (task.AssigneeId is not null && task.AssigneeId != userId)
+        {
+            await _notifications.NotifyAsync(
+                NotificationType.CommentAdded,
+                $"New comment on task '{task.Title}' in '{task.Project!.Name}'",
+                task.AssigneeId,
+                task.ProjectId,
+                task.Id,
+                $"/projects/{task.ProjectId}",
+                sendEmail: true);
+        }
 
         var created = await _context.Comments
             .Include(c => c.User)

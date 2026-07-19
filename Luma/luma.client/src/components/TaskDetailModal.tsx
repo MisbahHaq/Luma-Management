@@ -1,8 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import client from '../api/client';
 import {
+    attachmentsApi,
+    activityApi,
+} from '../api/endpoints';
+import {
     STATUS_LABELS,
     PRIORITY_LABELS,
+    type ActivityLog,
+    type Attachment,
     type Comment,
     type Task,
     type TaskPriority,
@@ -33,7 +39,10 @@ export default function TaskDetailModal({
     const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId);
     const [users, setUsers] = useState<UserSummary[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const [activity, setActivity] = useState<ActivityLog[]>([]);
     const [newComment, setNewComment] = useState('');
+    const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -41,13 +50,17 @@ export default function TaskDetailModal({
         let active = true;
         const load = async () => {
             try {
-                const [commentsRes, usersRes] = await Promise.all([
+                const [commentsRes, usersRes, attachmentsRes, activityRes] = await Promise.all([
                     client.get<Comment[]>(`/comments/task/${task.id}`),
                     canEdit ? client.get<UserSummary[]>('/users') : Promise.resolve({ data: [] as UserSummary[] }),
+                    attachmentsApi.list(task.id),
+                    activityApi.forTask(task.id),
                 ]);
                 if (!active) return;
                 setComments(commentsRes.data);
                 setUsers(usersRes.data);
+                setAttachments(attachmentsRes.data);
+                setActivity(activityRes.data);
             } catch {
                 if (active) setError('Failed to load task details.');
             }
@@ -88,9 +101,38 @@ export default function TaskDetailModal({
                 text: newComment.trim(),
             });
             setComments((prev) => [...prev, data]);
+            setActivity((prev) => [
+                { id: crypto.randomUUID(), action: 'CommentAdded', description: 'Comment added', projectId: null, taskId: task.id, actorId: '', actorFullName: 'You', createdAt: new Date().toISOString() },
+                ...prev,
+            ]);
             setNewComment('');
         } catch {
             setError('Failed to add comment.');
+        }
+    };
+
+    const onFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+        setUploading(true);
+        setError(null);
+        try {
+            const { data } = await attachmentsApi.upload(task.id, file);
+            setAttachments((prev) => [data, ...prev]);
+        } catch {
+            setError('Failed to upload attachment.');
+        } finally {
+            setUploading(false);
+        }
+    };
+
+    const removeAttachment = async (id: string) => {
+        try {
+            await attachmentsApi.remove(id);
+            setAttachments((prev) => prev.filter((a) => a.id !== id));
+        } catch {
+            setError('Failed to delete attachment.');
         }
     };
 
@@ -184,6 +226,43 @@ export default function TaskDetailModal({
                 </form>
 
                 <div className="comments">
+                    <h4>Attachments</h4>
+                    {canEdit && (
+                        <div className="attachment-upload">
+                            <label className="btn btn-ghost">
+                                {uploading ? 'Uploading...' : '📎 Attach file'}
+                                <input
+                                    type="file"
+                                    hidden
+                                    onChange={onFileSelected}
+                                    disabled={uploading}
+                                />
+                            </label>
+                        </div>
+                    )}
+                    {attachments.length === 0 ? (
+                        <p className="muted small">No attachments yet.</p>
+                    ) : (
+                        <ul className="attachment-list">
+                            {attachments.map((a) => (
+                                <li key={a.id} className="attachment">
+                                    <a href={attachmentsApi.downloadUrl(a.id)} target="_blank" rel="noreferrer">
+                                        {a.fileName}
+                                    </a>
+                                    <small className="muted">{(a.sizeBytes / 1024).toFixed(1)} KB</small>
+                                    {canEdit && (
+                                        <button
+                                            className="btn btn-ghost small"
+                                            onClick={() => void removeAttachment(a.id)}
+                                        >
+                                            Remove
+                                        </button>
+                                    )}
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+
                     <h4>Comments</h4>
                     {comments.length === 0 ? (
                         <p className="muted small">No comments yet.</p>
@@ -213,6 +292,27 @@ export default function TaskDetailModal({
                             Send
                         </button>
                     </form>
+                </div>
+
+                <div className="activity">
+                    <h4>Activity</h4>
+                    {activity.length === 0 ? (
+                        <p className="muted small">No activity yet.</p>
+                    ) : (
+                        <ul className="activity-list">
+                            {activity.map((log) => (
+                                <li key={log.id} className="activity-item">
+                                    <span className={`activity-tag activity-${log.action}`}>
+                                        {log.action}
+                                    </span>
+                                    <span>{log.description}</span>
+                                    <small className="muted">
+                                        {new Date(log.createdAt).toLocaleString()}
+                                    </small>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </div>
             </div>
         </div>

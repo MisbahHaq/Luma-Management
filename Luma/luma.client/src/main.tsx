@@ -4,12 +4,15 @@ import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <AuthProvider>
-                <App />
+                <NotificationProvider>
+                    <App />
+                </NotificationProvider>
             </AuthProvider>
         </BrowserRouter>
     </StrictMode>,

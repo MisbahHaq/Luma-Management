@@ -1,9 +1,15 @@
 # Luma — Project Management Tool
 
-Luma is a full-stack project management application (Phase 1 / Core MVP). It lets teams
-organize work into **Projects**, break them down into **Tasks** (with status, priority, due
-dates, and assignees), discuss tasks through **Comments**, and visualize progress on a
-**Kanban board** or a **list view**.
+Luma is a full-stack project management application. It lets teams organize work into
+**Projects**, break them down into **Tasks** (with status, priority, due dates, and
+assignees), discuss tasks through **Comments**, and visualize progress on a **Kanban
+board**, a **list view**, or a **planning view** (Gantt, sprints, dependencies, time
+tracking).
+
+Phase 1 covers the core MVP (auth, RBAC, projects, tasks, comments, Kanban + list).
+Phase 2 adds collaboration (file attachments, real-time SignalR updates, in-app + email
+notifications, per-task/project activity logs). Phase 3 adds planning (sprints/milestones,
+a Gantt timeline, task dependencies with cycle detection, and time tracking / timesheets).
 
 Authentication is handled with ASP.NET Core Identity + JWT bearer tokens, and access is
 role-based (`Admin`, `Member`, `Viewer`).
@@ -106,12 +112,19 @@ Vite dev server  ──proxies /api──►  ASP.NET Core API (:7023 https / :5
 | `Project` | `Id`, `Name`, `Description?`, `CreatedAt`, `CreatedByUserId` → `ApplicationUser` |
 | `TaskItem` | `Id`, `Title`, `Description?`, `Status` (`ToDo`/`InProgress`/`Done`), `Priority` (`Low`/`Medium`/`High`), `DueDate?`, `ProjectId` → `Project`, `AssigneeId?` → `ApplicationUser` |
 | `Comment` | `Id`, `TaskId` → `TaskItem`, `UserId` → `ApplicationUser`, `Text`, `CreatedAt` |
+| `Sprint` | `Id`, `Name`, `Description?`, `Status` (`Planned`/`Active`/`Completed`), `StartDate?`, `EndDate?`, `ProjectId` → `Project`, `CreatedByUserId` → `ApplicationUser` |
+| `TaskDependency` | `Id`, `TaskId` → `TaskItem`, `DependsOnTaskId` → `TaskItem`, `Type` (`Blocks`/`BlockedBy`), `ProjectId` → `Project` |
+| `TimeLog` | `Id`, `TaskId` → `TaskItem`, `ProjectId` → `Project`, `UserId` → `ApplicationUser`, `Date`, `Hours`, `Note?`, `CreatedAt` |
+| `TaskItem` (extended) | `SprintId?` → `Sprint` (a task may belong to one sprint) |
 
 ### Relationships
 - A **Project** has many **Tasks** (cascade delete).
 - A **Task** has many **Comments** (cascade delete).
 - A **Task** has an optional **Assignee** (set null on user delete).
 - A **Project** has a **CreatedByUser** (restrict delete).
+- A **Project** has many **Sprints** (cascade delete). A **Task** may belong to one **Sprint** (set null on sprint delete).
+- A **Task** may have many **TaskDependencies** (blocking / blocked-by). Cycles are rejected at creation time.
+- A **Task** has many **TimeLogs** (cascade delete).
 
 ---
 
@@ -184,6 +197,34 @@ Base URL: `/api`
 | Method | Route | Notes |
 | --- | --- | --- |
 | GET | `/users` | List users (used to populate the assignee dropdown) |
+
+### Sprints — `SprintsController` (authenticated; write = Admin/Member)
+| Method | Route | Notes |
+| --- | --- | --- |
+| GET | `/sprints/project/{projectId}` | Sprints for a project |
+| GET | `/sprints/{id}` | Single sprint |
+| POST | `/sprints` | Create sprint (Admin/Member) |
+| PUT | `/sprints/{id}` | Update (Admin/Member) |
+| DELETE | `/sprints/{id}` | Delete (Admin/Member) |
+| PUT | `/sprints/{id}/tasks/{taskId}` | Assign a task to the sprint (Admin/Member) |
+| DELETE | `/sprints/{id}/tasks/{taskId}` | Remove a task from the sprint (Admin/Member) |
+
+### Task Dependencies — `TaskDependenciesController` (authenticated; write = Admin/Member)
+| Method | Route | Notes |
+| --- | --- | --- |
+| GET | `/taskdependencies/project/{projectId}` | All dependencies in a project |
+| GET | `/taskdependencies/task/{taskId}` | Dependencies touching a task |
+| POST | `/taskdependencies` | Create (rejects self-links and cycles) |
+| DELETE | `/taskdependencies/{id}` | Remove |
+
+### Time Logs — `TimeLogsController` (authenticated; write = Admin/Member)
+| Method | Route | Notes |
+| --- | --- | --- |
+| GET | `/timelogs/task/{taskId}` | Time logs for a task |
+| GET | `/timelogs/project/{projectId}` | Time logs for a project |
+| GET | `/timelogs/user/{userId}` | A user's time logs (own, or any if Admin/Member) |
+| POST | `/timelogs` | Log hours against a task (Admin/Member) |
+| DELETE | `/timelogs/{id}` | Delete (Admin/Member) |
 
 ---
 
@@ -265,7 +306,10 @@ When running in Development, the API docs are available at the backend's Swagger
 
 ## Notes / Roadmap
 - Phase 1 covers the core MVP: auth, RBAC, projects, tasks, comments, Kanban + list views.
-- Projects currently have no membership list or status of their own — assignment and status
-  are modeled at the **task** level. These can be added as a follow-up.
+- Phase 2 adds collaboration: file attachments (local disk or S3/MinIO), real-time updates
+  via SignalR, in-app + email (SendGrid/SMTP) notifications, and per-task/project activity
+  logs.
+- Phase 3 adds planning: sprints/milestones, a Gantt timeline, task dependencies with cycle
+  detection, and time tracking / timesheets (accessible via the **Plan** view in a project).
 - Switching the database to SQL Server (LocalDB) is a one-line change in `appsettings.json`
   and `Program.cs` (`UseSqlite` → `UseSqlServer`).

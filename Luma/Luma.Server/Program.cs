@@ -1,4 +1,5 @@
 using Luma.Server.Data;
+using Luma.Server.Hubs;
 using Luma.Server.Models;
 using Luma.Server.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -59,13 +60,22 @@ namespace Luma.Server
             builder.Services.AddAuthorization();
             builder.Services.AddScoped<IJwtService, JwtService>();
 
+            builder.Services.AddScoped<ActivityService>();
+            builder.Services.AddScoped<NotificationService>();
+
+            ConfigureStorage(builder);
+            ConfigureEmail(builder);
+
+            builder.Services.AddSignalR();
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowSpa", policy =>
                 {
                     policy.WithOrigins("https://localhost:52613")
                           .AllowAnyHeader()
-                          .AllowAnyMethod();
+                          .AllowAnyMethod()
+                          .AllowCredentials();
                 });
             });
 
@@ -97,9 +107,44 @@ namespace Luma.Server
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHub<NotificationHub>("/hubs/notifications");
             app.MapFallbackToFile("/index.html");
 
             app.Run();
+        }
+
+        private static void ConfigureStorage(WebApplicationBuilder builder)
+        {
+            var storageProvider = builder.Configuration["Storage:Provider"]?.ToLowerInvariant() ?? "local";
+            if (storageProvider == "minio" || storageProvider == "s3")
+            {
+                builder.Services.Configure<MinioStorageOptions>(builder.Configuration.GetSection("Storage:Minio"));
+                builder.Services.AddSingleton<IFileStorageService, MinioStorageService>();
+            }
+            else
+            {
+                builder.Services.Configure<LocalStorageOptions>(builder.Configuration.GetSection("Storage:Local"));
+                builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+            }
+        }
+
+        private static void ConfigureEmail(WebApplicationBuilder builder)
+        {
+            var provider = builder.Configuration["Email:Provider"]?.ToLowerInvariant() ?? "none";
+            if (provider == "sendgrid")
+            {
+                builder.Services.Configure<SendGridOptions>(builder.Configuration.GetSection("Email:SendGrid"));
+                builder.Services.AddSingleton<IEmailService, SendGridEmailService>();
+            }
+            else if (provider == "smtp")
+            {
+                builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Email:Smtp"));
+                builder.Services.AddSingleton<IEmailService, SmtpEmailService>();
+            }
+            else
+            {
+                builder.Services.AddSingleton<IEmailService, NullEmailService>();
+            }
         }
     }
 }

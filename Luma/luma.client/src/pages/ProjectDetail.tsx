@@ -4,16 +4,23 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import KanbanBoard from '../components/KanbanBoard';
 import TaskDetailModal from '../components/TaskDetailModal';
+import SprintsPanel from '../components/SprintsPanel';
+import DependenciesPanel from '../components/DependenciesPanel';
+import TimeTracking from '../components/TimeTracking';
+import GanttView from '../components/GanttView';
+import { membersApi, usersApi } from '../api/endpoints';
 import {
     PRIORITY_LABELS,
     STATUS_LABELS,
     type Project,
+    type ProjectMember,
     type Task,
     type TaskPriority,
     type TaskStatus,
+    type UserSummary,
 } from '../types/types';
 
-type ViewMode = 'list' | 'kanban';
+type ViewMode = 'list' | 'kanban' | 'plan';
 
 const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High'];
 
@@ -35,18 +42,27 @@ export default function ProjectDetail() {
     const [newPriority, setNewPriority] = useState<TaskPriority>('Medium');
     const [saving, setSaving] = useState(false);
 
+    const [members, setMembers] = useState<ProjectMember[]>([]);
+    const [allUsers, setAllUsers] = useState<UserSummary[]>([]);
+    const [showMembers, setShowMembers] = useState(false);
+    const [newMemberId, setNewMemberId] = useState('');
+
     const canEdit = currentUser?.role === 'Admin' || currentUser?.role === 'Member';
 
     const load = async () => {
         if (!id) return;
         setLoading(true);
         try {
-            const [projRes, tasksRes] = await Promise.all([
+            const [projRes, tasksRes, membersRes, usersRes] = await Promise.all([
                 client.get<Project>(`/projects/${id}`),
                 client.get<Task[]>(`/tasks/project/${id}`),
+                membersApi.list(id),
+                canEdit ? usersApi.list() : Promise.resolve({ data: [] as UserSummary[] }),
             ]);
             setProject(projRes.data);
             setTasks(tasksRes.data);
+            setMembers(membersRes.data);
+            setAllUsers(usersRes.data);
         } catch {
             setError('Failed to load project.');
         } finally {
@@ -62,6 +78,10 @@ export default function ProjectDetail() {
     const handleTaskSaved = (updated: Task) => {
         setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
         setSelected(updated);
+    };
+
+    const handleTaskMoved = (taskId: string, status: TaskStatus) => {
+        setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, status } : t)));
     };
 
     const createTask = async (e: FormEvent) => {
@@ -90,6 +110,29 @@ export default function ProjectDetail() {
         }
     };
 
+    const addMember = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!newMemberId || !id) return;
+        try {
+            await membersApi.add(id, newMemberId);
+            const { data } = await membersApi.list(id);
+            setMembers(data);
+            setNewMemberId('');
+        } catch {
+            setError('Failed to add member.');
+        }
+    };
+
+    const removeMember = async (userId: string) => {
+        if (!id) return;
+        try {
+            await membersApi.remove(id, userId);
+            setMembers((prev) => prev.filter((m) => m.userId !== userId));
+        } catch {
+            setError('Failed to remove member.');
+        }
+    };
+
     return (
         <div className="page">
             <header className="topbar">
@@ -97,6 +140,12 @@ export default function ProjectDetail() {
                     ← Back
                 </button>
                 <div className="topbar-right">
+                    <button
+                        className={showMembers ? 'btn btn-active' : 'btn btn-ghost'}
+                        onClick={() => setShowMembers((s) => !s)}
+                    >
+                        Members ({members.length})
+                    </button>
                     <button
                         className={view === 'list' ? 'btn btn-active' : 'btn btn-ghost'}
                         onClick={() => setView('list')}
@@ -108,6 +157,12 @@ export default function ProjectDetail() {
                         onClick={() => setView('kanban')}
                     >
                         Kanban
+                    </button>
+                    <button
+                        className={view === 'plan' ? 'btn btn-active' : 'btn btn-ghost'}
+                        onClick={() => setView('plan')}
+                    >
+                        Plan
                     </button>
                 </div>
             </header>
@@ -134,9 +189,55 @@ export default function ProjectDetail() {
                             )}
                         </div>
 
+                        {showMembers && (
+                            <div className="card members-panel">
+                                <h4>Project members</h4>
+                                <ul className="member-list">
+                                    {members.map((m) => (
+                                        <li key={m.id} className="member">
+                                            <span>{m.fullName ?? m.email}</span>
+                                            <small className="muted">{m.role}</small>
+                                            {canEdit && m.userId !== currentUser?.id && (
+                                                <button
+                                                    className="btn btn-ghost small"
+                                                    onClick={() => removeMember(m.userId)}
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+                                        </li>
+                                    ))}
+                                    {members.length === 0 && (
+                                        <li className="muted small">No members yet.</li>
+                                    )}
+                                </ul>
+                                {canEdit && (
+                                    <form className="member-add" onSubmit={addMember}>
+                                        <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)}>
+                                            <option value="">Select user…</option>
+                                            {allUsers
+                                                .filter((u) => !members.some((m) => m.userId === u.id))
+                                                .map((u) => (
+                                                    <option key={u.id} value={u.id}>
+                                                        {u.fullName ?? u.email}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        <button type="submit" className="btn btn-primary" disabled={!newMemberId}>
+                                            Add
+                                        </button>
+                                    </form>
+                                )}
+                            </div>
+                        )}
+
                         {view === 'kanban' ? (
-                            <KanbanBoard tasks={tasks} onTaskClick={setSelected} />
-                        ) : (
+                            <KanbanBoard
+                                tasks={tasks}
+                                onTaskClick={setSelected}
+                                onTaskMoved={handleTaskMoved}
+                            />
+                        ) : view === 'list' ? (
                             <div className="card">
                                 <table className="table">
                                     <thead>
@@ -169,6 +270,18 @@ export default function ProjectDetail() {
                                         )}
                                     </tbody>
                                 </table>
+                            </div>
+                        ) : (
+                            <div className="plan-grid">
+                                <GanttView tasks={tasks} />
+                                <SprintsPanel
+                                    projectId={id!}
+                                    tasks={tasks}
+                                    canEdit={canEdit}
+                                    onTasksChanged={load}
+                                />
+                                <DependenciesPanel projectId={id!} tasks={tasks} canEdit={canEdit} />
+                                <TimeTracking projectId={id!} tasks={tasks} canEdit={canEdit} />
                             </div>
                         )}
                     </>

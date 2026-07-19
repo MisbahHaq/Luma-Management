@@ -21,4 +21,6 @@ public class Project
     public ApplicationUser? CreatedByUser { get; set; }
 
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
+
+    public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
 }

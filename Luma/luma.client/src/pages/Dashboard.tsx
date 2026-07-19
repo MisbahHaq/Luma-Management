@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import NotificationsBell from '../components/NotificationsBell';
 import type { Project } from '../types/types';
 
 export default function Dashboard() {
@@ -62,6 +63,7 @@ export default function Dashboard() {
             <header className="topbar">
                 <h1>Luma</h1>
                 <div className="topbar-right">
+                    <NotificationsBell />
                     <span className="muted">
                         {currentUser?.fullName ?? currentUser?.email} ({currentUser?.role})
                     </span>

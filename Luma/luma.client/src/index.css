@@ -393,3 +393,340 @@ select:focus {
         grid-template-columns: 1fr;
     }
 }
+
+/* Notifications */
+.notif {
+    position: relative;
+}
+
+.notif-bell {
+    position: relative;
+    font-size: 16px;
+}
+
+.notif-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: #dc2626;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0 6px;
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.notif-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+}
+
+.notif-panel {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 320px;
+    max-width: 90vw;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 201;
+}
+
+.notif-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.notif-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.notif-item {
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    cursor: pointer;
+}
+
+.notif-item.unread {
+    background: #f5f3ff;
+    border-color: #ddd6fe;
+}
+
+.notif-item p {
+    margin: 0 0 2px;
+    font-size: 14px;
+}
+
+/* Attachments */
+.attachment-upload {
+    margin-bottom: 10px;
+}
+
+.attachment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.attachment {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9fafb;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.attachment a {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    flex: 1;
+}
+
+/* Activity */
+.activity {
+    margin-top: 18px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+}
+
+.activity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.activity-tag {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 999px;
+    padding: 2px 8px;
+    white-space: nowrap;
+}
+
+/* Plan view layout */
+.plan-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Gantt */
+.gantt-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    overflow-x: auto;
+}
+
+.gantt-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Sprints */
+.sprints-panel .section-head,
+.timesheet .section-head,
+.deps-panel h4 {
+    margin-bottom: 10px;
+}
+
+.sprint-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.sprint-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sprint {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #f9fafb;
+}
+
+.sprint-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+}
+
+.progress {
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 8px 0 6px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--primary);
+    transition: width 0.25s ease;
+}
+
+.sprint-detail {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sprint-task-list,
+.dep-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.sprint-task-list li,
+.dep-list li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 14px;
+}
+
+.sprint-task-list li span:first-child,
+.dep-list li span:first-child {
+    flex: 1;
+}
+
+.sprint-add,
+.dep-form,
+.time-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.tag {
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 2px 8px;
+    text-transform: capitalize;
+}
+
+.tag-planned {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tag-active {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.tag-completed {
+    background: #ede9fe;
+    color: #6d28d9;
+}
+
+.tag-todo {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.tag-inprogress {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.tag-done {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+/* Time tracking */
+.time-table {
+    margin-top: 10px;
+}
+
+.time-table td,
+.time-table th {
+    padding: 6px 8px;
+}
+
+/* Gantt bar colors */
+.gantt .bar-todo .bar {
+    fill: #94a3b8;
+}
+
+.gantt .bar-inprogress .bar {
+    fill: #3b82f6;
+}
+
+.gantt .bar-done .bar {
+    fill: #22c55e;
+}

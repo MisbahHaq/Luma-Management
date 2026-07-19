@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import client from '../api/client';
+import { notificationHub } from '../api/notificationHub';
 import type { AuthResponse, User, UserRole } from '../types/types';
 
 interface RegisterPayload {
@@ -27,11 +28,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     const [token, setToken] = useState<string | null>(() => localStorage.getItem('luma_token'));
 
+    useEffect(() => {
+        const existing = localStorage.getItem('luma_token');
+        if (existing) {
+            void notificationHub.start(existing);
+        }
+    }, []);
+
     const persist = (auth: AuthResponse) => {
         localStorage.setItem('luma_token', auth.token);
         localStorage.setItem('luma_user', JSON.stringify(auth.user));
         setToken(auth.token);
         setCurrentUser(auth.user);
+        void notificationHub.start(auth.token);
     };
 
     const login = async (email: string, password: string) => {
@@ -49,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem('luma_user');
         setToken(null);
         setCurrentUser(null);
+        void notificationHub.stop();
     };
 
     return (
