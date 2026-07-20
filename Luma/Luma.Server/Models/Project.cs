@@ -23,4 +23,7 @@ public class Project
     public ICollection<TaskItem> Tasks { get; set; } = new List<TaskItem>();
 
     public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
+
+    [MaxLength(200)]
+    public string? PublicAccessToken { get; set; }
 }

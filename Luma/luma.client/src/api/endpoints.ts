@@ -8,6 +8,10 @@ import type {
     TaskDependency,
     TimeLog,
     UserSummary,
+    BurndownReport,
+    VelocityReport,
+    ProjectHealth,
+    DashboardSummary,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -105,4 +109,28 @@ export const timeLogsApi = {
         note?: string | null;
     }) => client.post<TimeLog>('/timelogs', payload),
     remove: (id: string) => client.delete(`/timelogs/${id}`),
+};
+
+export const reportsApi = {
+    dashboard: () => client.get<DashboardSummary>('/reports/dashboard'),
+    burndown: (projectId: string) => client.get<BurndownReport>(`/reports/projects/${projectId}/burndown`),
+    velocity: (projectId: string) => client.get<VelocityReport>(`/reports/projects/${projectId}/velocity`),
+    health: (projectId: string) => client.get<ProjectHealth>(`/reports/projects/${projectId}/health`),
+};
+
+export const exportApi = {
+    excel: (projectId: string) => `/api/export/projects/${projectId}/excel`,
+    pdf: (projectId: string) => `/api/export/projects/${projectId}/pdf`,
+    burndownPdf: (projectId: string) => `/api/export/projects/${projectId}/burndown/pdf`,
+};
+
+export const publicPortalApi = {
+    project: (projectId: string, token: string) =>
+        client.get(`/public/projects/${projectId}`, { headers: { 'X-Public-Token': token } }),
+    tasks: (projectId: string, token: string) =>
+        client.get(`/public/projects/${projectId}/tasks`, { headers: { 'X-Public-Token': token } }),
+    members: (projectId: string, token: string) =>
+        client.get(`/public/projects/${projectId}/members`, { headers: { 'X-Public-Token': token } }),
+    health: (projectId: string, token: string) =>
+        client.get(`/public/projects/${projectId}/health`, { headers: { 'X-Public-Token': token } }),
 };

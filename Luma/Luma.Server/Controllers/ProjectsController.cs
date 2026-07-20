@@ -251,6 +251,75 @@ public class ProjectsController : ControllerBase
         return Ok(fields);
     }
 
+    [HttpPost("{id}/public-access")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> EnablePublicAccess(Guid id)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        if (string.IsNullOrEmpty(project.PublicAccessToken))
+        {
+            project.PublicAccessToken = Guid.NewGuid().ToString("N");
+            await _context.SaveChangesAsync();
+        }
+
+        var userId = GetCurrentUserId();
+        if (userId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access enabled for '{project.Name}'", userId, project.Id);
+        }
+
+        return Ok(new { token = project.PublicAccessToken });
+    }
+
+    [HttpDelete("{id}/public-access")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> DisablePublicAccess(Guid id)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        project.PublicAccessToken = null;
+        await _context.SaveChangesAsync();
+
+        var userId = GetCurrentUserId();
+        if (userId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access disabled for '{project.Name}'", userId, project.Id);
+        }
+
+        return NoContent();
+    }
+
+    [HttpPost("{id}/public-access/regenerate")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> RegeneratePublicToken(Guid id)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        project.PublicAccessToken = Guid.NewGuid().ToString("N");
+        await _context.SaveChangesAsync();
+
+        var userId = GetCurrentUserId();
+        if (userId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access token regenerated for '{project.Name}'", userId, project.Id);
+        }
+
+        return Ok(new { token = project.PublicAccessToken });
+    }
+
     private static ProjectResponseDto ToDto(Project p) => new()
     {
         Id = p.Id,

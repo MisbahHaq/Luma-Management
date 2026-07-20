@@ -184,3 +184,82 @@ export const PRIORITY_LABELS: Record<TaskPriority, string> = {
     Medium: 'Medium',
     High: 'High',
 };
+
+export interface BurndownPoint {
+    date: string;
+    remainingTasks: number;
+    idealRemaining: number;
+}
+
+export interface BurndownReport {
+    projectId: string;
+    projectName: string;
+    sprintId: string;
+    sprintName: string;
+    sprintStart: string;
+    sprintEnd: string;
+    totalTasks: number;
+    dataPoints: BurndownPoint[];
+}
+
+export interface VelocityPoint {
+    sprintId: string;
+    sprintName: string;
+    sprintStart: string;
+    sprintEnd: string;
+    completedTasks: number;
+    storyPoints: number;
+}
+
+export interface VelocityReport {
+    projectId: string;
+    projectName: string;
+    averageVelocity: number;
+    dataPoints: VelocityPoint[];
+}
+
+export interface TaskStatusDistribution {
+    status: string;
+    count: number;
+    percentage: number;
+}
+
+export interface TaskPriorityDistribution {
+    priority: string;
+    count: number;
+    percentage: number;
+}
+
+export interface AssigneeWorkload {
+    assigneeId: string;
+    assigneeName: string;
+    taskCount: number;
+    totalHoursLogged: number;
+}
+
+export interface ProjectHealth {
+    projectId: string;
+    projectName: string;
+    totalTasks: number;
+    completedTasks: number;
+    inProgressTasks: number;
+    todoTasks: number;
+    completionPercentage: number;
+    overdueTasks: number;
+    averageCompletionTimeDays: number;
+    totalTimeLoggedHours: number;
+    healthStatus: string;
+    statusDistribution: TaskStatusDistribution[];
+    priorityDistribution: TaskPriorityDistribution[];
+    assigneeWorkload: AssigneeWorkload[];
+}
+
+export interface DashboardSummary {
+    totalProjects: number;
+    totalTasks: number;
+    completedTasks: number;
+    inProgressTasks: number;
+    overdueTasks: number;
+    overallCompletionRate: number;
+    projects: ProjectHealth[];
+}

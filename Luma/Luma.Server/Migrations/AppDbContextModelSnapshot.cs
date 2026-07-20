@@ -264,6 +264,10 @@ namespace Luma.Server.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("PublicAccessToken")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
