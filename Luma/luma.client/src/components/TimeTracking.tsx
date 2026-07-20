@@ -131,7 +131,7 @@ export default function TimeTracking({ projectId, tasks, canEdit }: TimeTracking
                     <tbody>
                         {logs.map((l) => (
                             <tr key={l.id}>
-                                <td>{new Date(l.date).toLocaleDateString()}</td>
+                                <td className="timestamp">{new Date(l.date).toLocaleDateString()}</td>
                                 <td>{l.taskTitle}</td>
                                 <td>{l.userFullName ?? 'Unknown'}</td>
                                 <td>{l.hours.toFixed(2)}</td>

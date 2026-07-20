@@ -4504,11 +4504,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\Luma.Server.csproj",
+      "projectUniqueName": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\Luma.Server.csproj",
       "projectName": "Luma.Server",
-      "projectPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\Luma.Server.csproj",
+      "projectPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\Luma.Server.csproj",
       "packagesPath": "C:\\Users\\Misbah\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\obj\\",
+      "outputPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

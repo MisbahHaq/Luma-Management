@@ -49,7 +49,7 @@ export default function NotificationsBell() {
                                         onClick={() => handleClick(n)}
                                     >
                                         <p>{n.message}</p>
-                                        <small className="muted">
+                                        <small className="muted timestamp">
                                             {new Date(n.createdAt).toLocaleString()}
                                         </small>
                                     </li>

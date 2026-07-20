@@ -272,7 +272,7 @@ export default function TaskDetailModal({
                                 <li key={c.id} className="comment">
                                     <div className="comment-head">
                                         <strong>{c.userFullName}</strong>
-                                        <small className="muted">
+                                        <small className="muted timestamp">
                                             {new Date(c.createdAt).toLocaleString()}
                                         </small>
                                     </div>
@@ -306,7 +306,7 @@ export default function TaskDetailModal({
                                         {log.action}
                                     </span>
                                     <span>{log.description}</span>
-                                    <small className="muted">
+                                    <small className="muted timestamp">
                                         {new Date(log.createdAt).toLocaleString()}
                                     </small>
                                 </li>

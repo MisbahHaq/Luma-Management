@@ -82,7 +82,7 @@ export default function PublicPortal() {
                         <h2>{project.name}</h2>
                         <p className="muted">{project.description || 'No description'}</p>
                         <small className="muted">
-                            Created by {project.createdBy} on {new Date(project.createdAt).toLocaleDateString()}
+                            Created by {project.createdBy} on <span className="timestamp">{new Date(project.createdAt).toLocaleDateString()}</span>
                         </small>
                     </div>
                 )}
