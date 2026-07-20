@@ -102,7 +102,10 @@ namespace Luma.Server
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<ActivityService>();
             builder.Services.AddScoped<NotificationService>();
+            builder.Services.AddScoped<ProjectAuthorizationService>();
             builder.Services.AddScoped<WebhookDispatcherService>();
+            builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            builder.Services.AddScoped<TenantContext>();
             builder.Services.AddHttpClient();
 
             builder.Services.AddHostedService<BackgroundJobService>();
