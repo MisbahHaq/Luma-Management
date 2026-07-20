@@ -56,26 +56,32 @@ namespace Luma.Server
                     ValidIssuer = jwt["Issuer"],
                     ValidAudience = jwt["Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    RoleClaimType = System.Security.Claims.ClaimTypes.Role
+                     RoleClaimType = System.Security.Claims.ClaimTypes.Role
                 };
-            })
-            .AddOpenIdConnect("OpenIdConnect", options =>
-            {
-                options.Authority = builder.Configuration["Sso:Authority"];
-                options.ClientId = builder.Configuration["Sso:ClientId"];
-                options.ClientSecret = builder.Configuration["Sso:ClientSecret"];
-                options.CallbackPath = builder.Configuration["Sso:CallbackPath"] ?? "/api/sso/callback";
-                options.ResponseType = "code";
-                options.SaveTokens = true;
-                options.GetClaimsFromUserInfoEndpoint = true;
-                options.Scope.Clear();
-                foreach (var scope in builder.Configuration.GetSection("Sso:Scopes").Get<string[]>() ?? Array.Empty<string>())
-                {
-                    options.Scope.Add(scope);
-                }
-                options.ClaimActions.MapJsonKey("email", "email");
-                options.ClaimActions.MapJsonKey("name", "name");
             });
+
+            var ssoAuthority = builder.Configuration["Sso:Authority"];
+            if (!string.IsNullOrWhiteSpace(ssoAuthority))
+            {
+                builder.Services.AddAuthentication()
+                    .AddOpenIdConnect("OpenIdConnect", options =>
+                    {
+                        options.Authority = ssoAuthority;
+                        options.ClientId = builder.Configuration["Sso:ClientId"] ?? string.Empty;
+                        options.ClientSecret = builder.Configuration["Sso:ClientSecret"] ?? string.Empty;
+                        options.CallbackPath = builder.Configuration["Sso:CallbackPath"] ?? "/api/sso/callback";
+                        options.ResponseType = "code";
+                        options.SaveTokens = true;
+                        options.GetClaimsFromUserInfoEndpoint = true;
+                        options.Scope.Clear();
+                        foreach (var scope in builder.Configuration.GetSection("Sso:Scopes").Get<string[]>() ?? Array.Empty<string>())
+                        {
+                            options.Scope.Add(scope);
+                        }
+                        options.ClaimActions.MapJsonKey("email", "email");
+                        options.ClaimActions.MapJsonKey("name", "name");
+                    });
+            }
 
             builder.Services.AddAuthorization();
 
