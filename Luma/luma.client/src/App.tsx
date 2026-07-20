@@ -5,6 +5,8 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
+import Reports from './pages/Reports';
+import PublicPortal from './pages/PublicPortal';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
     const { isAuthenticated } = useAuth();
@@ -32,6 +34,15 @@ export default function App() {
                     </ProtectedRoute>
                 }
             />
+            <Route
+                path="/reports/:projectId"
+                element={
+                    <ProtectedRoute>
+                        <Reports />
+                    </ProtectedRoute>
+                }
+            />
+            <Route path="/portal/:projectId" element={<PublicPortal />} />
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
