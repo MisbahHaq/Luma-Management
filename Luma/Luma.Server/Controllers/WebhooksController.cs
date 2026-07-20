@@ -27,7 +27,10 @@ public class WebhooksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<WebhookSubscriptionResponseDto>>> GetAll([FromQuery] Guid? tenantId, [FromQuery] Guid? projectId)
     {
+        // CROSS-TENANT: Admin platform view. Explicit tenantId/projectId params are the
+        // intentional scoping; bypass the global tenant filter.
         var query = _context.WebhookSubscriptions
+            .IgnoreQueryFilters()
             .Include(w => w.Tenant)
             .Include(w => w.Project)
             .Include(w => w.CreatedByUser)

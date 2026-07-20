@@ -22,14 +22,20 @@ public class ReportsController : ControllerBase
     [HttpGet("dashboard")]
     public async Task<ActionResult<DashboardSummaryResponseDto>> GetDashboard()
     {
-        var projects = await _context.Projects.ToListAsync();
+        // CROSS-TENANT: platform-wide dashboard summary. Intentionally bypasses the
+        // global tenant filter so an Admin can see all projects at once.
+        var projects = await _context.Projects
+            .IgnoreQueryFilters()
+            .ToListAsync();
         var projectIds = projects.Select(p => p.Id).ToList();
 
         var tasks = await _context.Tasks
+            .IgnoreQueryFilters()
             .Where(t => projectIds.Contains(t.ProjectId))
             .ToListAsync();
 
         var timeLogs = await _context.TimeLogs
+            .IgnoreQueryFilters()
             .Where(l => projectIds.Contains(l.ProjectId))
             .ToListAsync();
 

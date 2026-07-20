@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ProjectMember, Task, TaskItemType, TaskPriority, TaskStatus } from '../types/types';
+import type { ProjectMemberSummary, Task, TaskItemType, TaskPriority, TaskStatus } from '../types/types';
 import StatusPill from './StatusPill';
 import PriorityPill from './PriorityPill';
 import TypeBadge from './TypeBadge';
@@ -8,7 +8,7 @@ import KebabMenu from './KebabMenu';
 
 interface IssueHierarchyTableProps {
     tasks: Task[];
-    members: ProjectMember[];
+    members: ProjectMemberSummary[];
     canEdit: boolean;
     onOpenTask: (task: Task) => void;
     onToggleDone: (task: Task) => void;
@@ -79,7 +79,7 @@ export default function IssueHierarchyTable({
 
     const assigneeName = (t: Task) => {
         if (t.assigneeFullName) return t.assigneeFullName;
-        const m = members.find((x) => x.userId === t.assigneeId);
+        const m = members.find((x) => x.id === t.assigneeId);
         return m?.fullName ?? m?.email ?? null;
     };
 

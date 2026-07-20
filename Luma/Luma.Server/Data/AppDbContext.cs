@@ -1,4 +1,5 @@
 using Luma.Server.Models;
+using Luma.Server.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +8,12 @@ namespace Luma.Server.Data;
 
 public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+    private readonly TenantContext? _tenantContext;
+
+    public AppDbContext(DbContextOptions<AppDbContext> options, TenantContext? tenantContext = null)
+        : base(options)
     {
+        _tenantContext = tenantContext;
     }
 
     public DbSet<Project> Projects => Set<Project>();
@@ -422,5 +427,131 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
             entity.HasIndex(j => new { j.Status, j.NextAttemptAt });
             entity.HasIndex(j => new { j.Type, j.Status });
         });
+
+        // =====================================================================
+        // TENANT ISOLATION — global query filters
+        // Every tenant-aware entity is transparently scoped to the resolved tenant
+        // (see TenantResolutionMiddleware -> TenantContext). Entities reached via a
+        // parent Project are scoped through the Project's TenantId. When no tenant is
+        // resolved (null), Project still shows null-tenant rows; direct-tenant entities
+        // show all (matching prior behavior, since there was no tenant header).
+        // Intentionally cross-tenant reads call IgnoreQueryFilters() and are flagged
+        // with a "CROSS-TENANT" comment at each call site.
+        // =====================================================================
+        var tenantId = _tenantContext?.CurrentTenantId;
+
+        builder.Entity<Project>(entity =>
+        {
+            // Null-tenant projects (e.g. platform-owned) remain visible to all.
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(p => p.TenantId == tenantId || p.TenantId == null);
+            }
+        });
+
+        builder.Entity<ApiKey>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(k => k.TenantId == tenantId);
+            }
+        });
+
+        builder.Entity<WebhookSubscription>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(w => w.TenantId == tenantId);
+            }
+        });
+
+        builder.Entity<BackgroundJob>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(j => j.TenantId == tenantId || j.TenantId == null);
+            }
+        });
+
+        // Entities scoped via parent Project (TenantId lives on Project).
+        builder.Entity<TaskItem>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(t => t.Project != null && (t.Project.TenantId == tenantId || t.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<Sprint>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(s => s.Project != null && (s.Project.TenantId == tenantId || s.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<TimeLog>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(l => l.Project != null && (l.Project.TenantId == tenantId || l.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<Comment>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(c => c.Task != null && c.Task.Project != null &&
+                    (c.Task.Project.TenantId == tenantId || c.Task.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<Attachment>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(a => a.Task != null && a.Task.Project != null &&
+                    (a.Task.Project.TenantId == tenantId || a.Task.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<ProjectCustomField>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(f => f.Project != null && (f.Project.TenantId == tenantId || f.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<ProjectCustomFieldValue>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(v => v.CustomField != null && v.CustomField.Project != null &&
+                    (v.CustomField.Project.TenantId == tenantId || v.CustomField.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<TaskDependency>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(d => d.Project != null && (d.Project.TenantId == tenantId || d.Project.TenantId == null));
+            }
+        });
+
+        builder.Entity<TeamMemberCapacity>(entity =>
+        {
+            if (tenantId is not null)
+            {
+                entity.HasQueryFilter(c => c.Project != null && (c.Project.TenantId == tenantId || c.Project.TenantId == null));
+            }
+        });
+
+        // NOTE: ProjectTemplate and TeamCalendar are intentionally NOT tenant-scoped:
+        // templates are public/owner-scoped and calendars are user-scoped per the model.
+        // Adding a TenantId to those is a separate schema change (flagged in the audit).
+        // Tenant (the tenant directory itself) is never filtered.
     }
 }

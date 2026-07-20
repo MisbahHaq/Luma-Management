@@ -234,17 +234,40 @@ Query params: `?page=1&pageSize=20`. Defaults vary by endpoint (typically 20). P
   raw key are shown once at creation time.
 
 ### Role-based access (RBAC)
-| Capability | Admin | Member | Viewer |
-| --- | --- | --- | --- |
-| View projects / tasks / comments | ✅ | ✅ | ✅ |
-| Create / edit / delete **Projects** | ✅ | ✅ | ❌ |
-| Create / edit / delete **Tasks** | ✅ | ✅ | ❌ |
-| Add **Comments** | ✅ | ✅ | ✅ |
-| List **Users** (for assignment) | ✅ | ✅ | ❌ |
-| Manage tenants, API keys, webhooks, jobs | ✅ | ❌ | ❌ |
 
-Enforced server-side with `[Authorize(Roles = "Admin,Member")]` (read is gated by
-`[Authorize]` for any authenticated user) and mirrored client-side via `canEdit` in the UI.
+There are two layers of roles:
+
+- **Global role** (`User.Role`): `Admin`, `Member`, `Viewer`. Carried in the JWT `Role` claim.
+- **Per-project role** (`ProjectMember.Role`): `Owner`, `Editor`, `Viewer`. Determines what a user may do *within a specific project*.
+
+| Capability | Global Admin | Global Member | Global Viewer | Project Owner | Project Editor | Project Viewer |
+| --- | --- | --- | --- | --- | --- | --- |
+| View projects / tasks / comments | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Create / edit / delete **Tasks** in a project | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
+| Edit / delete **Project** | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
+| Manage project **members** (add/remove) | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
+| Change a member's **project role** | ✅ (bypass) | ❌ | ❌ | ✅ only | ❌ | ❌ |
+| Manage public access token | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
+| Create a **new Project** | ✅ | ✅ | ❌ | — | — | — |
+| Add **Comments** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| List **Users** (for assignment) | ✅ | ✅ | ❌ | — | — | — |
+| Manage tenants, API keys, webhooks, jobs | ✅ | ❌ | ❌ | — | — | — |
+
+\* Global `Member` alone is **not** sufficient for project writes — they must also be a project `Owner` or `Editor`. Global `Admin` always bypasses per-project checks (platform override). Global `Viewer` is never granted write access regardless of project role.
+
+**Enforcement:**
+- Read endpoints are gated by `[Authorize]` (any authenticated user).
+- Write endpoints keep the global `[Authorize(Roles = "Admin,Member")]` attribute **and** additionally call `ProjectAuthorizationService.CanWriteProjectAsync(projectId, userId, globalRole)` (or require project `Owner` for role changes). A `403` is returned when the caller lacks the per-project role.
+- The project **creator is auto-added as `ProjectMember` with `Role = Owner`** on project creation.
+- The **last Owner cannot be removed or demoted** (prevents orphaned projects).
+- Mirrored client-side via `canEdit` and `isProjectOwner` in the UI.
+
+**Endpoints added/changed:**
+- `POST /projects/{id}/members` — body accepts `role` (`Owner`/`Editor`/`Viewer`, defaults to `Editor`).
+- `PUT /projects/{id}/members/{userId}/role` — change a member's project role (project **Owner** or global **Admin** only).
+- `GET /projects/{id}/members` — now returns `ProjectMemberSummaryDto` (`id`, `fullName`, `email`, `globalRole`, `projectRole`).
+
+Migration: `AddProjectMemberRole` (adds `Role` column to `ProjectMembers`, default `Editor`).
 
 ### Seeded account
 On first run the database is migrated and a default admin is created:

@@ -27,7 +27,11 @@ public class ApiKeysController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<ApiKeyResponseDto>>> GetAll([FromQuery] Guid? tenantId)
     {
+        // CROSS-TENANT: Admin platform view. The explicit tenantId param is the
+        // intentional scoping; bypass the global tenant query filter so an Admin
+        // without an X-Tenant-Id header can still list keys for any tenant.
         var query = _context.ApiKeys
+            .IgnoreQueryFilters()
             .Include(k => k.Tenant)
             .AsQueryable();
 

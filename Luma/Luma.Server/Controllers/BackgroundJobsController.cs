@@ -22,7 +22,11 @@ public class BackgroundJobsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<BackgroundJobResponseDto>>> GetAll([FromQuery] Guid? tenantId, [FromQuery] JobStatus? status)
     {
-        var query = _context.BackgroundJobs.AsQueryable();
+        // CROSS-TENANT: Admin platform view. Explicit tenantId param is the intentional
+        // scoping; bypass the global tenant filter.
+        var query = _context.BackgroundJobs
+            .IgnoreQueryFilters()
+            .AsQueryable();
 
         if (tenantId.HasValue)
         {
