@@ -21,6 +21,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<Sprint> Sprints => Set<Sprint>();
     public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
     public DbSet<TimeLog> TimeLogs => Set<TimeLog>();
+    public DbSet<TeamMemberCapacity> TeamMemberCapacities => Set<TeamMemberCapacity>();
+    public DbSet<TeamCalendar> TeamCalendars => Set<TeamCalendar>();
+    public DbSet<TeamCalendarEvent> TeamCalendarEvents => Set<TeamCalendarEvent>();
+    public DbSet<ProjectCustomField> ProjectCustomFields => Set<ProjectCustomField>();
+    public DbSet<ProjectCustomFieldValue> ProjectCustomFieldValues => Set<ProjectCustomFieldValue>();
+    public DbSet<ProjectTemplate> ProjectTemplates => Set<ProjectTemplate>();
+    public DbSet<ProjectTemplateTask> ProjectTemplateTasks => Set<ProjectTemplateTask>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -198,6 +205,114 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(l => new { l.UserId, l.Date });
+        });
+
+        builder.Entity<TeamMemberCapacity>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+
+            entity.HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.Project)
+                .WithMany()
+                .HasForeignKey(c => c.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(c => new { c.UserId, c.ProjectId, c.Date }).IsUnique();
+        });
+
+        builder.Entity<TeamCalendar>(entity =>
+        {
+            entity.HasKey(c => c.Id);
+
+            entity.HasOne(c => c.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(c => c.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(c => c.Events)
+                .WithOne(e => e.Calendar)
+                .HasForeignKey(e => e.CalendarId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<TeamCalendarEvent>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Calendar)
+                .WithMany(c => c.Events)
+                .HasForeignKey(e => e.CalendarId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Project)
+                .WithMany()
+                .HasForeignKey(e => e.ProjectId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.CalendarId, e.StartDate, e.EndDate });
+        });
+
+        builder.Entity<ProjectCustomField>(entity =>
+        {
+            entity.HasKey(f => f.Id);
+
+            entity.HasOne(f => f.Project)
+                .WithMany()
+                .HasForeignKey(f => f.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(f => new { f.ProjectId, f.Name }).IsUnique();
+        });
+
+        builder.Entity<ProjectCustomFieldValue>(entity =>
+        {
+            entity.HasKey(v => v.Id);
+
+            entity.HasOne(v => v.CustomField)
+                .WithMany()
+                .HasForeignKey(v => v.CustomFieldId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(v => v.Task)
+                .WithMany()
+                .HasForeignKey(v => v.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(v => new { v.CustomFieldId, v.TaskId }).IsUnique();
+        });
+
+        builder.Entity<ProjectTemplate>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+
+            entity.HasOne(t => t.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(t => t.Tasks)
+                .WithOne(tt => tt.Template)
+                .HasForeignKey(tt => tt.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ProjectTemplateTask>(entity =>
+        {
+            entity.HasKey(tt => tt.Id);
+
+            entity.HasOne(tt => tt.Template)
+                .WithMany(t => t.Tasks)
+                .HasForeignKey(tt => tt.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(tt => tt.ParentTemplateTask)
+                .WithMany(tt => tt.Children)
+                .HasForeignKey(tt => tt.ParentTemplateTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

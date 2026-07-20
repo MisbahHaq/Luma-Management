@@ -304,3 +304,13 @@ C:\Users\Misbah\Desktop\Luma-Management\Luma\Luma.Server\obj\Debug\net8.0\swae.b
 C:\Users\Misbah\Desktop\Luma-Management\Luma\Luma.Server\obj\Debug\net8.0\Luma.Ser.20A90B25.Up2Date
 C:\Users\Misbah\Desktop\Luma-Management\Luma\Luma.Server\obj\Debug\net8.0\Luma.Server.genruntimeconfig.cache
 C:\Users\Misbah\Desktop\Luma-Management\Luma\Luma.Server\obj\Debug\net8.0\ref\Luma.Server.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\CommunityToolkit.HighPerformance.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\MailKit.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\MimeKit.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\Minio.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\Newtonsoft.Json.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\SendGrid.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\StarkbankEcdsa.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\System.IO.Hashing.dll
+C:\Users\Misbah\Desktop\Luma Management\Luma\Luma.Server\bin\Debug\net8.0\System.Reactive.dll
