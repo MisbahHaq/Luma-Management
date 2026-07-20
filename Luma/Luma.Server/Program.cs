@@ -1,9 +1,12 @@
 using Luma.Server.Data;
 using Luma.Server.Hubs;
+using Luma.Server.Middleware;
 using Luma.Server.Models;
 using Luma.Server.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -55,13 +58,35 @@ namespace Luma.Server
                     IssuerSigningKey = new SymmetricSecurityKey(key),
                     RoleClaimType = System.Security.Claims.ClaimTypes.Role
                 };
+            })
+            .AddOpenIdConnect("OpenIdConnect", options =>
+            {
+                options.Authority = builder.Configuration["Sso:Authority"];
+                options.ClientId = builder.Configuration["Sso:ClientId"];
+                options.ClientSecret = builder.Configuration["Sso:ClientSecret"];
+                options.CallbackPath = builder.Configuration["Sso:CallbackPath"] ?? "/api/sso/callback";
+                options.ResponseType = "code";
+                options.SaveTokens = true;
+                options.GetClaimsFromUserInfoEndpoint = true;
+                options.Scope.Clear();
+                foreach (var scope in builder.Configuration.GetSection("Sso:Scopes").Get<string[]>() ?? Array.Empty<string>())
+                {
+                    options.Scope.Add(scope);
+                }
+                options.ClaimActions.MapJsonKey("email", "email");
+                options.ClaimActions.MapJsonKey("name", "name");
             });
 
             builder.Services.AddAuthorization();
-            builder.Services.AddScoped<IJwtService, JwtService>();
 
+            builder.Services.Configure<SsoOptions>(builder.Configuration.GetSection("Sso"));
+            builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<ActivityService>();
             builder.Services.AddScoped<NotificationService>();
+            builder.Services.AddScoped<WebhookDispatcherService>();
+            builder.Services.AddHttpClient();
+
+            builder.Services.AddHostedService<BackgroundJobService>();
 
             ConfigureStorage(builder);
             ConfigureEmail(builder);
@@ -103,6 +128,11 @@ namespace Luma.Server
 
             app.UseHttpsRedirection();
             app.UseCors("AllowSpa");
+
+            app.UseMiddleware<RateLimitingMiddleware>();
+            app.UseMiddleware<ApiKeyAuthenticationMiddleware>();
+            app.UseMiddleware<TenantResolutionMiddleware>();
+
             app.UseAuthentication();
             app.UseAuthorization();
 

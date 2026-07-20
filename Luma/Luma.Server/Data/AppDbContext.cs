@@ -28,6 +28,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<ProjectCustomFieldValue> ProjectCustomFieldValues => Set<ProjectCustomFieldValue>();
     public DbSet<ProjectTemplate> ProjectTemplates => Set<ProjectTemplate>();
     public DbSet<ProjectTemplateTask> ProjectTemplateTasks => Set<ProjectTemplateTask>();
+    public DbSet<Tenant> Tenants => Set<Tenant>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
+    public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
+    public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -313,6 +318,104 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .WithMany(tt => tt.Children)
                 .HasForeignKey(tt => tt.ParentTemplateTaskId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Tenant>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+            entity.HasIndex(t => t.Slug).IsUnique();
+
+            entity.HasOne(t => t.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(t => t.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(t => t.Projects)
+                .WithOne(p => p.Tenant)
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Project>(entity =>
+        {
+            entity.HasKey(p => p.Id);
+
+            entity.HasOne(p => p.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(p => p.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.Tenant)
+                .WithMany(t => t.Projects)
+                .HasForeignKey(p => p.TenantId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasMany(p => p.Tasks)
+                .WithOne(t => t.Project)
+                .HasForeignKey(t => t.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<ApiKey>(entity =>
+        {
+            entity.HasKey(k => k.Id);
+
+            entity.HasOne(k => k.Tenant)
+                .WithMany()
+                .HasForeignKey(k => k.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(k => k.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(k => k.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(k => new { k.TenantId, k.KeyPrefix }).IsUnique();
+        });
+
+        builder.Entity<WebhookSubscription>(entity =>
+        {
+            entity.HasKey(w => w.Id);
+
+            entity.HasOne(w => w.Tenant)
+                .WithMany()
+                .HasForeignKey(w => w.TenantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(w => w.Project)
+                .WithMany()
+                .HasForeignKey(w => w.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(w => w.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(w => w.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasMany(w => w.Deliveries)
+                .WithOne(d => d.Subscription)
+                .HasForeignKey(d => d.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<WebhookDelivery>(entity =>
+        {
+            entity.HasKey(d => d.Id);
+
+            entity.HasOne(d => d.Subscription)
+                .WithMany(w => w.Deliveries)
+                .HasForeignKey(d => d.SubscriptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(d => new { d.Status, d.NextAttemptAt });
+        });
+
+        builder.Entity<BackgroundJob>(entity =>
+        {
+            entity.HasKey(j => j.Id);
+
+            entity.HasIndex(j => new { j.Status, j.NextAttemptAt });
+            entity.HasIndex(j => new { j.Type, j.Status });
         });
     }
 }
