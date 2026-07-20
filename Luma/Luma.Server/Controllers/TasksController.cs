@@ -28,16 +28,28 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("project/{projectId}")]
-    public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetByProject(Guid projectId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TaskResponseDto>>> GetByProject(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var tasks = await _context.Tasks
+        var query = _context.Tasks
             .Where(t => t.ProjectId == projectId)
             .Include(t => t.Assignee)
-            .OrderByDescending(t => t.CreatedAt)
+            .OrderByDescending(t => t.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var tasks = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(t => ToDto(t))
             .ToListAsync();
 
-        return Ok(tasks);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TaskResponseDto>
+        {
+            Items = tasks,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("{id}")]

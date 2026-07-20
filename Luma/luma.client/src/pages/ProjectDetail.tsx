@@ -8,7 +8,7 @@ import SprintsPanel from '../components/SprintsPanel';
 import DependenciesPanel from '../components/DependenciesPanel';
 import TimeTracking from '../components/TimeTracking';
 import GanttView from '../components/GanttView';
-import { membersApi, usersApi } from '../api/endpoints';
+import { membersApi, usersApi, tasksApi } from '../api/endpoints';
 import {
     PRIORITY_LABELS,
     STATUS_LABELS,
@@ -55,12 +55,12 @@ export default function ProjectDetail() {
         try {
             const [projRes, tasksRes, membersRes, usersRes] = await Promise.all([
                 client.get<Project>(`/projects/${id}`),
-                client.get<Task[]>(`/tasks/project/${id}`),
+                tasksApi.byProject(id, 1, 100),
                 membersApi.list(id),
                 canEdit ? usersApi.list() : Promise.resolve({ data: [] as UserSummary[] }),
             ]);
             setProject(projRes.data);
-            setTasks(tasksRes.data);
+            setTasks(tasksRes.data.items);
             setMembers(membersRes.data);
             setAllUsers(usersRes.data);
         } catch {

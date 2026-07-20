@@ -21,8 +21,8 @@ export default function TimeTracking({ projectId, tasks, canEdit }: TimeTracking
 
     const load = async () => {
         try {
-            const { data } = await timeLogsApi.forProject(projectId);
-            setLogs(data);
+            const { data } = await timeLogsApi.forProject(projectId, 1, 100);
+            setLogs(data.items);
         } catch {
             setError('Failed to load time logs.');
         }

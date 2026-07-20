@@ -19,7 +19,7 @@ public class NotificationsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<NotificationResponseDto>>> GetMine()
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<NotificationResponseDto>>> GetMine([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var userId = GetCurrentUserId();
         if (userId is null)
@@ -27,10 +27,15 @@ public class NotificationsController : ControllerBase
             return Unauthorized();
         }
 
-        var items = await _context.Notifications
+        var query = _context.Notifications
             .Where(n => n.RecipientId == userId)
-            .OrderByDescending(n => n.CreatedAt)
-            .Take(50)
+            .OrderByDescending(n => n.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(n => new NotificationResponseDto
             {
                 Id = n.Id,
@@ -44,7 +49,13 @@ public class NotificationsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(items);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<NotificationResponseDto>
+        {
+            Items = items,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("unread-count")]

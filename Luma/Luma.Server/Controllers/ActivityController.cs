@@ -20,29 +20,53 @@ public class ActivityController : ControllerBase
     }
 
     [HttpGet("task/{taskId}")]
-    public async Task<ActionResult<IEnumerable<ActivityLogResponseDto>>> GetByTask(Guid taskId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<ActivityLogResponseDto>>> GetByTask(Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var logs = await _context.ActivityLogs
+        var query = _context.ActivityLogs
             .Where(a => a.TaskId == taskId)
             .Include(a => a.Actor)
-            .OrderByDescending(a => a.CreatedAt)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var logs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => ToDto(a))
             .ToListAsync();
 
-        return Ok(logs);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<ActivityLogResponseDto>
+        {
+            Items = logs,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("project/{projectId}")]
-    public async Task<ActionResult<IEnumerable<ActivityLogResponseDto>>> GetByProject(Guid projectId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<ActivityLogResponseDto>>> GetByProject(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var logs = await _context.ActivityLogs
+        var query = _context.ActivityLogs
             .Where(a => a.ProjectId == projectId)
             .Include(a => a.Actor)
-            .OrderByDescending(a => a.CreatedAt)
+            .OrderByDescending(a => a.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var logs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => ToDto(a))
             .ToListAsync();
 
-        return Ok(logs);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<ActivityLogResponseDto>
+        {
+            Items = logs,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     private static ActivityLogResponseDto ToDto(ActivityLog a) => new()

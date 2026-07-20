@@ -177,6 +177,20 @@ Request
 | `WebhookDelivery` | `Id`, `SubscriptionId` → `WebhookSubscription`, `EventType`, `Payload`, `Status` (`Pending`/`Succeeded`/`Failed`/`DeadLettered`), `Attempts`, `MaxAttempts`, `NextAttemptAt?`, `LastError?`, `CreatedAt`, `CompletedAt?` |
 | `BackgroundJob` | `Id`, `TenantId?`, `Type`, `Payload`, `Status` (`Pending`/`Processing`/`Completed`/`Failed`/`DeadLettered`), `Priority`, `Attempts`, `MaxAttempts`, `NextAttemptAt?`, `CreatedAt`, `StartedAt?`, `CompletedAt?`, `Error?`, `ParentJobId?`, `LockedUntil?` |
 
+### Pagination
+List endpoints return `PagedResult<T>`:
+```json
+{
+  "items": [],
+  "total": 0,
+  "page": 1,
+  "pageSize": 20,
+  "totalPages": 0
+}
+```
+
+Query params: `?page=1&pageSize=20`. Defaults vary by endpoint (typically 20). Pass a larger `pageSize` (e.g. `100`) when you need more records for views like Kanban.
+
 ### Relationships
 - A **Project** has many **Tasks** (cascade delete).
 - A **Task** has many **Comments** (cascade delete).
@@ -268,7 +282,7 @@ Base URL: `/api`
 ### Tasks — `TasksController` (authenticated; write = Admin/Member)
 | Method | Route | Notes |
 | --- | --- | --- |
-| GET | `/tasks/project/{projectId}` | Tasks for a project |
+| GET | `/tasks/project/{projectId}` | Tasks for a project. Query: `?page=1&pageSize=20` |
 | GET | `/tasks/{id}` | Single task |
 | POST | `/tasks` | Create (Admin/Member) |
 | PUT | `/tasks/{id}` | Update status/priority/assignee (Admin/Member) |
@@ -278,7 +292,7 @@ Base URL: `/api`
 ### Comments — `CommentsController` (authenticated)
 | Method | Route | Notes |
 | --- | --- | --- |
-| GET | `/comments/task/{taskId}` | Comments for a task |
+| GET | `/comments/task/{taskId}` | Comments for a task. Query: `?page=1&pageSize=20` |
 | POST | `/comments` | Add a comment (any authenticated user) |
 
 ### Users — `UsersController` (Admin/Member)
@@ -308,9 +322,9 @@ Base URL: `/api`
 ### Time Logs — `TimeLogsController` (authenticated; write = Admin/Member)
 | Method | Route | Notes |
 | --- | --- | --- |
-| GET | `/timelogs/task/{taskId}` | Time logs for a task |
-| GET | `/timelogs/project/{projectId}` | Time logs for a project |
-| GET | `/timelogs/user/{userId}` | A user's time logs (own, or any if Admin/Member) |
+| GET | `/timelogs/task/{taskId}` | Time logs for a task. Query: `?page=1&pageSize=20` |
+| GET | `/timelogs/project/{projectId}` | Time logs for a project. Query: `?page=1&pageSize=20` |
+| GET | `/timelogs/user/{userId}` | A user's time logs. Query: `?page=1&pageSize=20` |
 | POST | `/timelogs` | Log hours against a task (Admin/Member) |
 | DELETE | `/timelogs/{id}` | Delete (Admin/Member) |
 
@@ -332,7 +346,7 @@ Base URL: `/api`
 ### Workload — `WorkloadController` (authenticated; write = Admin/Member)
 | Method | Route | Notes |
 | --- | --- | --- |
-| GET | `/workload/capacity` | Capacity entries (filter by `projectId`, `userId`, `from`, `to`) |
+| GET | `/workload/capacity` | Capacity entries. Query: `?projectId=&userId=&from=&to=&page=1&pageSize=20` |
 | GET | `/workload/utilization` | Resource utilization per user |
 | GET | `/workload/dashboard` | Combined utilization + timeline |
 | POST | `/workload/capacity` | Set/update capacity (Admin/Member) |
@@ -349,7 +363,7 @@ Base URL: `/api`
 ### Team Calendar Events — `TeamCalendarEventsController` (authenticated; write = Admin/Member)
 | Method | Route | Notes |
 | --- | --- | --- |
-| GET | `/team-calendars/{calendarId}/events` | Events for a calendar |
+| GET | `/team-calendars/{calendarId}/events` | Events for a calendar. Query: `?page=1&pageSize=20` |
 | GET | `/team-calendars/{calendarId}/events/range?start=&end=` | Events in date range |
 | POST | `/team-calendars/{calendarId}/events` | Create event (Admin/Member) |
 | GET | `/team-calendars/{calendarId}/events/{id}` | Single event |
@@ -425,6 +439,20 @@ Base URL: `/api`
 | GET | `/public/projects/{projectId}/tasks` | Read-only task list |
 | GET | `/public/projects/{projectId}/members` | Read-only member list |
 | GET | `/public/projects/{projectId}/health` | Read-only project health |
+
+### Notifications — `NotificationsController` (authenticated)
+| Method | Route | Notes |
+| --- | --- | --- |
+| GET | `/notifications` | List for current user. Query: `?page=1&pageSize=20` |
+| GET | `/notifications/unread-count` | Unread count |
+| POST | `/notifications/{id}/read` | Mark as read |
+| POST | `/notifications/read-all` | Mark all as read |
+
+### Activity — `ActivityController` (authenticated)
+| Method | Route | Notes |
+| --- | --- | --- |
+| GET | `/activity/task/{taskId}` | Activity for a task. Query: `?page=1&pageSize=20` |
+| GET | `/activity/project/{projectId}` | Activity for a project. Query: `?page=1&pageSize=20` |
 
 ### Notifications (SignalR)
 | Hub | Route |

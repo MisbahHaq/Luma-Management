@@ -12,6 +12,7 @@ import type {
     VelocityReport,
     ProjectHealth,
     DashboardSummary,
+    Task,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -28,12 +29,15 @@ export const attachmentsApi = {
 };
 
 export const activityApi = {
-    forTask: (taskId: string) => client.get<ActivityLog[]>(`/activity/task/${taskId}`),
-    forProject: (projectId: string) => client.get<ActivityLog[]>(`/activity/project/${projectId}`),
+    forTask: (taskId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: ActivityLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/activity/task/${taskId}?page=${page}&pageSize=${pageSize}`),
+    forProject: (projectId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: ActivityLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/activity/project/${projectId}?page=${page}&pageSize=${pageSize}`),
 };
 
 export const notificationsApi = {
-    mine: () => client.get<Notification[]>('/notifications'),
+    mine: (page = 1, pageSize = 20) =>
+        client.get<{ items: Notification[]; total: number; page: number; pageSize: number; totalPages: number }>(`/notifications?page=${page}&pageSize=${pageSize}`),
     unreadCount: () => client.get<number>('/notifications/unread-count'),
     markRead: (id: string) => client.post(`/notifications/${id}/read`),
     markAllRead: () => client.post('/notifications/read-all'),
@@ -52,6 +56,8 @@ export const usersApi = {
 };
 
 export const tasksApi = {
+    byProject: (projectId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: Task[]; total: number; page: number; pageSize: number; totalPages: number }>(`/tasks/project/${projectId}?page=${page}&pageSize=${pageSize}`),
     move: (taskId: string, status: string) =>
         client.put(`/tasks/${taskId}/move`, { status }),
 };
@@ -96,12 +102,12 @@ export const dependenciesApi = {
 };
 
 export const timeLogsApi = {
-    forTask: (taskId: string) =>
-        client.get<TimeLog[]>(`/timelogs/task/${taskId}`),
-    forProject: (projectId: string) =>
-        client.get<TimeLog[]>(`/timelogs/project/${projectId}`),
-    forUser: (userId: string) =>
-        client.get<TimeLog[]>(`/timelogs/user/${userId}`),
+    forTask: (taskId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: TimeLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/timelogs/task/${taskId}?page=${page}&pageSize=${pageSize}`),
+    forProject: (projectId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: TimeLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/timelogs/project/${projectId}?page=${page}&pageSize=${pageSize}`),
+    forUser: (userId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: TimeLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/timelogs/user/${userId}?page=${page}&pageSize=${pageSize}`),
     create: (payload: {
         taskId: string;
         hours: number;
