@@ -24,6 +24,10 @@ public class Project
 
     public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
 
+    public Guid? TenantId { get; set; }
+
+    public Tenant? Tenant { get; set; }
+
     [MaxLength(200)]
     public string? PublicAccessToken { get; set; }
 }

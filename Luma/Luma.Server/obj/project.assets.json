@@ -154,6 +154,25 @@
           "Microsoft.AspNetCore.App"
         ]
       },
+      "Microsoft.AspNetCore.Authentication.OpenIdConnect/8.0.8": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.IdentityModel.Protocols.OpenIdConnect": "7.1.2"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.OpenIdConnect.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.AspNetCore.Authentication.OpenIdConnect.dll": {
+            "related": ".xml"
+          }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
+      },
       "Microsoft.AspNetCore.Cryptography.Internal/8.0.8": {
         "type": "package",
         "compile": {
@@ -1953,6 +1972,21 @@
         "lib/net8.0/Microsoft.AspNetCore.Authentication.JwtBearer.xml",
         "microsoft.aspnetcore.authentication.jwtbearer.8.0.8.nupkg.sha512",
         "microsoft.aspnetcore.authentication.jwtbearer.nuspec"
+      ]
+    },
+    "Microsoft.AspNetCore.Authentication.OpenIdConnect/8.0.8": {
+      "sha512": "uPfEVY/Hg1EuggiHcB/l4Y0SwYeG9cNPxZitStZVtty7t2+ezK4+l0eyjXtcqI+rLC1iEpcEVDU3tBcBEzxNvg==",
+      "type": "package",
+      "path": "microsoft.aspnetcore.authentication.openidconnect/8.0.8",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.OpenIdConnect.dll",
+        "lib/net8.0/Microsoft.AspNetCore.Authentication.OpenIdConnect.xml",
+        "microsoft.aspnetcore.authentication.openidconnect.8.0.8.nupkg.sha512",
+        "microsoft.aspnetcore.authentication.openidconnect.nuspec"
       ]
     },
     "Microsoft.AspNetCore.Cryptography.Internal/8.0.8": {
@@ -4451,12 +4485,13 @@
       "ClosedXML >= 0.104.2",
       "MailKit >= 4.7.1",
       "Microsoft.AspNetCore.Authentication.JwtBearer >= 8.0.8",
+      "Microsoft.AspNetCore.Authentication.OpenIdConnect >= 8.0.8",
       "Microsoft.AspNetCore.Identity.EntityFrameworkCore >= 8.0.8",
       "Microsoft.AspNetCore.SpaProxy >= 8.*-*",
       "Microsoft.EntityFrameworkCore.Design >= 8.0.8",
       "Microsoft.EntityFrameworkCore.Sqlite >= 8.0.8",
       "Minio >= 6.0.0",
-      "QuestPDF >= 2024.11.0",
+      "QuestPDF >= 2024.12.0",
       "SendGrid >= 9.29.3",
       "Swashbuckle.AspNetCore >= 6.6.2",
       "System.IdentityModel.Tokens.Jwt >= 7.6.0"
@@ -4527,6 +4562,10 @@
             "target": "Package",
             "version": "[8.0.8, )"
           },
+          "Microsoft.AspNetCore.Authentication.OpenIdConnect": {
+            "target": "Package",
+            "version": "[8.0.8, )"
+          },
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
             "target": "Package",
             "version": "[8.0.8, )"
@@ -4551,7 +4590,7 @@
           },
           "QuestPDF": {
             "target": "Package",
-            "version": "[2024.11.0, )"
+            "version": "[2024.12.0, )"
           },
           "SendGrid": {
             "target": "Package",
@@ -4590,16 +4629,6 @@
     }
   },
   "logs": [
-    {
-      "code": "NU1603",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Luma.Server depends on QuestPDF (>= 2024.11.0) but QuestPDF 2024.11.0 was not found. QuestPDF 2024.12.0 was resolved instead.",
-      "libraryId": "QuestPDF",
-      "targetGraphs": [
-        "net8.0"
-      ]
-    },
     {
       "code": "NU1902",
       "level": "Warning",
