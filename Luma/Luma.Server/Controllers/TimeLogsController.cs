@@ -28,34 +28,58 @@ public class TimeLogsController : ControllerBase
     }
 
     [HttpGet("task/{taskId}")]
-    public async Task<ActionResult<IEnumerable<TimeLogResponseDto>>> GetByTask(Guid taskId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>>> GetByTask(Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var logs = await _context.TimeLogs
+        var query = _context.TimeLogs
             .Where(l => l.TaskId == taskId)
             .Include(l => l.User)
-            .OrderByDescending(l => l.Date)
+            .OrderByDescending(l => l.Date);
+
+        var total = await query.CountAsync();
+
+        var logs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(l => ToDto(l))
             .ToListAsync();
 
-        return Ok(logs);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>
+        {
+            Items = logs,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("project/{projectId}")]
-    public async Task<ActionResult<IEnumerable<TimeLogResponseDto>>> GetByProject(Guid projectId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>>> GetByProject(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var logs = await _context.TimeLogs
+        var query = _context.TimeLogs
             .Where(l => l.ProjectId == projectId)
             .Include(l => l.User)
             .Include(l => l.Task)
-            .OrderByDescending(l => l.Date)
+            .OrderByDescending(l => l.Date);
+
+        var total = await query.CountAsync();
+
+        var logs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(l => ToDto(l))
             .ToListAsync();
 
-        return Ok(logs);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>
+        {
+            Items = logs,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("user/{userId}")]
-    public async Task<ActionResult<IEnumerable<TimeLogResponseDto>>> GetByUser(string userId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>>> GetByUser(string userId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var current = GetCurrentUserId();
         if (current != userId && !IsAdminOrMember())
@@ -63,14 +87,26 @@ public class TimeLogsController : ControllerBase
             return Forbid();
         }
 
-        var logs = await _context.TimeLogs
+        var query = _context.TimeLogs
             .Where(l => l.UserId == userId)
             .Include(l => l.Task)
-            .OrderByDescending(l => l.Date)
+            .OrderByDescending(l => l.Date);
+
+        var total = await query.CountAsync();
+
+        var logs = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(l => ToDto(l))
             .ToListAsync();
 
-        return Ok(logs);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TimeLogResponseDto>
+        {
+            Items = logs,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpPost]

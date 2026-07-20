@@ -23,7 +23,7 @@ public class TeamCalendarEventsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<TeamCalendarEventResponseDto>>> GetAll(Guid calendarId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TeamCalendarEventResponseDto>>> GetAll(Guid calendarId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var calendar = await _context.TeamCalendars.FindAsync(calendarId);
         if (calendar is null)
@@ -31,10 +31,16 @@ public class TeamCalendarEventsController : ControllerBase
             return NotFound();
         }
 
-        var events = await _context.TeamCalendarEvents
+        var query = _context.TeamCalendarEvents
             .Where(e => e.CalendarId == calendarId)
             .Include(e => e.Project)
-            .OrderByDescending(e => e.StartDate)
+            .OrderByDescending(e => e.StartDate);
+
+        var total = await query.CountAsync();
+
+        var events = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(e => new TeamCalendarEventResponseDto
             {
                 Id = e.Id,
@@ -54,7 +60,13 @@ public class TeamCalendarEventsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(events);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TeamCalendarEventResponseDto>
+        {
+            Items = events,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("range")]

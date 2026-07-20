@@ -20,11 +20,13 @@ public class WorkloadController : ControllerBase
     }
 
     [HttpGet("capacity")]
-    public async Task<ActionResult<IEnumerable<TeamMemberCapacityResponseDto>>> GetCapacity(
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TeamMemberCapacityResponseDto>>> GetCapacity(
         [FromQuery] Guid? projectId,
         [FromQuery] string? userId,
         [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+        [FromQuery] DateTime? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20)
     {
         var start = from?.Date ?? DateTime.UtcNow.Date.AddDays(-30);
         var end = to?.Date ?? DateTime.UtcNow.Date.AddDays(30);
@@ -44,8 +46,12 @@ public class WorkloadController : ControllerBase
             query = query.Where(c => c.UserId == userId);
         }
 
+        var total = await query.CountAsync();
+
         var capacities = await query
             .OrderBy(c => c.Date)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new TeamMemberCapacityResponseDto
             {
                 Id = c.Id,
@@ -62,7 +68,13 @@ public class WorkloadController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(capacities);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TeamMemberCapacityResponseDto>
+        {
+            Items = capacities,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpGet("utilization")]

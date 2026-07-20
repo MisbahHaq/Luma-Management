@@ -28,12 +28,18 @@ public class CommentsController : ControllerBase
     }
 
     [HttpGet("task/{taskId}")]
-    public async Task<ActionResult<IEnumerable<CommentResponseDto>>> GetByTask(Guid taskId)
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<CommentResponseDto>>> GetByTask(Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
-        var comments = await _context.Comments
+        var query = _context.Comments
             .Where(c => c.TaskId == taskId)
             .Include(c => c.User)
-            .OrderBy(c => c.CreatedAt)
+            .OrderBy(c => c.CreatedAt);
+
+        var total = await query.CountAsync();
+
+        var comments = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(c => new CommentResponseDto
             {
                 Id = c.Id,
@@ -45,7 +51,13 @@ public class CommentsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(comments);
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<CommentResponseDto>
+        {
+            Items = comments,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
     }
 
     [HttpPost]

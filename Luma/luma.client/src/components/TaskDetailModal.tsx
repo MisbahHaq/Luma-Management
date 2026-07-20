@@ -51,16 +51,16 @@ export default function TaskDetailModal({
         const load = async () => {
             try {
                 const [commentsRes, usersRes, attachmentsRes, activityRes] = await Promise.all([
-                    client.get<Comment[]>(`/comments/task/${task.id}`),
+                    client.get<{ items: Comment[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${task.id}?page=1&pageSize=50`),
                     canEdit ? client.get<UserSummary[]>('/users') : Promise.resolve({ data: [] as UserSummary[] }),
                     attachmentsApi.list(task.id),
-                    activityApi.forTask(task.id),
+                    activityApi.forTask(task.id, 1, 50),
                 ]);
                 if (!active) return;
-                setComments(commentsRes.data);
+                setComments(commentsRes.data.items);
                 setUsers(usersRes.data);
                 setAttachments(attachmentsRes.data);
-                setActivity(activityRes.data);
+                setActivity(activityRes.data.items);
             } catch {
                 if (active) setError('Failed to load task details.');
             }

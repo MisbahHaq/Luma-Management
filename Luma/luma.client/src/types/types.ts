@@ -263,3 +263,11 @@ export interface DashboardSummary {
     overallCompletionRate: number;
     projects: ProjectHealth[];
 }
+
+export interface PagedResult<T> {
+    items: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+}

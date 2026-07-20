@@ -20,10 +20,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     const refresh = async () => {
         try {
             const [listRes, countRes] = await Promise.all([
-                notificationsApi.mine(),
+                notificationsApi.mine(1, 50),
                 notificationsApi.unreadCount(),
             ]);
-            setNotifications(listRes.data);
+            setNotifications(listRes.data.items);
             setUnreadCount(countRes.data);
         } catch {
             // ignore - user may not be authenticated yet
