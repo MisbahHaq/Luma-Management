@@ -16,5 +16,7 @@ public class ProjectMember
 
     public ApplicationUser? User { get; set; }
 
+    public ProjectRole Role { get; set; } = ProjectRole.Editor;
+
     public DateTime AddedAt { get; set; } = DateTime.UtcNow;
 }

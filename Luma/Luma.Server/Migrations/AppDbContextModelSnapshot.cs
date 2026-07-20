@@ -483,6 +483,9 @@ namespace Luma.Server.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -665,6 +668,9 @@ namespace Luma.Server.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("ParentTaskId")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Priority")
                         .HasColumnType("INTEGER");
 
@@ -682,9 +688,14 @@ namespace Luma.Server.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssigneeId");
+
+                    b.HasIndex("ParentTaskId");
 
                     b.HasIndex("ProjectId");
 
@@ -1361,6 +1372,11 @@ namespace Luma.Server.Migrations
                         .HasForeignKey("AssigneeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Luma.Server.Models.TaskItem", "ParentTask")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentTaskId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Luma.Server.Models.Project", "Project")
                         .WithMany("Tasks")
                         .HasForeignKey("ProjectId")
@@ -1373,6 +1389,8 @@ namespace Luma.Server.Migrations
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Assignee");
+
+                    b.Navigation("ParentTask");
 
                     b.Navigation("Project");
 
@@ -1578,6 +1596,8 @@ namespace Luma.Server.Migrations
             modelBuilder.Entity("Luma.Server.Models.TaskItem", b =>
                 {
                     b.Navigation("Attachments");
+
+                    b.Navigation("Children");
 
                     b.Navigation("Comments");
                 });

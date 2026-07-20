@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { reportsApi, exportApi } from '../api/endpoints';
+import AppShell from '../components/AppShell';
 import type {
     ProjectHealth,
     BurndownReport,
@@ -72,17 +73,17 @@ export default function Reports() {
     };
 
     return (
-        <div className="page">
-            <header className="topbar">
-                <h1>Reports & Insights</h1>
-                <div className="topbar-right">
-                    <button className="btn btn-ghost" onClick={() => navigate('/')}>
-                        Back to Dashboard
-                    </button>
-                </div>
-            </header>
-
-            <main className="container">
+        <AppShell
+            breadcrumb={
+                <>
+                    <span className="crumb-link" onClick={() => navigate('/')}>Workspace</span>
+                    <span className="crumb-sep">›</span>
+                    <span>Reports</span>
+                </>
+            }
+            title="Reports & Insights"
+        >
+            <main className="container shell-inner">
                 {error && <div className="alert alert-error">{error}</div>}
 
                 {loading ? (
@@ -212,6 +213,6 @@ export default function Reports() {
                     </>
                 )}
             </main>
-        </div>
+        </AppShell>
     );
 }

@@ -68,6 +68,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .HasForeignKey(t => t.AssigneeId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasMany(t => t.Children)
+                .WithOne(t => t.ParentTask)
+                .HasForeignKey(t => t.ParentTaskId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasMany(t => t.Comments)
                 .WithOne(c => c.Task)
                 .HasForeignKey(c => c.TaskId)

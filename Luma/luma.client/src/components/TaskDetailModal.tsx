@@ -7,10 +7,12 @@ import {
 import {
     STATUS_LABELS,
     PRIORITY_LABELS,
+    TASK_TYPE_LABELS,
     type ActivityLog,
     type Attachment,
     type Comment,
     type Task,
+    type TaskItemType,
     type TaskPriority,
     type TaskStatus,
     type UserSummary,
@@ -18,16 +20,19 @@ import {
 
 interface TaskDetailModalProps {
     task: Task;
+    tasks: Task[];
     canEdit: boolean;
     onClose: () => void;
     onSaved: (updated: Task) => void;
 }
 
 const STATUSES: TaskStatus[] = ['ToDo', 'InProgress', 'Done'];
-const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High'];
+const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
+const TYPES: TaskItemType[] = ['Task', 'Story', 'Bug', 'Epic'];
 
 export default function TaskDetailModal({
     task,
+    tasks,
     canEdit,
     onClose,
     onSaved,
@@ -36,6 +41,8 @@ export default function TaskDetailModal({
     const [description, setDescription] = useState(task.description ?? '');
     const [status, setStatus] = useState<TaskStatus>(task.status);
     const [priority, setPriority] = useState<TaskPriority>(task.priority);
+    const [type, setType] = useState<TaskItemType>(task.type);
+    const [parentTaskId, setParentTaskId] = useState<string>(task.parentTaskId ?? '');
     const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId);
     const [users, setUsers] = useState<UserSummary[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -81,6 +88,8 @@ export default function TaskDetailModal({
                 description: description.trim() || null,
                 status,
                 priority,
+                type,
+                parentTaskId: parentTaskId || null,
                 dueDate: task.dueDate,
                 assigneeId,
             });
@@ -196,6 +205,39 @@ export default function TaskDetailModal({
                                         {PRIORITY_LABELS[p]}
                                     </option>
                                 ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Type
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value as TaskItemType)}
+                                disabled={!canEdit}
+                            >
+                                {TYPES.map((t) => (
+                                    <option key={t} value={t}>
+                                        {TASK_TYPE_LABELS[t]}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Epic parent
+                            <select
+                                value={parentTaskId}
+                                onChange={(e) => setParentTaskId(e.target.value)}
+                                disabled={!canEdit}
+                            >
+                                <option value="">None</option>
+                                {tasks
+                                    .filter((t) => t.type === 'Epic' && t.id !== task.id)
+                                    .map((t) => (
+                                        <option key={t.id} value={t.id}>
+                                            {t.title}
+                                        </option>
+                                    ))}
                             </select>
                         </label>
 

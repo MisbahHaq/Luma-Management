@@ -2,7 +2,9 @@ export type UserRole = 'Admin' | 'Member' | 'Viewer';
 
 export type TaskStatus = 'ToDo' | 'InProgress' | 'Done';
 
-export type TaskPriority = 'Low' | 'Medium' | 'High';
+export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
+
+export type TaskItemType = 'Epic' | 'Story' | 'Bug' | 'Task';
 
 export interface User {
     id: string;
@@ -26,6 +28,8 @@ export interface Task {
     description: string | null;
     status: TaskStatus;
     priority: TaskPriority;
+    type: TaskItemType;
+    parentTaskId: string | null;
     dueDate: string | null;
     projectId: string;
     sprintId: string | null;
@@ -127,6 +131,16 @@ export interface ProjectMember {
     role: UserRole;
 }
 
+export type ProjectRole = 'Owner' | 'Editor' | 'Viewer';
+
+export interface ProjectMemberSummary {
+    id: string;
+    fullName: string | null;
+    email: string | null;
+    globalRole: UserRole;
+    projectRole: ProjectRole;
+}
+
 export type SprintStatus = 'Planned' | 'Active' | 'Completed';
 
 export type DependencyType = 'Blocks' | 'BlockedBy';
@@ -180,9 +194,37 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 export const PRIORITY_LABELS: Record<TaskPriority, string> = {
+    Critical: 'Critical',
     Low: 'Low',
     Medium: 'Medium',
     High: 'High',
+};
+
+export const TASK_TYPE_LABELS: Record<TaskItemType, string> = {
+    Epic: 'Epic',
+    Story: 'Story',
+    Bug: 'Bug',
+    Task: 'Task',
+};
+
+export const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
+    ToDo: { label: 'To Do', className: 'status-todo' },
+    InProgress: { label: 'In Progress', className: 'status-inprogress' },
+    Done: { label: 'Done', className: 'status-done' },
+};
+
+export const PRIORITY_META: Record<TaskPriority, { label: string; className: string }> = {
+    Critical: { label: 'Critical', className: 'priority-critical' },
+    High: { label: 'High', className: 'priority-high' },
+    Medium: { label: 'Medium', className: 'priority-medium' },
+    Low: { label: 'Low', className: 'priority-low' },
+};
+
+export const TASK_TYPE_META: Record<TaskItemType, { label: string; className: string }> = {
+    Epic: { label: 'Epic', className: 'type-epic' },
+    Story: { label: 'Story', className: 'type-story' },
+    Bug: { label: 'Bug', className: 'type-bug' },
+    Task: { label: 'Task', className: 'type-task' },
 };
 
 export interface BurndownPoint {

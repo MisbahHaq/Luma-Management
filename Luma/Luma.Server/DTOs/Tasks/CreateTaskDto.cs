@@ -1,5 +1,6 @@
 using TaskStatus = Luma.Server.Models.TaskStatus;
 using TaskPriority = Luma.Server.Models.TaskPriority;
+using TaskItemType = Luma.Server.Models.TaskItemType;
 using System.ComponentModel.DataAnnotations;
 
 namespace Luma.Server.DTOs.Tasks;
@@ -15,6 +16,10 @@ public class CreateTaskDto
     public TaskStatus Status { get; set; } = TaskStatus.ToDo;
 
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
+
+    public TaskItemType Type { get; set; } = TaskItemType.Task;
+
+    public Guid? ParentTaskId { get; set; }
 
     public DateTime? DueDate { get; set; }
 

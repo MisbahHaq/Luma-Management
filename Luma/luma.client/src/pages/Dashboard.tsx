@@ -2,14 +2,23 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import NotificationsBell from '../components/NotificationsBell';
-import type { Project } from '../types/types';
+import AppShell from '../components/AppShell';
+import ProjectListRow from '../components/ProjectListRow';
+import { tasksApi } from '../api/endpoints';
+import type { Project, Task } from '../types/types';
+
+interface ProjectStat {
+    project: Project;
+    taskCount: number;
+    completion: number;
+    lastUpdated: string | null;
+}
 
 export default function Dashboard() {
-    const { currentUser, logout } = useAuth();
+    const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    const [projects, setProjects] = useState<Project[]>([]);
+    const [stats, setStats] = useState<ProjectStat[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -20,11 +29,32 @@ export default function Dashboard() {
 
     const canWrite = currentUser?.role === 'Admin' || currentUser?.role === 'Member';
 
+    const computeStats = (project: Project, tasks: Task[]): ProjectStat => {
+        const total = tasks.length;
+        const done = tasks.filter((t) => t.status === 'Done').length;
+        const completion = total === 0 ? 0 : Math.round((done / total) * 100);
+        const lastUpdated = tasks.reduce<string | null>(
+            (acc, t) => (acc === null || t.createdAt > acc ? t.createdAt : acc),
+            project.createdAt,
+        );
+        return { project, taskCount: total, completion, lastUpdated };
+    };
+
     const loadProjects = async () => {
         setLoading(true);
         try {
-            const { data } = await client.get<Project[]>('/projects');
-            setProjects(data);
+            const { data: projects } = await client.get<Project[]>('/projects');
+            const enriched = await Promise.all(
+                projects.map(async (p) => {
+                    try {
+                        const res = await tasksApi.byProject(p.id, 1, 100);
+                        return computeStats(p, res.data.items);
+                    } catch {
+                        return computeStats(p, []);
+                    }
+                }),
+            );
+            setStats(enriched);
         } catch {
             setError('Failed to load projects.');
         } finally {
@@ -59,54 +89,53 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="page">
-            <header className="topbar">
-                <h1>Luma</h1>
-                <div className="topbar-right">
-                    <NotificationsBell />
-                    <span className="muted">
-                        {currentUser?.fullName ?? currentUser?.email} ({currentUser?.role})
-                    </span>
-                    <button className="btn btn-ghost" onClick={logout}>
-                        Sign out
+        <AppShell breadcrumb={<span>Workspace</span>} title="Projects">
+            <div className="section-head">
+                <div>
+                    <h2>All projects</h2>
+                    <p className="muted small">{stats.length} project{stats.length === 1 ? '' : 's'}</p>
+                </div>
+                {canWrite && (
+                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                        + New Project
                     </button>
-                </div>
-            </header>
-
-            <main className="container">
-                <div className="section-head">
-                    <h2>Projects</h2>
-                    {canWrite && (
-                        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                            + New Project
-                        </button>
-                    )}
-                </div>
-
-                {error && <div className="alert alert-error">{error}</div>}
-
-                {loading ? (
-                    <p className="muted">Loading...</p>
-                ) : projects.length === 0 ? (
-                    <p className="muted">No projects yet.</p>
-                ) : (
-                    <div className="grid">
-                        {projects.map((p) => (
-                            <button
-                                key={p.id}
-                                className="card project-card"
-                                onClick={() => openProject(p.id)}
-                            >
-                                <h3>{p.name}</h3>
-                                <p className="muted">{p.description ?? 'No description'}</p>
-                                <small className="muted">
-                                    Created by {p.createdByUserFullName ?? 'Unknown'}
-                                </small>
-                            </button>
-                        ))}
-                    </div>
                 )}
-            </main>
+            </div>
+
+            {error && <div className="alert alert-error">{error}</div>}
+
+            {loading ? (
+                <p className="muted">Loading...</p>
+            ) : stats.length === 0 ? (
+                <p className="muted">No projects yet.</p>
+            ) : (
+                <div className="card table-card">
+                    <table className="table project-table">
+                        <thead>
+                            <tr>
+                                <th>Project</th>
+                                <th>Tasks</th>
+                                <th>Completion</th>
+                                <th>Status</th>
+                                <th>Updated</th>
+                                <th>Owner</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {stats.map((s) => (
+                                <ProjectListRow
+                                    key={s.project.id}
+                                    project={s.project}
+                                    taskCount={s.taskCount}
+                                    completion={s.completion}
+                                    lastUpdated={s.lastUpdated}
+                                    onOpen={() => openProject(s.project.id)}
+                                />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             {showModal && (
                 <div className="modal-backdrop" onClick={() => setShowModal(false)}>
@@ -149,6 +178,6 @@ export default function Dashboard() {
                     </form>
                 </div>
             )}
-        </div>
+        </AppShell>
     );
 }

@@ -3,7 +3,7 @@ import type {
     ActivityLog,
     Attachment,
     Notification,
-    ProjectMember,
+    ProjectMemberSummary,
     Sprint,
     TaskDependency,
     TimeLog,
@@ -44,11 +44,13 @@ export const notificationsApi = {
 };
 
 export const membersApi = {
-    list: (projectId: string) => client.get<ProjectMember[]>(`/projects/${projectId}/members`),
-    add: (projectId: string, userId: string) =>
-        client.post(`/projects/${projectId}/members`, { userId }),
+    list: (projectId: string) => client.get<ProjectMemberSummary[]>(`/projects/${projectId}/members`),
+    add: (projectId: string, userId: string, role = 'Editor') =>
+        client.post(`/projects/${projectId}/members`, { userId, role }),
     remove: (projectId: string, userId: string) =>
         client.delete(`/projects/${projectId}/members/${userId}`),
+    changeRole: (projectId: string, userId: string, role: string) =>
+        client.put(`/projects/${projectId}/members/${userId}/role`, { role }),
 };
 
 export const usersApi = {
@@ -60,6 +62,17 @@ export const tasksApi = {
         client.get<{ items: Task[]; total: number; page: number; pageSize: number; totalPages: number }>(`/tasks/project/${projectId}?page=${page}&pageSize=${pageSize}`),
     move: (taskId: string, status: string) =>
         client.put(`/tasks/${taskId}/move`, { status }),
+    create: (payload: {
+        title: string;
+        description?: string | null;
+        status?: string;
+        priority?: string;
+        type?: string;
+        parentTaskId?: string | null;
+        dueDate?: string | null;
+        projectId: string;
+        assigneeId?: string | null;
+    }) => client.post<Task>('/tasks', payload),
 };
 
 export const sprintsApi = {

@@ -20,3 +20,18 @@ public enum TaskPriority
     Medium,
     High
 }
+
+public enum TaskItemType
+{
+    Epic,
+    Story,
+    Bug,
+    Task
+}
+
+public enum ProjectRole
+{
+    Owner,
+    Editor,
+    Viewer
+}
