@@ -17,15 +17,18 @@ public class ProjectsController : ControllerBase
     private readonly AppDbContext _context;
     private readonly ActivityService _activity;
     private readonly NotificationService _notifications;
+    private readonly ProjectAuthorizationService _authz;
 
     public ProjectsController(
         AppDbContext context,
         ActivityService activity,
-        NotificationService notifications)
+        NotificationService notifications,
+        ProjectAuthorizationService authz)
     {
         _context = context;
         _activity = activity;
         _notifications = notifications;
+        _authz = authz;
     }
 
     [HttpGet]
@@ -86,7 +89,7 @@ public class ProjectsController : ControllerBase
         };
 
         _context.Projects.Add(project);
-        _context.ProjectMembers.Add(new ProjectMember { Project = project, UserId = userId });
+        _context.ProjectMembers.Add(new ProjectMember { Project = project, UserId = userId, Role = ProjectRole.Owner });
         await _context.SaveChangesAsync();
 
         await _activity.LogAsync(ActivityAction.ProjectCreated, $"Project '{project.Name}' was created", userId, project.Id);
@@ -108,10 +111,16 @@ public class ProjectsController : ControllerBase
         }
 
         var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
             return NotFound();
+        }
+
+        if (!await _authz.CanWriteProjectAsync(id, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to edit this project." });
         }
 
         project.Name = dto.Name;
@@ -141,18 +150,19 @@ public class ProjectsController : ControllerBase
     }
 
     [HttpGet("{id}/members")]
-    public async Task<ActionResult<IEnumerable<UserSummaryDto>>> GetMembers(Guid id)
+    public async Task<ActionResult<IEnumerable<ProjectMemberSummaryDto>>> GetMembers(Guid id)
     {
         var members = await _context.ProjectMembers
             .Where(m => m.ProjectId == id)
             .Include(m => m.User)
             .OrderBy(m => m.User!.FullName)
-            .Select(m => new UserSummaryDto
+            .Select(m => new ProjectMemberSummaryDto
             {
                 Id = m.User!.Id,
                 FullName = m.User.FullName,
                 Email = m.User.Email,
-                Role = m.User.Role
+                GlobalRole = m.User.Role,
+                ProjectRole = m.Role
             })
             .ToListAsync();
 
@@ -168,10 +178,17 @@ public class ProjectsController : ControllerBase
             return BadRequest(new { message = "UserId is required." });
         }
 
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
             return NotFound();
+        }
+
+        if (!await _authz.CanWriteProjectAsync(id, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to manage members of this project." });
         }
 
         var user = await _context.Users.FindAsync(dto.UserId);
@@ -188,7 +205,7 @@ public class ProjectsController : ControllerBase
         }
 
         var actorId = GetCurrentUserId();
-        _context.ProjectMembers.Add(new ProjectMember { ProjectId = id, UserId = dto.UserId });
+        _context.ProjectMembers.Add(new ProjectMember { ProjectId = id, UserId = dto.UserId, Role = dto.Role });
         await _context.SaveChangesAsync();
 
         if (actorId is not null)
@@ -209,6 +226,8 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles = "Admin,Member")]
     public async Task<IActionResult> RemoveMember(Guid id, string userId)
     {
+        var callerId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var member = await _context.ProjectMembers
             .FirstOrDefaultAsync(m => m.ProjectId == id && m.UserId == userId);
         if (member is null)
@@ -216,8 +235,67 @@ public class ProjectsController : ControllerBase
             return NotFound();
         }
 
+        if (!await _authz.CanWriteProjectAsync(id, callerId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to manage members of this project." });
+        }
+
+        // Prevent orphaning a project: the last Owner cannot be removed.
+        if (member.Role == ProjectRole.Owner)
+        {
+            var ownerCount = await _context.ProjectMembers
+                .CountAsync(m => m.ProjectId == id && m.Role == ProjectRole.Owner);
+            if (ownerCount <= 1)
+            {
+                return BadRequest(new { message = "Cannot remove the last owner of the project." });
+            }
+        }
+
         _context.ProjectMembers.Remove(member);
         await _context.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [HttpPut("{id}/members/{userId}/role")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<IActionResult> ChangeMemberRole(Guid id, string userId, ChangeMemberRoleDto dto)
+    {
+        var callerId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        var member = await _context.ProjectMembers
+            .FirstOrDefaultAsync(m => m.ProjectId == id && m.UserId == userId);
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        // Only a project Owner (or global Admin) may change member roles.
+        var callerProjectRole = await _authz.GetProjectRoleAsync(id, callerId);
+        var isOwner = callerProjectRole == ProjectRole.Owner || _authz.IsGlobalAdmin(globalRole);
+        if (!isOwner)
+        {
+            return StatusCode(403, new { message = "Only a project owner can change member roles." });
+        }
+
+        // A role change targeting the last Owner is not allowed (prevents orphaning).
+        if (member.Role == ProjectRole.Owner && dto.Role != ProjectRole.Owner)
+        {
+            var ownerCount = await _context.ProjectMembers
+                .CountAsync(m => m.ProjectId == id && m.Role == ProjectRole.Owner);
+            if (ownerCount <= 1)
+            {
+                return BadRequest(new { message = "Cannot change the role of the last owner." });
+            }
+        }
+
+        member.Role = dto.Role;
+        await _context.SaveChangesAsync();
+
+        if (callerId is not null)
+        {
+            await _activity.LogAsync(ActivityAction.MemberAdded, $"{member.UserId} role changed to {dto.Role}", callerId, id);
+        }
+
         return NoContent();
     }
 
@@ -255,10 +333,17 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles = "Admin,Member")]
     public async Task<IActionResult> EnablePublicAccess(Guid id)
     {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
             return NotFound();
+        }
+
+        if (!await _authz.CanWriteProjectAsync(id, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to manage this project." });
         }
 
         if (string.IsNullOrEmpty(project.PublicAccessToken))
@@ -267,7 +352,6 @@ public class ProjectsController : ControllerBase
             await _context.SaveChangesAsync();
         }
 
-        var userId = GetCurrentUserId();
         if (userId is not null)
         {
             await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access enabled for '{project.Name}'", userId, project.Id);
@@ -280,16 +364,22 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles = "Admin,Member")]
     public async Task<IActionResult> DisablePublicAccess(Guid id)
     {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
             return NotFound();
         }
 
+        if (!await _authz.CanWriteProjectAsync(id, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to manage this project." });
+        }
+
         project.PublicAccessToken = null;
         await _context.SaveChangesAsync();
 
-        var userId = GetCurrentUserId();
         if (userId is not null)
         {
             await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access disabled for '{project.Name}'", userId, project.Id);
@@ -302,16 +392,22 @@ public class ProjectsController : ControllerBase
     [Authorize(Roles = "Admin,Member")]
     public async Task<IActionResult> RegeneratePublicToken(Guid id)
     {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var project = await _context.Projects.FindAsync(id);
         if (project is null)
         {
             return NotFound();
         }
 
+        if (!await _authz.CanWriteProjectAsync(id, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to manage this project." });
+        }
+
         project.PublicAccessToken = Guid.NewGuid().ToString("N");
         await _context.SaveChangesAsync();
 
-        var userId = GetCurrentUserId();
         if (userId is not null)
         {
             await _activity.LogAsync(ActivityAction.ProjectUpdated, $"Public access token regenerated for '{project.Name}'", userId, project.Id);
@@ -332,4 +428,7 @@ public class ProjectsController : ControllerBase
 
     private string? GetCurrentUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    private string? GetCurrentUserRole() =>
+        User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 }

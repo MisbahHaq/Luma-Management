@@ -16,15 +16,18 @@ public class TasksController : ControllerBase
     private readonly AppDbContext _context;
     private readonly ActivityService _activity;
     private readonly NotificationService _notifications;
+    private readonly ProjectAuthorizationService _authz;
 
     public TasksController(
         AppDbContext context,
         ActivityService activity,
-        NotificationService notifications)
+        NotificationService notifications,
+        ProjectAuthorizationService authz)
     {
         _context = context;
         _activity = activity;
         _notifications = notifications;
+        _authz = authz;
     }
 
     [HttpGet("project/{projectId}")]
@@ -77,6 +80,7 @@ public class TasksController : ControllerBase
         }
 
         var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         if (userId is null)
         {
             return Unauthorized();
@@ -88,6 +92,11 @@ public class TasksController : ControllerBase
             return BadRequest(new { message = "Invalid project." });
         }
 
+        if (!await _authz.CanWriteProjectAsync(dto.ProjectId, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to add tasks to this project." });
+        }
+
         if (dto.AssigneeId is not null)
         {
             var assignee = await _context.Users.FindAsync(dto.AssigneeId);
@@ -97,12 +106,23 @@ public class TasksController : ControllerBase
             }
         }
 
+        if (dto.ParentTaskId is not null)
+        {
+            var parentError = await ValidateParentAsync(dto.ParentTaskId.Value, dto.ProjectId, null);
+            if (parentError is not null)
+            {
+                return BadRequest(new { message = parentError });
+            }
+        }
+
         var task = new TaskItem
         {
             Title = dto.Title,
             Description = dto.Description,
             Status = dto.Status,
             Priority = dto.Priority,
+            Type = dto.Type,
+            ParentTaskId = dto.ParentTaskId,
             DueDate = dto.DueDate,
             ProjectId = dto.ProjectId,
             AssigneeId = dto.AssigneeId
@@ -142,12 +162,18 @@ public class TasksController : ControllerBase
         }
 
         var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var task = await _context.Tasks
             .Include(t => t.Project)
             .FirstOrDefaultAsync(t => t.Id == id);
         if (task is null)
         {
             return NotFound();
+        }
+
+        if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to edit this task." });
         }
 
         if (dto.AssigneeId is not null)
@@ -159,11 +185,22 @@ public class TasksController : ControllerBase
             }
         }
 
+        if (dto.ParentTaskId is not null)
+        {
+            var parentError = await ValidateParentAsync(dto.ParentTaskId.Value, task.ProjectId, task.Id);
+            if (parentError is not null)
+            {
+                return BadRequest(new { message = parentError });
+            }
+        }
+
         var previousAssignee = task.AssigneeId;
         task.Title = dto.Title;
         task.Description = dto.Description;
         task.Status = dto.Status;
         task.Priority = dto.Priority;
+        task.Type = dto.Type;
+        task.ParentTaskId = dto.ParentTaskId;
         task.DueDate = dto.DueDate;
         task.AssigneeId = dto.AssigneeId;
 
@@ -194,12 +231,18 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> Move(Guid id, MoveTaskDto dto)
     {
         var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
         var task = await _context.Tasks
             .Include(t => t.Project)
             .FirstOrDefaultAsync(t => t.Id == id);
         if (task is null)
         {
             return NotFound();
+        }
+
+        if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to move this task." });
         }
 
         if (task.Status == dto.Status)
@@ -244,6 +287,12 @@ public class TasksController : ControllerBase
         }
 
         var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+        {
+            return StatusCode(403, new { message = "You do not have permission to delete this task." });
+        }
+
         _context.Tasks.Remove(task);
         await _context.SaveChangesAsync();
 
@@ -261,6 +310,8 @@ public class TasksController : ControllerBase
         Description = t.Description,
         Status = t.Status,
         Priority = t.Priority,
+        Type = t.Type,
+        ParentTaskId = t.ParentTaskId,
         DueDate = t.DueDate,
         ProjectId = t.ProjectId,
         SprintId = t.SprintId,
@@ -269,6 +320,56 @@ public class TasksController : ControllerBase
         CreatedAt = t.CreatedAt
     };
 
+    /// <summary>
+    /// Validates a proposed parent task: must exist, belong to the same project,
+    /// be of type Epic, and must not create a cycle (cannot be the task itself or
+    /// one of its own descendants).
+    /// </summary>
+    private async Task<string?> ValidateParentAsync(Guid parentId, Guid projectId, Guid? childId)
+    {
+        if (parentId == childId)
+        {
+            return "A task cannot be its own parent.";
+        }
+
+        var parent = await _context.Tasks.FindAsync(parentId);
+        if (parent is null)
+        {
+            return "Invalid parent task.";
+        }
+
+        if (parent.ProjectId != projectId)
+        {
+            return "Parent task must belong to the same project.";
+        }
+
+        if (parent.Type != TaskItemType.Epic)
+        {
+            return "Only tasks of type Epic can have child tasks.";
+        }
+
+        if (childId is not null)
+        {
+            // Walk up from the proposed parent; if we reach the child, it's a cycle.
+            var ancestorId = parent.ParentTaskId;
+            var guard = 0;
+            while (ancestorId is not null && guard++ < 100)
+            {
+                if (ancestorId == childId)
+                {
+                    return "This parent would create a cycle.";
+                }
+                var ancestor = await _context.Tasks.FindAsync(ancestorId.Value);
+                ancestorId = ancestor?.ParentTaskId;
+            }
+        }
+
+        return null;
+    }
+
     private string? GetCurrentUserId() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+    private string? GetCurrentUserRole() =>
+        User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 }

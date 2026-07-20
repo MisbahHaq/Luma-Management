@@ -17,6 +17,14 @@ public class TaskItem
 
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
+    public TaskItemType Type { get; set; } = TaskItemType.Task;
+
+    public Guid? ParentTaskId { get; set; }
+
+    public TaskItem? ParentTask { get; set; }
+
+    public ICollection<TaskItem> Children { get; set; } = new List<TaskItem>();
+
     public DateTime? DueDate { get; set; }
 
     [Required]
