@@ -151,7 +151,7 @@ export default function Reports() {
                                         <tbody>
                                             {burndown.dataPoints.map((point, idx) => (
                                                 <tr key={idx}>
-                                                    <td>{new Date(point.date).toLocaleDateString()}</td>
+                                                    <td className="timestamp">{new Date(point.date).toLocaleDateString()}</td>
                                                     <td>{point.remainingTasks}</td>
                                                     <td>{point.idealRemaining}</td>
                                                 </tr>
@@ -182,8 +182,8 @@ export default function Reports() {
                                             {velocity.dataPoints.map((point) => (
                                                 <tr key={point.sprintId}>
                                                     <td>{point.sprintName}</td>
-                                                    <td>{new Date(point.sprintStart).toLocaleDateString()}</td>
-                                                    <td>{new Date(point.sprintEnd).toLocaleDateString()}</td>
+                                                    <td className="timestamp">{new Date(point.sprintStart).toLocaleDateString()}</td>
+                                                    <td className="timestamp">{new Date(point.sprintEnd).toLocaleDateString()}</td>
                                                     <td>{point.completedTasks}</td>
                                                 </tr>
                                             ))}

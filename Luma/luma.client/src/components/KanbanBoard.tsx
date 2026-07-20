@@ -61,7 +61,7 @@ export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved }: KanbanB
                                         </small>
                                     )}
                                     {task.dueDate && (
-                                        <small className="muted">
+                                        <small className="muted timestamp">
                                             ⏰ {new Date(task.dueDate).toLocaleDateString()}
                                         </small>
                                     )}
