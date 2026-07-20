@@ -1,9 +1,12 @@
-import 'frappe-gantt/dist/frappe-gantt.js';
+import 'frappe-gantt/dist/frappe-gantt.css';
 
-// frappe-gantt's prebuilt bundle is a UMD IIFE that assigns `Gantt` to the global scope.
-// Importing it for its side effect installs `window.Gantt`, which we re-export here so
-// consumers can use a stable ESM import. The class type comes from the ambient declaration.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const Gantt: any = typeof window !== 'undefined' ? (window as any).Gantt : undefined;
+// frappe-gantt 0.6.1 ships a UMD bundle (`var Gantt = (function () { ... })();`)
+// with no ESM exports, so Vite cannot import it directly.
+// We pull the raw source via Vite's `?raw` and evaluate it in an isolated function
+// that returns the `Gantt` constructor.
+// @ts-ignore
+import ganttSource from 'frappe-gantt/dist/frappe-gantt.js?raw';
+
+const Gantt = (new Function(ganttSource + '; return Gantt;'))();
 
 export { Gantt };
