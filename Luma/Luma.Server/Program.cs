@@ -47,6 +47,19 @@ namespace Luma.Server
             })
             .AddJwtBearer(options =>
             {
+                options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Query.TryGetValue("access_token", out var token) &&
+                            context.HttpContext.WebSockets.IsWebSocketRequest)
+                        {
+                            context.Token = token.ToString();
+                        }
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    }
+                };
+
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,

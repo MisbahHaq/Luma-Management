@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import 'frappe-gantt/dist/frappe-gantt.css';
 import type { Task } from '../types/types';
 import { Gantt } from './gantt-shim';
 

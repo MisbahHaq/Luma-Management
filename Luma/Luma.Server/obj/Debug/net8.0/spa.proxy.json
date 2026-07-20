@@ -3,7 +3,7 @@
 "ServerUrl": "https://localhost:52613",
 "RedirectUrl": "",
 "LaunchCommand": "npm run dev",
-"WorkingDirectory": "C:\\Users\\Misbah\\Desktop\\Luma Management\\luma\\luma.server\\..\\luma.client",
+"WorkingDirectory": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\..\\luma.client",
 "MaxTimeoutInSeconds": "120",
 "KeepRunning": "false"
 }
