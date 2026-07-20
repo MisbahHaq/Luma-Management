@@ -271,6 +271,82 @@ namespace Luma.Server.Migrations
                     b.ToTable("Projects");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.ProjectCustomField", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FieldType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Options")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("ProjectCustomFields");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectCustomFieldValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CustomFieldId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TaskId");
+
+                    b.HasIndex("CustomFieldId", "TaskId")
+                        .IsUnique();
+
+                    b.ToTable("ProjectCustomFieldValues");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.ProjectMember", b =>
                 {
                     b.Property<Guid>("Id")
@@ -295,6 +371,82 @@ namespace Luma.Server.Migrations
                         .IsUnique();
 
                     b.ToTable("ProjectMembers");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPublic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("ProjectTemplates");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplateTask", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("ParentTemplateTaskId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid>("TemplateId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentTemplateTaskId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("ProjectTemplateTasks");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.Sprint", b =>
@@ -415,6 +567,131 @@ namespace Luma.Server.Migrations
                     b.HasIndex("SprintId");
 
                     b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.ToTable("TeamCalendars");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamCalendarEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Attendees")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CalendarId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAllDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TaskId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("CalendarId", "StartDate", "EndDate");
+
+                    b.ToTable("TeamCalendarEvents");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamMemberCapacity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("AllocatedHours")
+                        .HasColumnType("REAL");
+
+                    b.Property<double>("CapacityHours")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.HasIndex("UserId", "ProjectId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("TeamMemberCapacities");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TimeLog", b =>
@@ -670,6 +947,36 @@ namespace Luma.Server.Migrations
                     b.Navigation("CreatedByUser");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.ProjectCustomField", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectCustomFieldValue", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ProjectCustomField", "CustomField")
+                        .WithMany()
+                        .HasForeignKey("CustomFieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.TaskItem", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CustomField");
+
+                    b.Navigation("Task");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.ProjectMember", b =>
                 {
                     b.HasOne("Luma.Server.Models.Project", "Project")
@@ -687,6 +994,35 @@ namespace Luma.Server.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplate", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplateTask", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ProjectTemplateTask", "ParentTemplateTask")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentTemplateTaskId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Luma.Server.Models.ProjectTemplate", "Template")
+                        .WithMany("Tasks")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ParentTemplateTask");
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.Sprint", b =>
@@ -758,6 +1094,54 @@ namespace Luma.Server.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("Sprint");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamCalendarEvent", b =>
+                {
+                    b.HasOne("Luma.Server.Models.TeamCalendar", "Calendar")
+                        .WithMany("Events")
+                        .HasForeignKey("CalendarId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Calendar");
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamMemberCapacity", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TimeLog", b =>
@@ -845,6 +1229,16 @@ namespace Luma.Server.Migrations
                     b.Navigation("Tasks");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplate", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.ProjectTemplateTask", b =>
+                {
+                    b.Navigation("Children");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Sprint", b =>
                 {
                     b.Navigation("Tasks");
@@ -855,6 +1249,11 @@ namespace Luma.Server.Migrations
                     b.Navigation("Attachments");
 
                     b.Navigation("Comments");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
+                {
+                    b.Navigation("Events");
                 });
 #pragma warning restore 612, 618
         }

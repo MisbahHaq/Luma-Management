@@ -221,6 +221,36 @@ public class ProjectsController : ControllerBase
         return NoContent();
     }
 
+    [HttpGet("{id}/custom-fields")]
+    public async Task<ActionResult<IEnumerable<Luma.Server.DTOs.CustomFields.ProjectCustomFieldResponseDto>>> GetCustomFields(Guid id)
+    {
+        var project = await _context.Projects.FindAsync(id);
+        if (project is null)
+        {
+            return NotFound();
+        }
+
+        var fields = await _context.ProjectCustomFields
+            .Where(f => f.ProjectId == id)
+            .OrderBy(f => f.SortOrder)
+            .Select(f => new Luma.Server.DTOs.CustomFields.ProjectCustomFieldResponseDto
+            {
+                Id = f.Id,
+                ProjectId = f.ProjectId,
+                Name = f.Name,
+                FieldType = f.FieldType,
+                IsRequired = f.IsRequired,
+                Options = f.Options,
+                SortOrder = f.SortOrder,
+                IsActive = f.IsActive,
+                CreatedAt = f.CreatedAt,
+                UpdatedAt = f.UpdatedAt
+            })
+            .ToListAsync();
+
+        return Ok(fields);
+    }
+
     private static ProjectResponseDto ToDto(Project p) => new()
     {
         Id = p.Id,
