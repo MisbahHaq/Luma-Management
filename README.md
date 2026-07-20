@@ -62,6 +62,17 @@ role-based (`Admin`, `Member`, `Viewer`).
 | Routing | React Router 6 |
 | HTTP client | Axios (with auth interceptor) |
 | Styling | Plain CSS (`src/index.css`) |
+| Fonts | Newsreader (voice/headings) + IBM Plex Mono (data, timestamps, keys) |
+
+### UI / UX
+
+The client is a structured, Linear/Jira-style work tracker with a warm, professional theme (no cold slate):
+
+- **App shell** — collapsible left sidebar (Home, Projects, Sprints, Tasks, Reports, Members, Settings) and a per-page top bar showing a breadcrumb (`Workspace › Project`), page title, status pill, and an overall project progress bar computed from task completion %.
+- **Projects list** — a dense table (`ProjectListRow`) with name, description (hidden when empty), task count, completion %, status pill, last updated, and owner avatar. `+ New Project` sits top-right.
+- **Project issue hierarchy** — `IssueHierarchyTable` groups tasks under **Epics** (collapsible group headers with child count + aggregate progress) and shows ungrouped tasks under a Backlog section. Each row shows a derived key (`PROJECT-N`), a `TypeBadge` (Epic/Story/Bug/Task), title, `StatusPill`, `PriorityPill`, assignee avatar, and a kebab menu. Includes a search box and a Filters popover (status/priority/type), plus an inline "+" add row under each group.
+- **Shared components** — `StatusPill`, `PriorityPill`, `TypeBadge`, `Avatar`, `ProgressTrack`, and `KebabMenu` are reused across the list, Kanban, and table views.
+- **Task forms** — create/edit modals include a Type selector and an optional Epic parent picker (lists only `Type=Epic` tasks in the same project). |
 
 ---
 
@@ -144,7 +155,7 @@ Request
 | --- | --- |
 | `ApplicationUser` (IdentityUser) | `FullName?`, `Role` (`Admin`/`Member`/`Viewer`) |
 | `Project` | `Id`, `Name`, `Description?`, `CreatedAt`, `CreatedByUserId` → `ApplicationUser`, `TenantId?` → `Tenant`, `PublicAccessToken?` |
-| `TaskItem` | `Id`, `Title`, `Description?`, `Status` (`ToDo`/`InProgress`/`Done`), `Priority` (`Low`/`Medium`/`High`), `DueDate?`, `ProjectId` → `Project`, `SprintId?` → `Sprint`, `AssigneeId?` → `ApplicationUser` |
+| `TaskItem` | `Id`, `Title`, `Description?`, `Status` (`ToDo`/`InProgress`/`Done`), `Priority` (`Low`/`Medium`/`High`/`Critical`), `Type` (`Epic`/`Story`/`Bug`/`Task`), `ParentTaskId?` → `TaskItem` (self-ref, Epic only), `DueDate?`, `ProjectId` → `Project`, `SprintId?` → `Sprint`, `AssigneeId?` → `ApplicationUser` |
 | `Comment` | `Id`, `TaskId` → `TaskItem`, `UserId` → `ApplicationUser`, `Text`, `CreatedAt` |
 | `Sprint` | `Id`, `Name`, `Description?`, `Status` (`Planned`/`Active`/`Completed`), `StartDate?`, `EndDate?`, `ProjectId` → `Project`, `CreatedByUserId` → `ApplicationUser` |
 | `TaskDependency` | `Id`, `TaskId` → `TaskItem`, `DependsOnTaskId` → `TaskItem`, `Type` (`Blocks`/`BlockedBy`), `ProjectId` → `Project` |
@@ -284,10 +295,16 @@ Base URL: `/api`
 | --- | --- | --- |
 | GET | `/tasks/project/{projectId}` | Tasks for a project. Query: `?page=1&pageSize=20` |
 | GET | `/tasks/{id}` | Single task |
-| POST | `/tasks` | Create (Admin/Member) |
-| PUT | `/tasks/{id}` | Update status/priority/assignee (Admin/Member) |
+| POST | `/tasks` | Create (Admin/Member). Body may include `type` (`Epic`/`Story`/`Bug`/`Task`) and `parentTaskId` |
+| PUT | `/tasks/{id}` | Update title/description/status/priority/assignee/**type**/**parentTaskId** (Admin/Member) |
 | PUT | `/tasks/{id}/move` | Move task between statuses (Admin/Member) |
-| DELETE | `/tasks/{id}` | Delete (Admin/Member) |
+| DELETE | `/tasks/{id}` | Delete (Admin/Member). Children are **not** cascade-deleted — delete/reassign them first |
+
+**Task hierarchy validation** (enforced on create/update):
+- `parentTaskId`, when set, must reference an existing task in the **same project** whose `type` is `Epic`.
+- Non-Epic tasks cannot be parents.
+- A task cannot reference itself or one of its own descendants as a parent (cycle rejection).
+- The self-referencing relationship uses `DeleteBehavior.Restrict`, so deleting an Epic with children is rejected until the children are removed or reassigned.
 
 ### Comments — `CommentsController` (authenticated)
 | Method | Route | Notes |
