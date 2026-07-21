@@ -6,6 +6,9 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import Reports from './pages/Reports';
+import ReportsPage from './pages/ReportsPage';
+import SprintsPage from './pages/SprintsPage';
+import TasksPage from './pages/TasksPage';
 import Placeholder from './pages/Placeholder';
 import PublicPortal from './pages/PublicPortal';
 
@@ -47,10 +50,7 @@ export default function App() {
                 path="/reports"
                 element={
                     <ProtectedRoute>
-                        <Placeholder
-                            title="Reports"
-                            hint="Open a project and choose Reports from its header to see health, burndown, and velocity."
-                        />
+                        <ReportsPage />
                     </ProtectedRoute>
                 }
             />
@@ -66,10 +66,7 @@ export default function App() {
                 path="/sprints"
                 element={
                     <ProtectedRoute>
-                        <Placeholder
-                            title="Sprints"
-                            hint="Open a project and switch to the Plan view to manage sprints, dependencies, and time tracking."
-                        />
+                        <SprintsPage />
                     </ProtectedRoute>
                 }
             />
@@ -77,10 +74,7 @@ export default function App() {
                 path="/tasks"
                 element={
                     <ProtectedRoute>
-                        <Placeholder
-                            title="Tasks"
-                            hint="Open a project to see its issue list grouped by Epic."
-                        />
+                        <TasksPage />
                     </ProtectedRoute>
                 }
             />
