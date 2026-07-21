@@ -1,554 +1,202 @@
-# Luma — Project Management Tool
+# Luma Management
 
-Luma is a full-stack project management application. It lets teams organize work into
-**Projects**, break them down into **Tasks** (with status, priority, due dates, and
-assignees), discuss tasks through **Comments**, and visualize progress on a **Kanban
-board**, a **list view**, or a **planning view** (Gantt, sprints, dependencies, time
-tracking).
-
-- **Phase 1** covers the core MVP (auth, RBAC, projects, tasks, comments, Kanban + list).
-- **Phase 2** adds collaboration (file attachments, real-time SignalR updates, in-app + email
-  notifications, per-task/project activity logs).
-- **Phase 3** adds planning (sprints/milestones, a Gantt timeline, task dependencies with
-  cycle detection, and time tracking / timesheets).
-- **Phase 4** adds team & resource management (workload/capacity view, team calendars,
-  custom fields per project, project templates).
-- **Phase 5** adds reporting & insights (burndown charts, velocity, project health,
-  PDF/Excel exports, client-facing read-only portal).
-- **Phase 6** adds enterprise/scale features (multi-tenancy, SSO/OIDC, webhooks + public
-  API for integrations, API keys, rate limiting, background job queue with retries and
-  dead-letter handling).
-
-Authentication is handled with ASP.NET Core Identity + JWT bearer tokens, and access is
-role-based (`Admin`, `Member`, `Viewer`).
-
----
-
-## Table of Contents
-- [Tech Stack](#tech-stack)
-- [Solution Structure](#solution-structure)
-- [Architecture Overview](#architecture-overview)
-- [Data Model](#data-model)
-- [Authentication & Authorization](#authentication--authorization)
-- [API Reference](#api-reference)
-- [Getting Started](#getting-started)
-- [Project Structure](#project-structure)
-- [Environment / Configuration](#environment--configuration)
+Luma is a full-stack, self-hosted project management and work-tracking platform. It supports project planning, task management, sprint tracking, time logging, reporting, team collaboration, and public client portals — all within a modern, unified interface.
 
 ---
 
 ## Tech Stack
 
-### Backend — `Luma.Server`
-| Concern | Technology |
-| --- | --- |
-| Framework | ASP.NET Core 8 (Web API) |
-| Language | C# 12 (Nullable enabled, ImplicitUsings) |
-| ORM | Entity Framework Core 8 |
-| Database | **SQLite** (file: `Luma.Server/luma.db`) |
-| Authentication | ASP.NET Core Identity + JWT Bearer |
-| SSO | OpenID Connect (Microsoft.AspNetCore.Authentication.OpenIdConnect) |
-| PDF Export | QuestPDF 2024.12.0 |
-| Excel Export | ClosedXML 0.104.2 |
-| API Docs | Swagger / OpenAPI (Swashbuckle) |
-| Dev Proxy | `Microsoft.AspNetCore.SpaProxy` (launches the SPA) |
-
-### Frontend — `luma.client`
-| Concern | Technology |
-| --- | --- |
-| Framework | React 19 |
-| Language | TypeScript |
-| Build tool | Vite 8 |
-| Routing | React Router 6 |
-| HTTP client | Axios (with auth interceptor) |
-| Styling | Plain CSS (`src/index.css`) |
-| Fonts | Newsreader (voice/headings) + IBM Plex Mono (data, timestamps, keys) |
-
-### UI / UX
-
-The client is a structured, Linear/Jira-style work tracker with a warm, professional theme (no cold slate):
-
-- **App shell** — collapsible left sidebar (Home, Projects, Sprints, Tasks, Reports, Members, Settings) and a per-page top bar showing a breadcrumb (`Workspace › Project`), page title, status pill, and an overall project progress bar computed from task completion %.
-- **Projects list** — a dense table (`ProjectListRow`) with name, description (hidden when empty), task count, completion %, status pill, last updated, and owner avatar. `+ New Project` sits top-right.
-- **Project issue hierarchy** — `IssueHierarchyTable` groups tasks under **Epics** (collapsible group headers with child count + aggregate progress) and shows ungrouped tasks under a Backlog section. Each row shows a derived key (`PROJECT-N`), a `TypeBadge` (Epic/Story/Bug/Task), title, `StatusPill`, `PriorityPill`, assignee avatar, and a kebab menu. Includes a search box and a Filters popover (status/priority/type), plus an inline "+" add row under each group.
-- **Shared components** — `StatusPill`, `PriorityPill`, `TypeBadge`, `Avatar`, `ProgressTrack`, and `KebabMenu` are reused across the list, Kanban, and table views.
-- **Task forms** — create/edit modals include a Type selector and an optional Epic parent picker (lists only `Type=Epic` tasks in the same project). |
+| Layer | Technology |
+|-------|-----------|
+| **Backend** | ASP.NET Core 8 (Web API) + C# 12 |
+| **Database** | SQLite via Entity Framework Core 8 |
+| **Auth** | ASP.NET Core Identity + JWT Bearer (12h) |
+| **SSO** | OpenID Connect |
+| **Real-time** | SignalR (`NotificationHub`) |
+| **PDF Export** | QuestPDF |
+| **Excel Export** | ClosedXML |
+| **API Docs** | Swashbuckle (Swagger / OpenAPI) |
+| **Frontend** | React 19 + TypeScript + Vite 8 |
+| **Routing** | React Router 6 |
+| **Styling** | Plain CSS with modern design system |
+| **Gantt** | Frappe Gantt |
 
 ---
 
-## Solution Structure
+## What It Can Do
 
-```
-Luma/
-├── Luma.slnx                 # Solution file
-├── Luma.Server/              # ASP.NET Core Web API + EF Core + Identity + JWT
-│   ├── Controllers/          # Auth, Projects, Tasks, Comments, Users, Sprints,
-│   │                         # Dependencies, TimeLogs, Reports, Export, Webhooks,
-│   │                         # ApiKeys, Tenants, SSO, PublicPortal, BackgroundJobs
-│   ├── Models/               # ApplicationUser, Project, TaskItem, Comment, Sprint,
-│   │                         # TaskDependency, TimeLog, Enums, ActivityLog, etc.
-│   ├── DTOs/                 # Auth, Projects, Tasks, Comments, Users, Reports,
-│   │                         # Workload, TeamCalendars, CustomFields, ProjectTemplates,
-│   │                         # ApiKeys, Webhooks, Tenants, BackgroundJobs
-│   ├── Data/                 # AppDbContext + SeedData
-│   ├── Services/             # JwtService, ActivityService, NotificationService,
-│   │                         # WebhookDispatcherService, BackgroundJobService, SsoOptions
-│   ├── Middleware/            # TenantResolutionMiddleware, ApiKeyAuthenticationMiddleware,
-│   │                         # RateLimitingMiddleware
-│   ├── Hubs/                 # NotificationHub (SignalR)
-│   ├── Migrations/           # EF Core migrations (Phase1–Phase6)
-│   ├── appsettings.json      # ConnectionStrings + Jwt + Sso + Storage + Email
-│   └── luma.db               # SQLite database file (created at runtime)
-└── luma.client/              # React + TypeScript + Vite SPA
-    ├── src/
-    │   ├── api/              # Axios client (attaches JWT) + endpoint definitions
-    │   ├── components/       # KanbanBoard, TaskDetailModal, GanttView, SprintsPanel,
-    │   │                     # TimeTracking, DependenciesPanel, NotificationsBell
-    │   ├── context/          # AuthContext (auth state), NotificationContext
-    │   ├── pages/            # Login, Register, Dashboard, ProjectDetail, Reports,
-    │   │                     # PublicPortal
-    │   ├── types/            # TypeScript types mapped to C# DTOs
-    │   └── index.css         # Global styles + component styles
-    └── vite.config.ts        # Dev server + /api proxy
-```
+### Authentication & Access Control
+- **JWT-based login/registration** with role-based access control
+- **Global roles**: `Admin`, `Member`, `Viewer`
+- **Per-project roles**: `Owner`, `Editor`, `Viewer`
+- **SSO via OpenID Connect** (configurable authority/client/secret)
+- **API Key authentication** for third-party integrations (`X-Api-Key`)
+- **Rate limiting** — 100 requests/minute per API key or IP
+- **Seeded admin account** — `admin@luma.com` / `Admin@123`
 
----
+### Project Management
+- Create, update, and delete projects
+- Project listing with task counts and completion percentages
+- **Project members** — add/remove members, change roles (Owner/Editor/Viewer)
+- **Last Owner protection** — last Owner cannot be removed or demoted
+- **Public access tokens** — generate/regenerate/revoke tokens for external sharing
+- **Custom fields** per project (Text, Number, Date, Select)
+- **Project templates** — create reusable templates with nested task structures
+- Create projects from templates
 
-## Architecture Overview
+### Task & Issue Management
+- Full CRUD for tasks with title, description, status, priority, type, assignee, and due date
+- **Task types**: Epic, Story, Bug, Task
+- **Priorities**: Low, Medium, High, Critical
+- **Statuses**: ToDo, InProgress, Done
+- **Task hierarchy** — Epics can have child tasks (with cycle detection)
+- **Inline quick-add** for fast task creation under Epics and in the backlog
+- **Kanban board** with drag-and-drop status changes
+- **List view** with collapsible Epic groups, search, and filter popover
+- **Task detail modal** with full editing, comments, attachments, and activity log
+- Pagination on task lists
 
-- **Backend** exposes a REST API under `/api`. It uses EF Core against a local SQLite
-  database, ASP.NET Core Identity for user storage, and issues a signed JWT on login/register.
-- **Frontend** is a Single Page Application. It talks to the API through an Axios instance
-  (`src/api/client.ts`) that automatically attaches the `Authorization: Bearer <token>`
-  header and redirects to login on a `401`.
-- **Dev workflow:** running `dotnet run` in `Luma.Server` starts the API **and** the Vite
-  dev server (via SpaProxy). The SPA is served on `https://localhost:52613` and proxies
-  `/api` calls to the backend.
+### Sprint Management
+- Create, update, and delete sprints with name, description, status, and dates
+- **Sprint statuses**: Planned, Active, Completed
+- Assign and remove tasks from sprints
+- Sprint progress tracking (completion %)
+- Expandable sprint panels showing assigned tasks
 
-### Request flow
-```
-Browser (React SPA :52613)
-   │  GET/POST /api/...
-   ▼
-Vite dev server  ──proxies /api──►  ASP.NET Core API (:7023 https / :5177 http)
-                                          │  JWT Bearer auth (Issuer/Audience/Lifetime/Key)
-                                          ▼
-                                    EF Core  ──►  SQLite (luma.db)
-```
+### Dependencies & Gantt
+- **Task dependencies** — `Blocks` and `BlockedBy` relationships
+- **Cycle detection** (BFS-based) prevents circular dependencies
+- **Gantt timeline view** using Frappe Gantt with status-colored bars
+- **Dependencies panel** for managing task blockers
 
-### Middleware pipeline
-```
-Request
-  → RateLimitingMiddleware (100 req/min per key/IP)
-  → ApiKeyAuthenticationMiddleware (X-Api-Key auth for integrations)
-  → TenantResolutionMiddleware (X-Tenant-Id / query param resolution)
-  → Authentication / Authorization
-  → Controllers
-```
+### Time Tracking
+- Log hours per task with date and optional note
+- Timesheet view showing all time logs for a project
+- Per-user time log endpoints
+- Total hours tracking per project and per user
+- Delete own time logs
 
----
+### Comments & Activity
+- **Comments** on tasks (paginated)
+- **Activity logs** per task and per project (25 action types)
+- Tracked actions: ProjectCreated/Updated/Deleted, TaskCreated/Updated/Moved/Deleted, CommentAdded, AttachmentAdded/Removed, MemberAdded/Removed, SprintCreated/Updated/Completed, DependencyAdded/Removed, TimeLogged
 
-## Data Model
+### File Attachments
+- Upload, download, and delete attachments on tasks
+- Local filesystem or MinIO/S3 storage (pluggable)
+- 25MB upload limit
+- File metadata: name, content type, size, uploader, timestamp
 
-### Core entities
-| Entity | Key fields |
-| --- | --- |
-| `ApplicationUser` (IdentityUser) | `FullName?`, `Role` (`Admin`/`Member`/`Viewer`) |
-| `Project` | `Id`, `Name`, `Description?`, `CreatedAt`, `CreatedByUserId` → `ApplicationUser`, `TenantId?` → `Tenant`, `PublicAccessToken?` |
-| `TaskItem` | `Id`, `Title`, `Description?`, `Status` (`ToDo`/`InProgress`/`Done`), `Priority` (`Low`/`Medium`/`High`/`Critical`), `Type` (`Epic`/`Story`/`Bug`/`Task`), `ParentTaskId?` → `TaskItem` (self-ref, Epic only), `DueDate?`, `ProjectId` → `Project`, `SprintId?` → `Sprint`, `AssigneeId?` → `ApplicationUser` |
-| `Comment` | `Id`, `TaskId` → `TaskItem`, `UserId` → `ApplicationUser`, `Text`, `CreatedAt` |
-| `Sprint` | `Id`, `Name`, `Description?`, `Status` (`Planned`/`Active`/`Completed`), `StartDate?`, `EndDate?`, `ProjectId` → `Project`, `CreatedByUserId` → `ApplicationUser` |
-| `TaskDependency` | `Id`, `TaskId` → `TaskItem`, `DependsOnTaskId` → `TaskItem`, `Type` (`Blocks`/`BlockedBy`), `ProjectId` → `Project` |
-| `TimeLog` | `Id`, `TaskId` → `TaskItem`, `ProjectId` → `Project`, `UserId` → `ApplicationUser`, `Date`, `Hours`, `Note?`, `CreatedAt` |
-| `Attachment` | `Id`, `TaskId` → `TaskItem`, `FileName`, `ContentType`, `SizeBytes`, `UploadedById` → `ApplicationUser`, `CreatedAt` |
-| `ActivityLog` | `Id`, `Action` (enum), `Description`, `ProjectId?`, `TaskId?`, `ActorId` → `ApplicationUser`, `CreatedAt` |
-| `Notification` | `Id`, `RecipientId` → `ApplicationUser`, `Type`, `Message`, `Link?`, `ProjectId?`, `TaskId?`, `IsRead`, `CreatedAt` |
-| `ProjectMember` | `Id`, `ProjectId` → `Project`, `UserId` → `ApplicationUser`, `AddedAt` |
+### Notifications
+- **In-app notifications** via SignalR real-time hub
+- Notification bell with unread count badge
+- Mark as read / mark all as read
+- **Email notifications** (SendGrid or SMTP) for task assignments, comments, etc.
+- Notification types: TaskAssigned, TaskStatusChanged, CommentAdded, AttachmentAdded, MemberAdded, Mentioned, SprintCreated, DependencyAdded, TimeLogged
 
-### Team & Resource Management (Phase 4)
-| Entity | Key fields |
-| --- | --- |
-| `TeamMemberCapacity` | `Id`, `UserId`, `ProjectId` → `Project`, `Date`, `CapacityHours`, `AllocatedHours`, `CreatedAt`, `UpdatedAt` |
-| `TeamCalendar` | `Id`, `Name`, `Color?`, `Description?`, `IsDefault`, `CreatedByUserId` → `ApplicationUser`, `CreatedAt` |
-| `TeamCalendarEvent` | `Id`, `CalendarId` → `TeamCalendar`, `Title`, `Description?`, `StartDate`, `EndDate`, `IsAllDay`, `ProjectId?`, `TaskId?`, `Attendees?`, `CreatedAt`, `UpdatedAt` |
-| `ProjectCustomField` | `Id`, `ProjectId` → `Project`, `Name`, `FieldType` (Text/Number/Date/Select), `IsRequired`, `Options?`, `SortOrder`, `IsActive`, `CreatedAt`, `UpdatedAt` |
-| `ProjectCustomFieldValue` | `Id`, `CustomFieldId` → `ProjectCustomField`, `TaskId` → `TaskItem`, `Value?`, `CreatedAt`, `UpdatedAt` |
-| `ProjectTemplate` | `Id`, `Name`, `Description?`, `Icon?`, `Category?`, `IsPublic`, `CreatedByUserId` → `ApplicationUser`, `CreatedAt` |
-| `ProjectTemplateTask` | `Id`, `TemplateId` → `ProjectTemplate`, `Title`, `Description?`, `Priority`, `SortOrder`, `ParentTemplateTaskId?` → self |
+### Reporting & Analytics
+- **Dashboard summary** — total projects, tasks, completed, in-progress, overdue, overall completion rate
+- **Project health** — completion %, overdue tasks, status/priority distributions, assignee workload, time logged
+- **Burndown chart** — remaining tasks vs ideal line per active sprint
+- **Velocity tracking** — completed tasks per sprint, average velocity
+- **Cross-project dashboard** — Admins can see all projects at a glance
 
-### Reporting & Insights (Phase 5)
-- Dashboard summary, burndown data, velocity, project health — computed from tasks, sprints, and time logs.
+### Team & Resource Management
+- **Team calendars** CRUD with color and description
+- **Calendar events** with title, start/end, all-day flag, project/task linking, attendees
+- Date range queries for calendar events
+- **Team member capacity** — capacity hours and allocated hours per user per day
+- **Resource utilization** view (task count, active projects, utilization %)
+- **Workload dashboard** combining utilization and timeline
 
-### Enterprise / Scale (Phase 6)
-| Entity | Key fields |
-| --- | --- |
-| `Tenant` | `Id`, `Name`, `Slug` (unique), `IsActive`, `CreatedByUserId` → `ApplicationUser`, `CreatedAt` |
-| `ApiKey` | `Id`, `TenantId` → `Tenant`, `Name`, `KeyPrefix`, `KeyHash` (SHA-256), `Scopes?`, `ExpiresAt?`, `CreatedByUserId`, `LastUsedAt?`, `IsActive`, `CreatedAt` |
-| `WebhookSubscription` | `Id`, `TenantId` → `Tenant`, `ProjectId?`, `Url`, `Secret`, `Events` (comma-separated), `IsActive`, `CreatedByUserId`, `CreatedAt` |
-| `WebhookDelivery` | `Id`, `SubscriptionId` → `WebhookSubscription`, `EventType`, `Payload`, `Status` (`Pending`/`Succeeded`/`Failed`/`DeadLettered`), `Attempts`, `MaxAttempts`, `NextAttemptAt?`, `LastError?`, `CreatedAt`, `CompletedAt?` |
-| `BackgroundJob` | `Id`, `TenantId?`, `Type`, `Payload`, `Status` (`Pending`/`Processing`/`Completed`/`Failed`/`DeadLettered`), `Priority`, `Attempts`, `MaxAttempts`, `NextAttemptAt?`, `CreatedAt`, `StartedAt?`, `CompletedAt?`, `Error?`, `ParentJobId?`, `LockedUntil?` |
+### Custom Fields
+- Per-project custom fields: Text, Number, Date, Select
+- Required flag, sort order
+- Custom field values per task
+- Options support for Select type
 
-### Pagination
-List endpoints return `PagedResult<T>`:
-```json
-{
-  "items": [],
-  "total": 0,
-  "page": 1,
-  "pageSize": 20,
-  "totalPages": 0
-}
-```
+### Project Templates
+- Create, update, and delete templates
+- Public/private visibility
+- Hierarchical template tasks (parent/child)
+- Category and icon support
+- Create project from template (copies tasks as ToDo)
 
-Query params: `?page=1&pageSize=20`. Defaults vary by endpoint (typically 20). Pass a larger `pageSize` (e.g. `100`) when you need more records for views like Kanban.
+### Public Portal
+- Token-gated read-only access for external clients
+- View project metadata, task list, member list, and health metrics
+- Accessible via `/portal/:projectId`
 
-### Relationships
-- A **Project** has many **Tasks** (cascade delete).
-- A **Task** has many **Comments** (cascade delete).
-- A **Task** has many **Attachments** (cascade delete).
-- A **Task** has an optional **Assignee** (set null on user delete).
-- A **Project** has a **CreatedByUser** (restrict delete).
-- A **Project** has many **Sprints** (cascade delete). A **Task** may belong to one **Sprint** (set null on sprint delete).
-- A **Task** may have many **TaskDependencies** (blocking / blocked-by). Cycles are rejected at creation time.
-- A **Task** has many **TimeLogs** (cascade delete).
-- A **Project** optionally belongs to a **Tenant** (set null on tenant delete).
-- A **Tenant** has many **Projects**.
-- A **WebhookSubscription** belongs to a **Tenant** and optionally a **Project**.
-- A **WebhookSubscription** has many **WebhookDeliveries** (cascade delete).
-- A **BackgroundJob** is optionally scoped to a **Tenant** and can have a **ParentJobId**.
+### Export
+- **PDF export** — project report (summary + task list) via QuestPDF
+- **Excel export** — project tasks as `.xlsx` via ClosedXML
+- **Burndown PDF export** — burndown data as formatted PDF table
 
----
+### Multi-Tenancy
+- Tenant entity with name, slug, and active status
+- TenantId on Project (optional)
+- Global query filters for tenant isolation
+- Cross-tenant Admin views
 
-## Authentication & Authorization
+### Webhooks & Integrations
+- Create/update/delete webhook subscriptions
+- Tenant and project scoping
+- Event selection (comma-separated)
+- Secret signing (`X-Luma-Signature` header)
+- Delivery tracking with status, attempts, and errors
+- Retry with exponential backoff
+- Dead-letter queue after max attempts
 
-- On **Register** / **Login**, the server validates credentials and returns a `token` (JWT)
-  plus the user profile (`id`, `email`, `fullName`, `role`).
-- The JWT carries the user `Id`, `Email`, and `Role` claims and is valid for 12 hours.
-- The client stores the token in `localStorage` (`luma_token`, `luma_user`).
-- **SSO** is supported via OpenID Connect. Configure `Sso:Authority`, `Sso:ClientId`,
-  `Sso:ClientSecret`, and `Sso:Scopes` in `appsettings.json`. Endpoints:
-  - `GET /api/sso/login` — initiates OIDC challenge
-  - `GET /api/sso/callback` — exchanges code for JWT and returns it to the client
-- **API keys** can be issued for third-party integrations. Send `X-Api-Key: <key>` to
-  authenticate without a JWT. Keys are hashed (SHA-256) server-side; only the prefix and
-  raw key are shown once at creation time.
-
-### Role-based access (RBAC)
-
-There are two layers of roles:
-
-- **Global role** (`User.Role`): `Admin`, `Member`, `Viewer`. Carried in the JWT `Role` claim.
-- **Per-project role** (`ProjectMember.Role`): `Owner`, `Editor`, `Viewer`. Determines what a user may do *within a specific project*.
-
-| Capability | Global Admin | Global Member | Global Viewer | Project Owner | Project Editor | Project Viewer |
-| --- | --- | --- | --- | --- | --- | --- |
-| View projects / tasks / comments | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Create / edit / delete **Tasks** in a project | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
-| Edit / delete **Project** | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
-| Manage project **members** (add/remove) | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
-| Change a member's **project role** | ✅ (bypass) | ❌ | ❌ | ✅ only | ❌ | ❌ |
-| Manage public access token | ✅ (bypass) | ❌* | ❌ | ✅ | ✅ | ❌ |
-| Create a **new Project** | ✅ | ✅ | ❌ | — | — | — |
-| Add **Comments** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| List **Users** (for assignment) | ✅ | ✅ | ❌ | — | — | — |
-| Manage tenants, API keys, webhooks, jobs | ✅ | ❌ | ❌ | — | — | — |
-
-\* Global `Member` alone is **not** sufficient for project writes — they must also be a project `Owner` or `Editor`. Global `Admin` always bypasses per-project checks (platform override). Global `Viewer` is never granted write access regardless of project role.
-
-**Enforcement:**
-- Read endpoints are gated by `[Authorize]` (any authenticated user).
-- Write endpoints keep the global `[Authorize(Roles = "Admin,Member")]` attribute **and** additionally call `ProjectAuthorizationService.CanWriteProjectAsync(projectId, userId, globalRole)` (or require project `Owner` for role changes). A `403` is returned when the caller lacks the per-project role.
-- The project **creator is auto-added as `ProjectMember` with `Role = Owner`** on project creation.
-- The **last Owner cannot be removed or demoted** (prevents orphaned projects).
-- Mirrored client-side via `canEdit` and `isProjectOwner` in the UI.
-
-**Endpoints added/changed:**
-- `POST /projects/{id}/members` — body accepts `role` (`Owner`/`Editor`/`Viewer`, defaults to `Editor`).
-- `PUT /projects/{id}/members/{userId}/role` — change a member's project role (project **Owner** or global **Admin** only).
-- `GET /projects/{id}/members` — now returns `ProjectMemberSummaryDto` (`id`, `fullName`, `email`, `globalRole`, `projectRole`).
-
-Migration: `AddProjectMemberRole` (adds `Role` column to `ProjectMembers`, default `Editor`).
-
-### Seeded account
-On first run the database is migrated and a default admin is created:
-
-```
-Email:    admin@luma.com
-Password: Admin@123
-```
-
-> Change the JWT signing key in `appsettings.json` before deploying to production.
-
----
-
-## API Reference
-
-Base URL: `/api`
-
-### Auth — `AuthController` (public)
-| Method | Route | Body | Returns |
-| --- | --- | --- | --- |
-| POST | `/auth/register` | `{ email, password, fullName?, role }` | `AuthResponse` (token + user) |
-| POST | `/auth/login` | `{ email, password }` | `AuthResponse` (token + user) |
-
-### SSO — `SsoController` (public)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/sso/login` | Initiates OpenID Connect challenge |
-| GET | `/sso/callback` | OIDC callback; returns JWT for matched local user |
-
-### Projects — `ProjectsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/projects` | List all projects |
-| GET | `/projects/{id}` | Single project |
-| POST | `/projects` | Create (Admin/Member) |
-| PUT | `/projects/{id}` | Update (Admin/Member) |
-| DELETE | `/projects/{id}` | Delete (Admin only) |
-| GET | `/projects/{id}/members` | List project members |
-| POST | `/projects/{id}/members` | Add member (Admin/Member) |
-| DELETE | `/projects/{id}/members/{userId}` | Remove member (Admin/Member) |
-| GET | `/projects/{id}/custom-fields` | List custom fields |
-| POST | `/projects/{id}/public-access` | Enable public access + generate token |
-| DELETE | `/projects/{id}/public-access` | Disable public access |
-| POST | `/projects/{id}/public-access/regenerate` | Rotate public access token |
-
-### Tasks — `TasksController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/tasks/project/{projectId}` | Tasks for a project. Query: `?page=1&pageSize=20` |
-| GET | `/tasks/{id}` | Single task |
-| POST | `/tasks` | Create (Admin/Member). Body may include `type` (`Epic`/`Story`/`Bug`/`Task`) and `parentTaskId` |
-| PUT | `/tasks/{id}` | Update title/description/status/priority/assignee/**type**/**parentTaskId** (Admin/Member) |
-| PUT | `/tasks/{id}/move` | Move task between statuses (Admin/Member) |
-| DELETE | `/tasks/{id}` | Delete (Admin/Member). Children are **not** cascade-deleted — delete/reassign them first |
-
-**Task hierarchy validation** (enforced on create/update):
-- `parentTaskId`, when set, must reference an existing task in the **same project** whose `type` is `Epic`.
-- Non-Epic tasks cannot be parents.
-- A task cannot reference itself or one of its own descendants as a parent (cycle rejection).
-- The self-referencing relationship uses `DeleteBehavior.Restrict`, so deleting an Epic with children is rejected until the children are removed or reassigned.
-
-### Comments — `CommentsController` (authenticated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/comments/task/{taskId}` | Comments for a task. Query: `?page=1&pageSize=20` |
-| POST | `/comments` | Add a comment (any authenticated user) |
-
-### Users — `UsersController` (Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/users` | List users (used to populate the assignee dropdown) |
-
-### Sprints — `SprintsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/sprints/project/{projectId}` | Sprints for a project |
-| GET | `/sprints/{id}` | Single sprint |
-| POST | `/sprints` | Create sprint (Admin/Member) |
-| PUT | `/sprints/{id}` | Update (Admin/Member) |
-| DELETE | `/sprints/{id}` | Delete (Admin/Member) |
-| PUT | `/sprints/{id}/tasks/{taskId}` | Assign a task to the sprint (Admin/Member) |
-| DELETE | `/sprints/{id}/tasks/{taskId}` | Remove a task from the sprint (Admin/Member) |
-
-### Task Dependencies — `TaskDependenciesController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/taskdependencies/project/{projectId}` | All dependencies in a project |
-| GET | `/taskdependencies/task/{taskId}` | Dependencies touching a task |
-| POST | `/taskdependencies` | Create (rejects self-links and cycles) |
-| DELETE | `/taskdependencies/{id}` | Remove |
-
-### Time Logs — `TimeLogsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/timelogs/task/{taskId}` | Time logs for a task. Query: `?page=1&pageSize=20` |
-| GET | `/timelogs/project/{projectId}` | Time logs for a project. Query: `?page=1&pageSize=20` |
-| GET | `/timelogs/user/{userId}` | A user's time logs. Query: `?page=1&pageSize=20` |
-| POST | `/timelogs` | Log hours against a task (Admin/Member) |
-| DELETE | `/timelogs/{id}` | Delete (Admin/Member) |
-
-### Reports — `ReportsController` (authenticated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/reports/dashboard` | Cross-project dashboard summary |
-| GET | `/reports/projects/{projectId}/burndown` | Active sprint burndown data |
-| GET | `/reports/projects/{projectId}/velocity` | Completed sprint velocity |
-| GET | `/reports/projects/{projectId}/health` | Project health metrics |
-
-### Export — `ExportController` (authenticated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/export/projects/{projectId}/excel` | Download project tasks as `.xlsx` |
-| GET | `/export/projects/{projectId}/pdf` | Download project report as `.pdf` |
-| GET | `/export/projects/{projectId}/burndown/pdf` | Download burndown chart as `.pdf` |
-
-### Workload — `WorkloadController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/workload/capacity` | Capacity entries. Query: `?projectId=&userId=&from=&to=&page=1&pageSize=20` |
-| GET | `/workload/utilization` | Resource utilization per user |
-| GET | `/workload/dashboard` | Combined utilization + timeline |
-| POST | `/workload/capacity` | Set/update capacity (Admin/Member) |
-
-### Team Calendars — `TeamCalendarsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/team-calendars` | List calendars |
-| GET | `/team-calendars/{id}` | Single calendar |
-| POST | `/team-calendars` | Create (Admin/Member) |
-| PUT | `/team-calendars/{id}` | Update (Admin/Member) |
-| DELETE | `/team-calendars/{id}` | Delete (Admin only) |
-
-### Team Calendar Events — `TeamCalendarEventsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/team-calendars/{calendarId}/events` | Events for a calendar. Query: `?page=1&pageSize=20` |
-| GET | `/team-calendars/{calendarId}/events/range?start=&end=` | Events in date range |
-| POST | `/team-calendars/{calendarId}/events` | Create event (Admin/Member) |
-| GET | `/team-calendars/{calendarId}/events/{id}` | Single event |
-| PUT | `/team-calendars/{calendarId}/events/{id}` | Update (Admin/Member) |
-| DELETE | `/team-calendars/{calendarId}/events/{id}` | Delete (Admin/Member) |
-
-### Custom Fields — `CustomFieldsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/projects/{projectId}/custom-fields` | List custom fields |
-| POST | `/projects/{projectId}/custom-fields` | Create field (Admin/Member) |
-| GET | `/projects/{projectId}/custom-fields/{id}` | Single field |
-| PUT | `/projects/{projectId}/custom-fields/{id}` | Update (Admin/Member) |
-| DELETE | `/projects/{projectId}/custom-fields/{id}` | Delete (Admin only) |
-
-### Custom Field Values — `CustomFieldValuesController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/projects/{projectId}/custom-fields/{customFieldId}/values` | Values for a field |
-| POST | `/projects/{projectId}/custom-fields/{customFieldId}/values` | Set value on a task (Admin/Member) |
-| GET | `/projects/{projectId}/custom-fields/{customFieldId}/values/{id}` | Single value |
-| DELETE | `/projects/{projectId}/custom-fields/{customFieldId}/values/{id}` | Delete (Admin/Member) |
-
-### Project Templates — `ProjectTemplatesController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/project-templates` | List public + own templates |
-| GET | `/project-templates/{id}` | Single template |
-| POST | `/project-templates` | Create template (Admin/Member) |
-| PUT | `/project-templates/{id}` | Update own template (Admin/Member) |
-| DELETE | `/project-templates/{id}` | Delete own template (Admin/Member) |
-| POST | `/project-templates/create-project` | Create project from template (Admin/Member) |
-
-### Tenants — `TenantsController` (Admin)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/tenants` | List tenants |
-| GET | `/tenants/{id}` | Single tenant |
-| POST | `/tenants` | Create tenant |
-| PUT | `/tenants/{id}` | Update tenant |
-| DELETE | `/tenants/{id}` | Delete tenant |
-
-### API Keys — `ApiKeysController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/api-keys?tenantId=` | List keys (optionally filtered by tenant) |
-| GET | `/api-keys/{id}` | Single key |
-| POST | `/api-keys` | Create key (Admin/Member) — raw key returned once |
-| DELETE | `/api-keys/{id}` | Revoke key (Admin/Member) |
-
-### Webhooks — `WebhooksController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/webhooks?tenantId=&projectId=` | List subscriptions |
-| GET | `/webhooks/{id}` | Single subscription |
-| POST | `/webhooks` | Create subscription (Admin/Member) |
-| PUT | `/webhooks/{id}` | Update subscription (Admin/Member) |
-| DELETE | `/webhooks/{id}` | Delete subscription (Admin/Member) |
-| GET | `/webhooks/{id}/deliveries` | Delivery history for a subscription |
-
-### Background Jobs — `BackgroundJobsController` (authenticated; write = Admin/Member)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/jobs?tenantId=&status=` | List jobs |
-| GET | `/jobs/{id}` | Single job |
-| POST | `/jobs` | Enqueue a job (Admin/Member) |
-| DELETE | `/jobs/{id}` | Delete job (Admin only) |
-
-### Public Portal — `PublicPortalController` (allow anonymous, token-gated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/public/projects/{projectId}` | Project metadata (requires `X-Public-Token` or `?token=`) |
-| GET | `/public/projects/{projectId}/tasks` | Read-only task list |
-| GET | `/public/projects/{projectId}/members` | Read-only member list |
-| GET | `/public/projects/{projectId}/health` | Read-only project health |
-
-### Notifications — `NotificationsController` (authenticated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/notifications` | List for current user. Query: `?page=1&pageSize=20` |
-| GET | `/notifications/unread-count` | Unread count |
-| POST | `/notifications/{id}/read` | Mark as read |
-| POST | `/notifications/read-all` | Mark all as read |
-
-### Activity — `ActivityController` (authenticated)
-| Method | Route | Notes |
-| --- | --- | --- |
-| GET | `/activity/task/{taskId}` | Activity for a task. Query: `?page=1&pageSize=20` |
-| GET | `/activity/project/{projectId}` | Activity for a project. Query: `?page=1&pageSize=20` |
-
-### Notifications (SignalR)
-| Hub | Route |
-| --- | --- |
-| `NotificationHub` | `/hubs/notifications` |
+### Background Jobs
+- Hosted background service with channel-based queue
+- Priority, attempts, max attempts
+- Exponential backoff on failure
+- Dead-letter queue
+- Parent job support
+- Lock mechanism to prevent duplicate processing
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
-- [Node.js](https://nodejs.org/) (v18+; v23 used during development)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js 18+](https://nodejs.org/)
+- npm or yarn
 
-### Run the app (recommended)
-From the `Luma.Server` directory, run:
+### Run the Backend
 
 ```bash
-dotnet run
-```
-
-This starts the API and the Vite dev server together. Then open:
-
-```
-https://localhost:52613
-```
-
-Log in with the seeded admin (`admin@luma.com` / `Admin@123`), or register a new account
-and choose a role.
-
-> ⚠️ Keep the `dotnet run` terminal open — it hosts both the API and the SPA. If the
-> backend is not running, API calls return `502 Bad Gateway` through the Vite proxy.
-
-### Run the pieces separately (optional)
-```bash
-# Terminal 1 — API
 cd Luma.Server
 dotnet run
+```
 
-# Terminal 2 — SPA (proxies /api to the running API)
+The API starts at `https://localhost:52613` (or the port shown in console output).
+
+### Run the Frontend
+
+```bash
 cd luma.client
 npm install
 npm run dev
 ```
 
-### Build / type-check the frontend
-```bash
-cd luma.client
-npm install
-npm run build      # tsc -b && vite build
-```
+The frontend starts at `http://localhost:5173` (or the port shown in Vite output).
 
-### Reset the database
-Delete `Luma.Server/luma.db`; it will be recreated (with the seeded admin) on next `dotnet run`.
+### Seeded Account
 
-### Apply migrations only
+| Field | Value |
+|-------|-------|
+| Email | `admin@luma.com` |
+| Password | `Admin@123` |
+| Role | Admin |
+
+### Reset Database
+
+Delete `Luma.Server/luma.db` — it will be recreated with the seeded admin on next run.
+
+### Apply Migrations
+
 ```bash
 cd Luma.Server
 dotnet ef database update
@@ -556,84 +204,148 @@ dotnet ef database update
 
 ---
 
-## Environment / Configuration
+## API Documentation
 
-`Luma.Server/appsettings.json`:
+Swagger/OpenAPI docs are available at:
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Data Source=luma.db"
-  },
-  "Jwt": {
-    "Key": "<signing key — change in production>",
-    "Issuer": "Luma.Server",
-    "Audience": "Luma.Client"
-  },
-  "Sso": {
-    "Authority": "<oidc issuer url>",
-    "ClientId": "<client id>",
-    "ClientSecret": "<client secret>",
-    "CallbackPath": "/api/sso/callback",
-    "Scopes": [ "openid", "profile", "email" ]
-  },
-  "Storage": {
-    "Provider": "local",
-    "Local": {
-      "RootPath": "uploads"
-    },
-    "Minio": {
-      "Endpoint": "localhost:9000",
-      "AccessKey": "minioadmin",
-      "SecretKey": "minioadmin",
-      "Bucket": "luma-attachments",
-      "UseSsl": false
-    }
-  },
-  "Email": {
-    "Provider": "none",
-    "SendGrid": {
-      "ApiKey": "",
-      "FromEmail": "noreply@luma.com",
-      "FromName": "Luma"
-    },
-    "Smtp": {
-      "Host": "localhost",
-      "Port": 587,
-      "UseSsl": false,
-      "UserName": "",
-      "Password": "",
-      "FromEmail": "noreply@luma.com",
-      "FromName": "Luma"
-    }
-  }
-}
+```
+https://localhost:52613/swagger
 ```
 
-The Vite dev server (`luma.client/vite.config.ts`) proxies `/api` to the ASP.NET backend
-using the `ASPNETCORE_URLS` value provided by SpaProxy (default fallback
-`https://localhost:7023`).
+Key endpoint groups:
 
-### Swagger
-When running in Development, the API docs are available at the backend's Swagger UI
-(e.g. `https://localhost:7023/swagger`).
+| Area | Base Route |
+|------|-----------|
+| Auth | `/api/auth` |
+| Projects | `/api/projects` |
+| Tasks | `/api/tasks` |
+| Sprints | `/api/sprints` |
+| Dependencies | `/api/taskdependencies` |
+| Time Logs | `/api/timelogs` |
+| Comments | `/api/comments` |
+| Reports | `/api/reports` |
+| Export | `/api/export` |
+| Notifications | `/api/notifications` |
+| Activity | `/api/activity` |
+| Attachments | `/api/attachments` |
+| Webhooks | `/api/webhooks` |
+| API Keys | `/api/api-keys` |
+| Templates | `/api/project-templates` |
+| Custom Fields | `/api/projects/{id}/custom-fields` |
+| Public Portal | `/api/public/projects/{projectId}` |
+| Team Calendars | `/api/team-calendars` |
+| Workload | `/api/workload` |
+| Tenants | `/api/tenants` |
+| Background Jobs | `/api/jobs` |
 
 ---
 
-## Notes / Roadmap
-- Phase 1 covers the core MVP: auth, RBAC, projects, tasks, comments, Kanban + list views.
-- Phase 2 adds collaboration: file attachments (local disk or S3/MinIO), real-time updates
-  via SignalR, in-app + email (SendGrid/SMTP) notifications, and per-task/project activity
-  logs.
-- Phase 3 adds planning: sprints/milestones, a Gantt timeline, task dependencies with cycle
-  detection, and time tracking / timesheets (accessible via the **Plan** view in a project).
-- Phase 4 adds team & resource management: workload/capacity view, team calendars, custom
-  fields on projects/tasks, and reusable project templates.
-- Phase 5 adds reporting & insights: burndown charts, velocity tracking, project health
-  dashboards, PDF/Excel exports, and a token-gated client portal for external stakeholders.
-- Phase 6 adds enterprise/scale: multi-tenancy (shared-schema with `TenantId`), SSO via
-  OpenID Connect, webhook subscriptions with retry/dead-letter handling, API keys for
-  third-party integrations, rate limiting, and a background job queue with exponential
-  backoff.
-- Switching the database to SQL Server (LocalDB) is a one-line change in `appsettings.json`
-  and `Program.cs` (`UseSqlite` → `UseSqlServer`).
+## What's Missing
+
+Compared to mature project management tools like Linear, Jira, and Asana, Luma currently lacks the following:
+
+### Critical Gaps
+- **Search** — The search box is UI-only; no backend search endpoint exists
+- **Password reset / forgot password** — No account recovery flow
+- **Email verification** — Accounts are active immediately
+- **Two-factor authentication (2FA / MFA)**
+- **Profile / settings management** — Settings page is a placeholder
+- **Real-time collaboration** — SignalR only pushes notifications, not live task updates
+- **Mentions / @users in comments** — Notification type exists but no UI to trigger it
+- **Labels / tags** — Only custom fields (heavier weight)
+- **Bulk operations** — No bulk edit, delete, move, or assign
+- **Import** — No CSV/JSON/Excel import for tasks or projects
+- **Data backup / restore** — Only per-project PDF/Excel export
+- **Audit log viewer in UI** — Activity logs exist in DB but no dedicated frontend page
+
+### Workflow & Automation
+- **Custom workflows** — Statuses are hardcoded (ToDo / InProgress / Done)
+- **Automation rules** — No "when X happens, do Y"
+- **SLA tracking** — No service level agreements or escalation
+- **Approval workflows**
+- **Recurring tasks**
+- **Task templates per project** — Only full project templates
+- **Issue triage / inbox view**
+- **Assignment rules**
+
+### Planning & Tracking
+- **Story points** — Velocity uses task count, not story points
+- **Milestones** — Only sprints; no separate milestone concept
+- **Releases / versions**
+- **Portfolio / epic management** across projects
+- **Cross-project epics**
+- **Capacity planning at team level** — Only per-user per-project capacity
+- **Time tracking timer / stopwatch** — Manual entry only
+- **Billable / non-billable time flag**
+- **Approval for time logs**
+
+### Integration & Extensibility
+- **GitHub / GitLab integration** — No commit/PR linking
+- **CI/CD pipeline integration**
+- **Slack / Teams / Discord bots** — Only raw webhooks
+- **Calendar sync** (Google Calendar, Outlook)
+- **LDAP / AD integration**
+- **SAML** — Only OIDC
+- **SCIM provisioning**
+- **OAuth2 for third-party apps** — Only API keys and OIDC
+- **Mobile app**
+- **Offline mode**
+
+### Enterprise Features
+- **Organization / workspace branding**
+- **Billing / subscription management**
+- **Usage limits or quotas**
+- **Compliance reports** (GDPR, SOC2, etc.)
+- **Data retention policies**
+- **SSO group mapping**
+- **JIT provisioning**
+- **Audit trail export**
+- **Role templates**
+
+### UX & Usability
+- **Dark mode**
+- **Keyboard shortcuts**
+- **Saved filters / views**
+- **Custom dashboards** — Dashboard is fixed
+- **Custom item types** — Fixed Epic/Story/Bug/Task
+- **Custom statuses / columns** — Fixed Kanban columns
+- **Drag-and-drop for sprints or dependencies**
+- **Inline editing in Gantt view**
+- **Attachment previews** — Only download links
+- **Comment editing / deletion** — Comments are append-only
+- **Task linking** (relates-to, duplicates, etc.) — Only Blocks/BlockedBy
+- **Watch / star / favorite tasks**
+- **My-tasks view** — No personalized task list
+- **Inbox view**
+- **Due date reminders** — No scheduled notifications
+- **Workload heatmaps**
+- **Team directory page** — Members page is a placeholder
+- **Help / support page** — Placeholder only
+
+---
+
+## Architecture
+
+```
+Browser (React SPA)
+   │  GET/POST /api/...
+   ▼
+Vite dev server ──proxies /api──► ASP.NET Core API
+                                           │  JWT Bearer auth
+                                           ▼
+                                     EF Core ──► SQLite (luma.db)
+
+Middleware Pipeline:
+  Request
+    → RateLimitingMiddleware (100 req/min)
+    → ApiKeyAuthenticationMiddleware (X-Api-Key)
+    → TenantResolutionMiddleware (X-Tenant-Id)
+    → Authentication / Authorization
+    → Controllers
+```
+
+---
+
+## License
+
+MIT
