@@ -28,6 +28,13 @@ public class Project
 
     public Tenant? Tenant { get; set; }
 
+    public Guid? WorkspaceId { get; set; }
+
+    public Workspace? Workspace { get; set; }
+
     [MaxLength(200)]
     public string? PublicAccessToken { get; set; }
+
+    [Required, MaxLength(10)]
+    public string IssueKeyPrefix { get; set; } = string.Empty;
 }

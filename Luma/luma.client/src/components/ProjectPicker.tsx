@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
+import { useWorkspace } from '../context/WorkspaceContext';
 import AppShell from './AppShell';
 import Avatar from './Avatar';
 import type { Project } from '../types/types';
@@ -13,6 +14,7 @@ interface ProjectPickerProps {
 
 export default function ProjectPicker({ title, subtitle, onSelect }: ProjectPickerProps) {
     const navigate = useNavigate();
+    const { currentWorkspace } = useWorkspace();
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -20,7 +22,11 @@ export default function ProjectPicker({ title, subtitle, onSelect }: ProjectPick
     const load = async () => {
         setLoading(true);
         try {
-            const { data } = await client.get<Project[]>('/projects');
+            const params: Record<string, string> = {};
+            if (currentWorkspace?.id) {
+                params.workspaceId = currentWorkspace.id;
+            }
+            const { data } = await client.get<Project[]>('/projects', { params });
             setProjects(data);
         } catch {
             setError('Failed to load projects.');
@@ -32,10 +38,10 @@ export default function ProjectPicker({ title, subtitle, onSelect }: ProjectPick
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         void load();
-    }, []);
+    }, [currentWorkspace?.id]);
 
     return (
-        <AppShell breadcrumb={<span>Workspace</span>} title={title}>
+        <AppShell breadcrumb={<span>{currentWorkspace?.name ?? 'Workspace'}</span>} title={title}>
             <div className="modern-greeting-row">
                 <div>
                     <h1 className="modern-greeting">{title}</h1>

@@ -8,4 +8,8 @@ public class ProjectResponseDto
     public DateTime CreatedAt { get; set; }
     public string CreatedByUserId { get; set; } = string.Empty;
     public string? CreatedByUserFullName { get; set; }
+    public Guid? WorkspaceId { get; set; }
+    public string? WorkspaceName { get; set; }
+    public string? WorkspaceSlug { get; set; }
+    public string IssueKeyPrefix { get; set; } = string.Empty;
 }

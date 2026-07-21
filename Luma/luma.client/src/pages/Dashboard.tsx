@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useWorkspace } from '../context/WorkspaceContext';
 import AppShell from '../components/AppShell';
 import { tasksApi } from '../api/endpoints';
 import type { Project, Task } from '../types/types';
@@ -15,6 +16,7 @@ interface ProjectStat {
 
 export default function Dashboard() {
     const { currentUser } = useAuth();
+    const { currentWorkspace, workspaces, switchWorkspace } = useWorkspace();
     const navigate = useNavigate();
 
     const [stats, setStats] = useState<ProjectStat[]>([]);
@@ -42,7 +44,11 @@ export default function Dashboard() {
     const loadProjects = useCallback(async () => {
         setLoading(true);
         try {
-            const { data: projects } = await client.get<Project[]>('/projects');
+            const params: Record<string, string> = {};
+            if (currentWorkspace?.id) {
+                params.workspaceId = currentWorkspace.id;
+            }
+            const { data: projects } = await client.get<Project[]>('/projects', { params });
             const enriched = await Promise.all(
                 projects.map(async (p) => {
                     try {
@@ -59,7 +65,7 @@ export default function Dashboard() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [currentWorkspace?.id]);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -70,12 +76,13 @@ export default function Dashboard() {
 
     const handleCreate = async (e: FormEvent) => {
         e.preventDefault();
-        if (!name.trim()) return;
+        if (!name.trim() || !currentWorkspace?.id) return;
         setSaving(true);
         try {
             await client.post<Project>('/projects', {
                 name: name.trim(),
                 description: description.trim() || null,
+                workspaceId: currentWorkspace.id,
             });
             setName('');
             setDescription('');
@@ -88,6 +95,13 @@ export default function Dashboard() {
         }
     };
 
+    const handleWorkspaceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const id = e.target.value;
+        if (id) {
+            switchWorkspace(id);
+        }
+    };
+
     const userName = currentUser?.fullName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User';
 
     return (
@@ -95,13 +109,26 @@ export default function Dashboard() {
             <div className="modern-greeting-row">
                 <div>
                     <h1 className="modern-greeting">Welcome back, {userName}</h1>
-                    <p className="modern-subtitle">{stats.length} project{stats.length === 1 ? '' : 's'} across your workspace</p>
+                    <p className="modern-subtitle">{stats.length} project{stats.length === 1 ? '' : 's'} in {currentWorkspace?.name ?? 'your workspace'}</p>
                 </div>
-                {canWrite && (
-                    <button className="modern-btn-primary" onClick={() => setShowModal(true)}>
-                        + New Project
-                    </button>
-                )}
+                <div className="modern-greeting-actions">
+                    {workspaces.length > 1 && (
+                        <select
+                            className="modern-select"
+                            value={currentWorkspace?.id ?? ''}
+                            onChange={handleWorkspaceChange}
+                        >
+                            {workspaces.map(ws => (
+                                <option key={ws.id} value={ws.id}>{ws.name}</option>
+                            ))}
+                        </select>
+                    )}
+                    {canWrite && (
+                        <button className="modern-btn-primary" onClick={() => setShowModal(true)}>
+                            + New Project
+                        </button>
+                    )}
+                </div>
             </div>
 
             {error && <div className="alert alert-error">{error}</div>}
@@ -159,6 +186,9 @@ export default function Dashboard() {
                                 rows={3}
                             />
                         </label>
+                        {!currentWorkspace?.id && (
+                            <div className="alert alert-warning">Select a workspace before creating a project.</div>
+                        )}
                         <div className="modal-actions">
                             <button
                                 type="button"
@@ -167,7 +197,7 @@ export default function Dashboard() {
                             >
                                 Cancel
                             </button>
-                            <button type="submit" className="modern-btn-primary" disabled={saving}>
+                            <button type="submit" className="modern-btn-primary" disabled={saving || !currentWorkspace?.id}>
                                 {saving ? 'Saving...' : 'Create'}
                             </button>
                         </div>

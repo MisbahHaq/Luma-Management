@@ -9,6 +9,7 @@ import DependenciesPanel from '../components/DependenciesPanel';
 import TimeTracking from '../components/TimeTracking';
 import GanttView from '../components/GanttView';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
+import MilestonesPanel from '../components/MilestonesPanel';
 import AppShell from '../components/AppShell';
 import { membersApi, usersApi, tasksApi } from '../api/endpoints';
 import { labelsApi } from '../api/endpoints';
@@ -206,7 +207,7 @@ export default function ProjectDetail() {
         <AppShell
             breadcrumb={
                 <>
-                    <span className="crumb-link" onClick={() => navigate('/')}>Workspace</span>
+                    <span className="crumb-link" onClick={() => navigate('/projects')}>{project?.workspaceName ?? 'Workspace'}</span>
                     <span className="crumb-sep">›</span>
                     <span>Projects</span>
                     <span className="crumb-sep">›</span>
@@ -311,6 +312,7 @@ export default function ProjectDetail() {
                         <div className="plan-grid">
                             <GanttView tasks={tasks} />
                             <SprintsPanel projectId={id!} tasks={tasks} canEdit={canEdit} onTasksChanged={load} />
+                            <MilestonesPanel projectId={id!} tasks={tasks} canEdit={canEdit} onTasksChanged={load} />
                             <DependenciesPanel projectId={id!} tasks={tasks} canEdit={canEdit} />
                             <TimeTracking projectId={id!} tasks={tasks} canEdit={canEdit} />
                         </div>

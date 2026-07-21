@@ -19,10 +19,8 @@ interface IssueHierarchyTableProps {
     onSelectionChange?: (ids: string[]) => void;
 }
 
-function keyFor(tasks: Task[], task: Task): string {
-    const idx = tasks.findIndex((t) => t.id === task.id);
-    const prefix = (task.projectId || '').replace(/-/g, '').slice(0, 4).toUpperCase() || 'ISS';
-    return `${prefix}-${idx + 1}`;
+function keyFor(_tasks: Task[], task: Task): string {
+    return task.issueKey;
 }
 
 export default function IssueHierarchyTable({

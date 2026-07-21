@@ -1,5 +1,27 @@
 export type UserRole = 'Admin' | 'Member' | 'Viewer';
 
+export type WorkspaceRole = 'Owner' | 'Admin' | 'Member';
+
+export interface Workspace {
+    id: string;
+    name: string;
+    slug: string;
+    tenantId: string;
+    createdAt: string;
+    createdByUserId: string;
+    createdByUserFullName: string | null;
+    memberCount: number;
+    projectCount: number;
+}
+
+export interface WorkspaceMember {
+    userId: string;
+    fullName: string | null;
+    email: string | null;
+    role: WorkspaceRole;
+    addedAt: string;
+}
+
 export type TaskStatus = 'ToDo' | 'InProgress' | 'Done';
 
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -20,6 +42,10 @@ export interface Project {
     createdAt: string;
     createdByUserId: string;
     createdByUserFullName: string | null;
+    workspaceId: string | null;
+    workspaceName: string | null;
+    workspaceSlug: string | null;
+    issueKeyPrefix: string;
 }
 
 export interface SearchProjectResult {
@@ -37,6 +63,7 @@ export interface SearchTaskResult {
     projectName: string;
     status: TaskStatus;
     assigneeFullName: string | null;
+    issueKey: string;
 }
 
 export interface SearchResponse {
@@ -56,9 +83,12 @@ export interface Task {
     dueDate: string | null;
     projectId: string;
     sprintId: string | null;
+    milestoneId: string | null;
     assigneeId: string | null;
     assigneeFullName: string | null;
     createdAt: string;
+    issueNumber: number;
+    issueKey: string;
 }
 
 export interface Comment {
@@ -209,6 +239,21 @@ export interface ProjectMemberSummary {
 }
 
 export type SprintStatus = 'Planned' | 'Active' | 'Completed';
+
+export type MilestoneStatus = 'Open' | 'Completed';
+
+export interface Milestone {
+    id: string;
+    projectId: string;
+    name: string;
+    description: string | null;
+    dueDate: string | null;
+    status: MilestoneStatus;
+    createdAt: string;
+    taskCount: number;
+    completedTaskCount: number;
+    progressPercentage: number;
+}
 
 export type DependencyType = 'Blocks' | 'BlockedBy';
 

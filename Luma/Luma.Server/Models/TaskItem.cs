@@ -36,11 +36,17 @@ public class TaskItem
 
     public Sprint? Sprint { get; set; }
 
+    public Guid? MilestoneId { get; set; }
+
+    public Milestone? Milestone { get; set; }
+
     public string? AssigneeId { get; set; }
 
     public ApplicationUser? Assignee { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public int IssueNumber { get; set; }
 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 

@@ -179,7 +179,8 @@ public class TasksController : ControllerBase
             ParentTaskId = dto.ParentTaskId,
             DueDate = dto.DueDate,
             ProjectId = dto.ProjectId,
-            AssigneeId = dto.AssigneeId
+            AssigneeId = dto.AssigneeId,
+            IssueNumber = GetNextIssueNumber(dto.ProjectId)
         };
 
         _context.Tasks.Add(task);
@@ -534,7 +535,9 @@ public class TasksController : ControllerBase
         SprintId = t.SprintId,
         AssigneeId = t.AssigneeId,
         AssigneeFullName = t.Assignee?.FullName,
-        CreatedAt = t.CreatedAt
+        CreatedAt = t.CreatedAt,
+        IssueNumber = t.IssueNumber,
+        IssueKey = $"{t.Project?.IssueKeyPrefix ?? "ISS"}-{t.IssueNumber}"
     };
 
     /// <summary>
@@ -582,6 +585,15 @@ public class TasksController : ControllerBase
         }
 
         return null;
+    }
+
+    private int GetNextIssueNumber(Guid projectId)
+    {
+        var max = _context.Tasks
+            .Where(t => t.ProjectId == projectId)
+            .Select(t => (int?)t.IssueNumber)
+            .Max();
+        return (max ?? 0) + 1;
     }
 
     private string? GetCurrentUserId() =>

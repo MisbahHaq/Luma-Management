@@ -41,6 +41,9 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
     public DbSet<Label> Labels => Set<Label>();
     public DbSet<TaskLabel> TaskLabels => Set<TaskLabel>();
+    public DbSet<Workspace> Workspaces => Set<Workspace>();
+    public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
+    public DbSet<Milestone> Milestones => Set<Milestone>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -50,21 +53,6 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
         {
             entity.Property(u => u.Role)
                 .HasConversion<string>();
-        });
-
-        builder.Entity<Project>(entity =>
-        {
-            entity.HasKey(p => p.Id);
-
-            entity.HasOne(p => p.CreatedByUser)
-                .WithMany()
-                .HasForeignKey(p => p.CreatedByUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasMany(p => p.Tasks)
-                .WithOne(t => t.Project)
-                .HasForeignKey(t => t.ProjectId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<TaskItem>(entity =>
@@ -85,6 +73,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .WithOne(c => c.Task)
                 .HasForeignKey(c => c.TaskId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(t => t.Milestone)
+                .WithMany(m => m.Tasks)
+                .HasForeignKey(t => t.MilestoneId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Comment>(entity =>
@@ -338,6 +331,40 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<Workspace>(entity =>
+        {
+            entity.HasKey(w => w.Id);
+
+            entity.HasOne(w => w.Tenant)
+                .WithMany()
+                .HasForeignKey(w => w.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(w => w.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(w => w.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(w => new { w.TenantId, w.Slug }).IsUnique();
+        });
+
+        builder.Entity<WorkspaceMember>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+
+            entity.HasOne(m => m.Workspace)
+                .WithMany(w => w.Members)
+                .HasForeignKey(m => m.WorkspaceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(m => new { m.WorkspaceId, m.UserId }).IsUnique();
+        });
+
         builder.Entity<Tenant>(entity =>
         {
             entity.HasKey(t => t.Id);
@@ -354,24 +381,41 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
-        builder.Entity<Project>(entity =>
+        builder.Entity<Workspace>(entity =>
         {
-            entity.HasKey(p => p.Id);
+            entity.HasKey(w => w.Id);
 
-            entity.HasOne(p => p.CreatedByUser)
+            entity.HasOne(w => w.Tenant)
                 .WithMany()
-                .HasForeignKey(p => p.CreatedByUserId)
+                .HasForeignKey(w => w.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(p => p.Tenant)
-                .WithMany(t => t.Projects)
-                .HasForeignKey(p => p.TenantId)
-                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(w => w.CreatedByUser)
+                .WithMany()
+                .HasForeignKey(w => w.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasMany(p => p.Tasks)
-                .WithOne(t => t.Project)
-                .HasForeignKey(t => t.ProjectId)
+            entity.HasMany(w => w.Projects)
+                .WithOne(p => p.Workspace)
+                .HasForeignKey(p => p.WorkspaceId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(w => new { w.TenantId, w.Slug }).IsUnique();
+        });
+
+        builder.Entity<Milestone>(entity =>
+        {
+            entity.HasKey(m => m.Id);
+
+            entity.HasOne(m => m.Project)
+                .WithMany()
+                .HasForeignKey(m => m.ProjectId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(m => m.Tasks)
+                .WithOne(t => t.Milestone)
+                .HasForeignKey(t => t.MilestoneId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<ApiKey>(entity =>

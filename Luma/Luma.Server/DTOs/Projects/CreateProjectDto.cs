@@ -9,4 +9,7 @@ public class CreateProjectDto
 
     [MaxLength(2000)]
     public string? Description { get; set; }
+
+    [Required]
+    public Guid WorkspaceId { get; set; }
 }

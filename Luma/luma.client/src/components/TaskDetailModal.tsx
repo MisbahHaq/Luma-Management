@@ -5,6 +5,7 @@ import {
     activityApi,
     commentsApi,
     labelsApi,
+    milestonesApi,
 } from '../api/endpoints';
 import {
     STATUS_LABELS,
@@ -19,6 +20,7 @@ import {
     type TaskPriority,
     type TaskStatus,
     type UserSummary,
+    type Milestone,
 } from '../types/types';
 import LabelPicker from './LabelPicker';
 
@@ -47,6 +49,8 @@ export default function TaskDetailModal({
     const [priority, setPriority] = useState<TaskPriority>(task.priority);
     const [type, setType] = useState<TaskItemType>(task.type);
     const [parentTaskId, setParentTaskId] = useState<string>(task.parentTaskId ?? '');
+    const [milestoneId, setMilestoneId] = useState<string>(task.milestoneId ?? '');
+    const [milestones, setMilestones] = useState<Milestone[]>([]);
     const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId);
     const [users, setUsers] = useState<UserSummary[]>([]);
     const [comments, setComments] = useState<CommentModel[]>([]);
@@ -64,12 +68,13 @@ export default function TaskDetailModal({
         let active = true;
         const load = async () => {
             try {
-                const [commentsRes, usersRes, attachmentsRes, activityRes, labelsRes] = await Promise.all([
+                const [commentsRes, usersRes, attachmentsRes, activityRes, labelsRes, milestonesRes] = await Promise.all([
                     client.get<{ items: CommentModel[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${task.id}?page=1&pageSize=50`),
                     canEdit ? client.get<UserSummary[]>('/users') : Promise.resolve({ data: [] as UserSummary[] }),
                     attachmentsApi.list(task.id),
                     activityApi.forTask(task.id, 1, 50),
                     labelsApi.forTask(task.id),
+                    milestonesApi.forProject(task.projectId),
                 ]);
                 if (!active) return;
                 setComments(commentsRes.data.items);
@@ -77,6 +82,7 @@ export default function TaskDetailModal({
                 setAttachments(attachmentsRes.data);
                 setActivity(activityRes.data.items);
                 setLabels(labelsRes.data);
+                setMilestones(milestonesRes.data);
             } catch {
                 if (active) setError('Failed to load task details.');
             }
@@ -85,7 +91,7 @@ export default function TaskDetailModal({
         return () => {
             active = false;
         };
-    }, [task.id, canEdit]);
+    }, [task.id, canEdit, task.projectId]);
 
     const save = async (e: FormEvent) => {
         e.preventDefault();
@@ -99,6 +105,7 @@ export default function TaskDetailModal({
                 priority,
                 type,
                 parentTaskId: parentTaskId || null,
+                milestoneId: milestoneId || null,
                 dueDate: task.dueDate,
                 assigneeId,
             });
@@ -189,7 +196,10 @@ export default function TaskDetailModal({
         <div className="modal-backdrop" onClick={onClose}>
             <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
-                    <h3>{title}</h3>
+                    <div>
+                        <small className="muted" style={{ fontFamily: 'var(--instrument)', fontSize: 12 }}>{task.issueKey}</small>
+                        <h3 style={{ margin: 0 }}>{title}</h3>
+                    </div>
                     <button type="button" className="btn btn-ghost" onClick={onClose}>
                         ✕
                     </button>
@@ -278,6 +288,22 @@ export default function TaskDetailModal({
                                             {t.title}
                                         </option>
                                     ))}
+                            </select>
+                        </label>
+
+                        <label>
+                            Milestone
+                            <select
+                                value={milestoneId}
+                                onChange={(e) => setMilestoneId(e.target.value)}
+                                disabled={!canEdit}
+                            >
+                                <option value="">None</option>
+                                {milestones.map((m) => (
+                                    <option key={m.id} value={m.id}>
+                                        {m.name} ({m.progressPercentage}%)
+                                    </option>
+                                ))}
                             </select>
                         </label>
 
