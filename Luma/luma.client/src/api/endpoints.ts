@@ -2,6 +2,7 @@ import client from './client';
 import type {
     ActivityLog,
     Attachment,
+    Comment,
     Notification,
     ProjectMemberSummary,
     Sprint,
@@ -27,6 +28,16 @@ export const attachmentsApi = {
     },
     downloadUrl: (id: string) => `/api/attachments/${id}/download`,
     remove: (id: string) => client.delete(`/attachments/${id}`),
+};
+
+export const commentsApi = {
+    list: (taskId: string, page = 1, pageSize = 20) =>
+        client.get<{ items: Comment[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${taskId}?page=${page}&pageSize=${pageSize}`),
+    create: (taskId: string, text: string) =>
+        client.post<Comment>('/comments', { taskId, text }),
+    update: (id: string, text: string) =>
+        client.put<Comment>(`/comments/${id}`, { text }),
+    remove: (id: string) => client.delete(`/comments/${id}`),
 };
 
 export const activityApi = {

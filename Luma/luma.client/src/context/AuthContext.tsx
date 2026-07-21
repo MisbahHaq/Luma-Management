@@ -17,6 +17,8 @@ interface AuthContextValue {
     login: (email: string, password: string) => Promise<void>;
     register: (payload: RegisterPayload) => Promise<void>;
     logout: () => void;
+    forgotPassword: (email: string) => Promise<void>;
+    resetPassword: (token: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -61,6 +63,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         void notificationHub.stop();
     };
 
+    const forgotPassword = async (email: string) => {
+        await client.post('/auth/forgot-password', { email });
+    };
+
+    const resetPassword = async (token: string, newPassword: string) => {
+        await client.post('/auth/reset-password', { token, newPassword });
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -70,6 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 login,
                 register,
                 logout,
+                forgotPassword,
+                resetPassword,
             }}
         >
             {children}

@@ -3,6 +3,7 @@ using System;
 using Luma.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Luma.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260721061456_AddPasswordResetToken")]
+    partial class AddPasswordResetToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -293,15 +296,6 @@ namespace Luma.Server.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DeletedById")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
                     b.Property<Guid>("TaskId")
                         .HasColumnType("TEXT");
 
@@ -315,8 +309,6 @@ namespace Luma.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("DeletedById");
 
                     b.HasIndex("TaskId");
 
@@ -1238,11 +1230,6 @@ namespace Luma.Server.Migrations
 
             modelBuilder.Entity("Luma.Server.Models.Comment", b =>
                 {
-                    b.HasOne("Luma.Server.Models.ApplicationUser", "DeletedBy")
-                        .WithMany()
-                        .HasForeignKey("DeletedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("Luma.Server.Models.TaskItem", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
@@ -1254,8 +1241,6 @@ namespace Luma.Server.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("DeletedBy");
 
                     b.Navigation("Task");
 

@@ -844,6 +844,15 @@ select:focus {
     padding: 12px 14px;
 }
 
+.comment-deleted {
+    opacity: 0.7;
+}
+
+.comment-deleted p {
+    color: #71717A;
+    font-style: italic;
+}
+
 .comment-head {
     display: flex;
     justify-content: space-between;

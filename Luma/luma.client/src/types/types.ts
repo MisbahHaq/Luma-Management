@@ -68,11 +68,23 @@ export interface Comment {
     userFullName: string;
     text: string;
     createdAt: string;
+    isDeleted: boolean;
+    canEdit: boolean;
+    canDelete: boolean;
 }
 
 export interface AuthResponse {
     token: string;
     user: User;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    newPassword: string;
 }
 
 export interface UserSummary {
