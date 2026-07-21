@@ -80,6 +80,27 @@ export interface Label {
     projectId: string;
 }
 
+export interface BulkResult {
+    succeeded: number;
+    failed: number;
+    errors: string[];
+}
+
+export interface BulkStatusRequest {
+    taskIds: string[];
+    status: string;
+}
+
+export interface BulkPriorityRequest {
+    taskIds: string[];
+    priority: string;
+}
+
+export interface BulkAssigneeRequest {
+    taskIds: string[];
+    assigneeId: string | null;
+}
+
 export interface AuthResponse {
     token: string;
     user: User;
@@ -130,7 +151,11 @@ export type ActivityAction =
     | 'SprintCompleted'
     | 'DependencyAdded'
     | 'DependencyRemoved'
-    | 'TimeLogged';
+    | 'TimeLogged'
+    | 'TaskBulkStatusChanged'
+    | 'TaskBulkPriorityChanged'
+    | 'TaskBulkAssigneeChanged'
+    | 'TaskBulkDeleted';
 
 export interface ActivityLog {
     id: string;

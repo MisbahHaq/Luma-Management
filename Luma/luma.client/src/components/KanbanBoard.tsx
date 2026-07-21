@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { Task, TaskStatus } from '../types/types';
+import type { Label, Task, TaskStatus } from '../types/types';
 import { STATUS_LABELS, PRIORITY_LABELS } from '../types/types';
 import { tasksApi } from '../api/endpoints';
 
@@ -7,11 +7,12 @@ interface KanbanBoardProps {
     tasks: Task[];
     onTaskClick: (task: Task) => void;
     onTaskMoved: (taskId: string, status: TaskStatus) => void;
+    labels?: Record<string, Label[]>;
 }
 
 const COLUMNS: TaskStatus[] = ['ToDo', 'InProgress', 'Done'];
 
-export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved }: KanbanBoardProps) {
+export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved, labels }: KanbanBoardProps) {
     const [dragId, setDragId] = useState<string | null>(null);
 
     const handleDrop = async (status: TaskStatus) => {
@@ -59,6 +60,23 @@ export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved }: KanbanB
                                         <small className="muted">
                                             👤 {task.assigneeFullName}
                                         </small>
+                                    )}
+                                    {(labels?.[task.id] ?? []).length > 0 && (
+                                        <div className="kanban-labels">
+                                            {(labels?.[task.id] ?? []).map((l) => (
+                                                <span
+                                                    key={l.id}
+                                                    className="label-chip"
+                                                    style={{
+                                                        backgroundColor: `${l.color}20`,
+                                                        color: l.color,
+                                                        borderColor: `${l.color}40`,
+                                                    }}
+                                                >
+                                                    {l.name}
+                                                </span>
+                                            ))}
+                                        </div>
                                     )}
                                     {task.dueDate && (
                                         <small className="muted timestamp">
