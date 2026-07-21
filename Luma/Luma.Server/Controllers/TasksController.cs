@@ -357,6 +357,169 @@ public class TasksController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("bulk/status")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<ActionResult<BulkResultDto>> BulkUpdateStatus([FromBody] BulkStatusDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = new BulkResultDto();
+        var tasks = await _context.Tasks.Where(t => dto.TaskIds.Contains(t.Id)).ToListAsync();
+
+        foreach (var task in tasks)
+        {
+            if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+            {
+                result.Failed++;
+                result.Errors.Add($"Task '{task.Title}': no permission.");
+                continue;
+            }
+
+            task.Status = dto.Status;
+            result.Succeeded++;
+        }
+
+        await _context.SaveChangesAsync();
+
+        if (result.Succeeded > 0 && userId is not null)
+        {
+            await _activity.LogAsync(
+                ActivityAction.TaskBulkStatusChanged,
+                $"Changed status of {result.Succeeded} task{(result.Succeeded == 1 ? "" : "s")} to {dto.Status}",
+                userId);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("bulk/priority")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<ActionResult<BulkResultDto>> BulkUpdatePriority([FromBody] BulkPriorityDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = new BulkResultDto();
+        var tasks = await _context.Tasks.Where(t => dto.TaskIds.Contains(t.Id)).ToListAsync();
+
+        foreach (var task in tasks)
+        {
+            if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+            {
+                result.Failed++;
+                result.Errors.Add($"Task '{task.Title}': no permission.");
+                continue;
+            }
+
+            task.Priority = dto.Priority;
+            result.Succeeded++;
+        }
+
+        await _context.SaveChangesAsync();
+
+        if (result.Succeeded > 0 && userId is not null)
+        {
+            await _activity.LogAsync(
+                ActivityAction.TaskBulkPriorityChanged,
+                $"Changed priority of {result.Succeeded} task{(result.Succeeded == 1 ? "" : "s")} to {dto.Priority}",
+                userId);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("bulk/assignee")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<ActionResult<BulkResultDto>> BulkUpdateAssignee([FromBody] BulkAssigneeDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = new BulkResultDto();
+        var tasks = await _context.Tasks.Where(t => dto.TaskIds.Contains(t.Id)).ToListAsync();
+
+        foreach (var task in tasks)
+        {
+            if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+            {
+                result.Failed++;
+                result.Errors.Add($"Task '{task.Title}': no permission.");
+                continue;
+            }
+
+            task.AssigneeId = dto.AssigneeId;
+            result.Succeeded++;
+        }
+
+        await _context.SaveChangesAsync();
+
+        if (result.Succeeded > 0 && userId is not null)
+        {
+            await _activity.LogAsync(
+                ActivityAction.TaskBulkAssigneeChanged,
+                $"Changed assignee of {result.Succeeded} task{(result.Succeeded == 1 ? "" : "s")}",
+                userId);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("bulk/delete")]
+    [Authorize(Roles = "Admin,Member")]
+    public async Task<ActionResult<BulkResultDto>> BulkDelete([FromBody] BulkTaskIdsDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var globalRole = GetCurrentUserRole();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var result = new BulkResultDto();
+        var tasks = await _context.Tasks.Where(t => dto.TaskIds.Contains(t.Id)).ToListAsync();
+
+        var authorizedTasks = new List<TaskItem>();
+
+        foreach (var task in tasks)
+        {
+            if (!await _authz.CanWriteProjectAsync(task.ProjectId, userId, globalRole))
+            {
+                result.Failed++;
+                result.Errors.Add($"Task '{task.Title}': no permission.");
+                continue;
+            }
+
+            authorizedTasks.Add(task);
+            result.Succeeded++;
+        }
+
+        _context.Tasks.RemoveRange(authorizedTasks);
+        await _context.SaveChangesAsync();
+
+        if (result.Succeeded > 0 && userId is not null)
+        {
+            await _activity.LogAsync(
+                ActivityAction.TaskBulkDeleted,
+                $"Deleted {result.Succeeded} task{(result.Succeeded == 1 ? "" : "s")}",
+                userId);
+        }
+
+        return Ok(result);
+    }
+
     private static TaskResponseDto ToDto(TaskItem t) => new()
     {
         Id = t.Id,

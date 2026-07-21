@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import AppShell from '../components/AppShell';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
-import { tasksApi } from '../api/endpoints';
-import type { Task, TaskStatus, TaskPriority, TaskItemType } from '../types/types';
+import { tasksApi, labelsApi } from '../api/endpoints';
+import type { Label, Task, TaskStatus, TaskPriority, TaskItemType } from '../types/types';
 
 type FilterStatus = TaskStatus | 'all';
 type FilterPriority = TaskPriority | 'all';
@@ -24,6 +24,7 @@ export default function MyTasksPage() {
     const [typeFilter, setTypeFilter] = useState<FilterType>('all');
     const [projectFilter, setProjectFilter] = useState<string>('all');
     const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+    const [taskLabels, setTaskLabels] = useState<Record<string, Label[]>>({});
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -55,6 +56,33 @@ export default function MyTasksPage() {
             .then(({ data }) => setProjects(data))
             .catch(() => setProjects([]));
     }, []);
+
+    useEffect(() => {
+        if (tasks.length === 0) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setTaskLabels({});
+            return;
+        }
+        const uniqueProjectIds = Array.from(new Set(tasks.map((t) => t.projectId)));
+        let cancelled = false;
+        Promise.all(
+            uniqueProjectIds.map(async (pid) => {
+                const { data } = await labelsApi.forProject(pid);
+                return { projectId: pid, labels: data };
+            }),
+        ).then((results) => {
+            if (cancelled) return;
+            const map: Record<string, Label[]> = {};
+            for (const r of results) {
+                for (const l of r.labels) {
+                    if (!map[l.projectId]) map[l.projectId] = [];
+                    map[l.projectId].push(l);
+                }
+            }
+            setTaskLabels(map);
+        }).catch(() => setTaskLabels({}));
+        return () => { cancelled = true; };
+    }, [tasks]);
 
     const handleOpenTask = useCallback((task: Task) => {
         navigate(`/projects/${task.projectId}`);
@@ -174,6 +202,7 @@ export default function MyTasksPage() {
                     onToggleDone={handleToggleDone}
                     onDelete={handleDelete}
                     onQuickAdd={handleQuickAdd}
+                    labels={taskLabels}
                 />
             )}
         </AppShell>

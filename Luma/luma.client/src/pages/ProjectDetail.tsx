@@ -11,6 +11,7 @@ import GanttView from '../components/GanttView';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
 import AppShell from '../components/AppShell';
 import { membersApi, usersApi, tasksApi } from '../api/endpoints';
+import { labelsApi } from '../api/endpoints';
 import {
     PRIORITY_LABELS,
     TASK_TYPE_LABELS,
@@ -22,6 +23,7 @@ import {
     type ProjectMemberSummary,
     type ProjectRole,
     type UserSummary,
+    type Label,
 } from '../types/types';
 
 type ViewMode = 'list' | 'kanban' | 'plan';
@@ -53,6 +55,7 @@ export default function ProjectDetail() {
     const [allUsers, setAllUsers] = useState<UserSummary[]>([]);
     const [showMembers, setShowMembers] = useState(false);
     const [newMemberId, setNewMemberId] = useState('');
+    const [taskLabels, setTaskLabels] = useState<Record<string, Label[]>>({});
 
     const canEdit = currentUser?.role === 'Admin' || currentUser?.role === 'Member';
 
@@ -70,6 +73,13 @@ export default function ProjectDetail() {
             setTasks(tasksRes.data.items);
             setMembers(membersRes.data);
             setAllUsers(usersRes.data);
+
+            const taskLabelMap: Record<string, Label[]> = {};
+            for (const task of tasksRes.data.items) {
+                const tl = await labelsApi.forTask(task.id);
+                taskLabelMap[task.id] = tl.data;
+            }
+            setTaskLabels(taskLabelMap);
         } catch {
             setError('Failed to load project.');
         } finally {
@@ -267,7 +277,7 @@ export default function ProjectDetail() {
                     )}
 
                     {view === 'kanban' ? (
-                        <KanbanBoard tasks={tasks} onTaskClick={setSelected} onTaskMoved={handleTaskMoved} />
+                        <KanbanBoard tasks={tasks} onTaskClick={setSelected} onTaskMoved={handleTaskMoved} labels={taskLabels} />
                     ) : view === 'list' ? (
                         <IssueHierarchyTable
                             tasks={tasks}
@@ -295,6 +305,7 @@ export default function ProjectDetail() {
                                     setError('Failed to create issue.');
                                 }
                             }}
+                            labels={taskLabels}
                         />
                     ) : (
                         <div className="plan-grid">

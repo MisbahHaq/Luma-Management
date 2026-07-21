@@ -16,6 +16,7 @@ import type {
     Task,
     SearchResponse,
     Label,
+    BulkResult,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -89,6 +90,17 @@ export const tasksApi = {
         assigneeId?: string | null;
     }) => client.post<Task>('/tasks', payload),
     remove: (id: string) => client.delete(`/tasks/${id}`),
+};
+
+export const bulkApi = {
+    updateStatus: (taskIds: string[], status: string) =>
+        client.post<BulkResult>('/tasks/bulk/status', { taskIds, status }),
+    updatePriority: (taskIds: string[], priority: string) =>
+        client.post<BulkResult>('/tasks/bulk/priority', { taskIds, priority }),
+    updateAssignee: (taskIds: string[], assigneeId: string | null) =>
+        client.post<BulkResult>('/tasks/bulk/assignee', { taskIds, assigneeId }),
+    delete: (taskIds: string[]) =>
+        client.post<BulkResult>('/tasks/bulk/delete', { taskIds }),
 };
 
 export const sprintsApi = {

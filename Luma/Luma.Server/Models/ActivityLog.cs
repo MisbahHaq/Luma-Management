@@ -30,7 +30,11 @@ public enum ActivityAction
     LabelUpdated,
     LabelRemoved,
     TaskLabelAdded,
-    TaskLabelRemoved
+    TaskLabelRemoved,
+    TaskBulkStatusChanged,
+    TaskBulkPriorityChanged,
+    TaskBulkAssigneeChanged,
+    TaskBulkDeleted
 }
 
 public class ActivityLog

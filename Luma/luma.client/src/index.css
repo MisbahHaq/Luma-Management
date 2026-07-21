@@ -2796,6 +2796,186 @@ select:focus {
     display: none;
 }
 
+/* Labels */
+.label-picker {
+    position: relative;
+}
+
+.label-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.label-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid;
+    text-transform: capitalize;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+}
+
+.label-chip-remove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    padding: 0;
+    margin-left: 2px;
+    opacity: 0.7;
+}
+
+.label-chip-remove:hover {
+    opacity: 1;
+}
+
+.label-add-btn {
+    background: transparent;
+    border: 1px dashed rgba(0,0,0,0.2);
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    color: #71717A;
+    font-family: inherit;
+}
+
+.label-add-btn:hover {
+    border-color: #8B5CF6;
+    color: #8B5CF6;
+}
+
+.label-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 40;
+    background: #FFFFFF;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+    padding: 8px;
+    min-width: 220px;
+    animation: rise 0.15s ease both;
+}
+
+.label-dropdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.label-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    font-size: 13px;
+    color: #3F3F46;
+}
+
+.label-dropdown-item:hover {
+    background: #FAFAFA;
+}
+
+.label-dropdown-item.selected {
+    background: #F5F3FF;
+    color: #7C3AED;
+}
+
+.label-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.label-create-btn {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    color: #8B5CF6;
+    text-align: left;
+}
+
+.label-create-btn:hover {
+    background: #F5F3FF;
+}
+
+.label-create-form {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.label-create-form input {
+    padding: 8px 10px;
+    font-size: 13px;
+}
+
+.label-color-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.label-color-option {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+}
+
+.label-color-option.selected {
+    border-color: #18181B;
+}
+
+.label-create-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.kanban-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.issue-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 3px;
+}
+
 /* Search */
 .modern-search-container {
     position: relative;

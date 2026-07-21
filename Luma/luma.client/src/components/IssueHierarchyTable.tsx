@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ProjectMemberSummary, Task, TaskItemType, TaskPriority, TaskStatus } from '../types/types';
+import type { Label, ProjectMemberSummary, Task, TaskItemType, TaskPriority, TaskStatus } from '../types/types';
 import StatusPill from './StatusPill';
 import PriorityPill from './PriorityPill';
 import TypeBadge from './TypeBadge';
@@ -14,6 +14,9 @@ interface IssueHierarchyTableProps {
     onToggleDone: (task: Task) => void;
     onDelete: (task: Task) => void;
     onQuickAdd: (parentId: string | null, type: TaskItemType) => void;
+    labels?: Record<string, Label[]>;
+    selectedIds?: string[];
+    onSelectionChange?: (ids: string[]) => void;
 }
 
 function keyFor(tasks: Task[], task: Task): string {
@@ -30,6 +33,7 @@ export default function IssueHierarchyTable({
     onToggleDone,
     onDelete,
     onQuickAdd,
+    labels,
 }: IssueHierarchyTableProps) {
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
@@ -86,59 +90,79 @@ export default function IssueHierarchyTable({
     const toggle = (id: string) =>
         setCollapsed((c) => ({ ...c, [id]: !c[id] }));
 
-    const renderRow = (t: Task, depth: number, extraClass = '') => (
-        <tr
-            key={t.id}
-            className={`issue-row clickable ${extraClass} ${t.status === 'Done' ? 'issue-done' : ''}`}
-            style={{ ['--depth' as string]: depth }}
-            onClick={() => onOpenTask(t)}
-        >
-            <td className="issue-key instrument">{keyFor(tasks, t)}</td>
-            <td className="issue-type">
-                <TypeBadge type={t.type} />
-            </td>
-            <td className="issue-title">
-                <span className="issue-title-text">{t.title}</span>
-            </td>
-            <td>
-                <StatusPill status={t.status} />
-            </td>
-            <td>
-                <PriorityPill priority={t.priority} />
-            </td>
-            <td className="issue-assignee">
-                <Avatar name={assigneeName(t)} size={24} />
-            </td>
-            <td className="issue-actions" onClick={(e) => e.stopPropagation()}>
-                {canEdit && (
-                    <KebabMenu label={`Actions for ${t.title}`}>
-                        {(close) => (
-                            <>
-                                <button
-                                    className="kebab-item"
-                                    onClick={() => {
-                                        onToggleDone(t);
-                                        close();
+    const renderRow = (t: Task, depth: number, extraClass = '') => {
+        const taskLabels = labels?.[t.id] ?? [];
+        return (
+            <tr
+                key={t.id}
+                className={`issue-row clickable ${extraClass} ${t.status === 'Done' ? 'issue-done' : ''}`}
+                style={{ ['--depth' as string]: depth }}
+                onClick={() => onOpenTask(t)}
+            >
+                <td className="issue-key instrument">{keyFor(tasks, t)}</td>
+                <td className="issue-type">
+                    <TypeBadge type={t.type} />
+                </td>
+                <td className="issue-title">
+                    <span className="issue-title-text">{t.title}</span>
+                    {taskLabels.length > 0 && (
+                        <div className="issue-labels">
+                            {taskLabels.map((l) => (
+                                <span
+                                    key={l.id}
+                                    className="label-chip"
+                                    style={{
+                                        backgroundColor: `${l.color}20`,
+                                        color: l.color,
+                                        borderColor: `${l.color}40`,
                                     }}
                                 >
-                                    {t.status === 'Done' ? 'Reopen' : 'Mark done'}
-                                </button>
-                                <button
-                                    className="kebab-item kebab-danger"
-                                    onClick={() => {
-                                        onDelete(t);
-                                        close();
-                                    }}
-                                >
-                                    Delete
-                                </button>
-                            </>
-                        )}
-                    </KebabMenu>
-                )}
-            </td>
-        </tr>
-    );
+                                    {l.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </td>
+                <td>
+                    <StatusPill status={t.status} />
+                </td>
+                <td>
+                    <PriorityPill priority={t.priority} />
+                </td>
+                <td className="issue-assignee">
+                    <Avatar name={assigneeName(t)} size={24} />
+                </td>
+                <td className="issue-actions" onClick={(e) => e.stopPropagation()}>
+                    {canEdit && (
+                        <KebabMenu label={`Actions for ${t.title}`}>
+                            {(close) => (
+                                <>
+                                    <button
+                                        className="kebab-item"
+                                        onClick={() => {
+                                            onToggleDone(t);
+                                            close();
+                                        }}
+                                    >
+                                        {t.status === 'Done' ? 'Reopen' : 'Mark done'}
+                                    </button>
+                                    <button
+                                        className="kebab-item kebab-danger"
+                                        onClick={() => {
+                                            onDelete(t);
+                                            close();
+                                        }}
+                                    >
+                                        Delete
+                                    </button>
+                                </>
+                            )}
+                        </KebabMenu>
+                    )}
+                </td>
+            </tr>
+        );
+    };
 
     return (
         <div className="issue-table-wrap">
