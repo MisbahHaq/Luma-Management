@@ -498,7 +498,7 @@ namespace Luma.Server.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid?>("WorkspaceId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -1483,8 +1483,7 @@ namespace Luma.Server.Migrations
                     b.HasOne("Luma.Server.Models.Workspace", "Workspace")
                         .WithMany("Projects")
                         .HasForeignKey("WorkspaceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByUser");
 

@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Luma.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260721064128_AddCommentSoftDelete")]
-    partial class AddCommentSoftDelete
+    [Migration("20260721102759_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -328,6 +328,70 @@ namespace Luma.Server.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Label", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Labels");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.Milestone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId");
+
+                    b.ToTable("Milestones");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -420,6 +484,11 @@ namespace Luma.Server.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IssueKeyPrefix")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -432,11 +501,16 @@ namespace Luma.Server.Migrations
                     b.Property<Guid?>("TenantId")
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid?>("WorkspaceId")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("WorkspaceId");
 
                     b.ToTable("Projects");
                 });
@@ -714,6 +788,12 @@ namespace Luma.Server.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("IssueNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<Guid?>("MilestoneId")
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid?>("ParentTaskId")
                         .HasColumnType("TEXT");
 
@@ -741,6 +821,8 @@ namespace Luma.Server.Migrations
 
                     b.HasIndex("AssigneeId");
 
+                    b.HasIndex("MilestoneId");
+
                     b.HasIndex("ParentTaskId");
 
                     b.HasIndex("ProjectId");
@@ -748,6 +830,31 @@ namespace Luma.Server.Migrations
                     b.HasIndex("SprintId");
 
                     b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TaskLabel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LabelId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("TaskId", "LabelId")
+                        .IsUnique();
+
+                    b.ToTable("TaskLabels");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
@@ -1048,6 +1155,71 @@ namespace Luma.Server.Migrations
                     b.ToTable("WebhookSubscriptions");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Workspace", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("TenantId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("Workspaces");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.WorkspaceMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("WorkspaceId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("WorkspaceMembers");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -1265,6 +1437,28 @@ namespace Luma.Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Label", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.Milestone", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Notification", b =>
                 {
                     b.HasOne("Luma.Server.Models.ApplicationUser", "Recipient")
@@ -1281,7 +1475,7 @@ namespace Luma.Server.Migrations
                     b.HasOne("Luma.Server.Models.ApplicationUser", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("Luma.Server.Models.Tenant", "Tenant")
@@ -1289,9 +1483,16 @@ namespace Luma.Server.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Luma.Server.Models.Workspace", "Workspace")
+                        .WithMany("Projects")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Tenant");
+
+                    b.Navigation("Workspace");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.ProjectCustomField", b =>
@@ -1425,6 +1626,11 @@ namespace Luma.Server.Migrations
                         .HasForeignKey("AssigneeId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.HasOne("Luma.Server.Models.Milestone", "Milestone")
+                        .WithMany("Tasks")
+                        .HasForeignKey("MilestoneId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Luma.Server.Models.TaskItem", "ParentTask")
                         .WithMany("Children")
                         .HasForeignKey("ParentTaskId")
@@ -1443,11 +1649,32 @@ namespace Luma.Server.Migrations
 
                     b.Navigation("Assignee");
 
+                    b.Navigation("Milestone");
+
                     b.Navigation("ParentTask");
 
                     b.Navigation("Project");
 
                     b.Navigation("Sprint");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TaskLabel", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Label", "Label")
+                        .WithMany()
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.TaskItem", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Label");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
@@ -1573,6 +1800,44 @@ namespace Luma.Server.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Workspace", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.WorkspaceMember", b =>
+                {
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.Workspace", "Workspace")
+                        .WithMany("Members")
+                        .HasForeignKey("WorkspaceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+
+                    b.Navigation("Workspace");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -1624,6 +1889,11 @@ namespace Luma.Server.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Milestone", b =>
+                {
+                    b.Navigation("Tasks");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Project", b =>
                 {
                     b.Navigation("Members");
@@ -1668,6 +1938,13 @@ namespace Luma.Server.Migrations
             modelBuilder.Entity("Luma.Server.Models.WebhookSubscription", b =>
                 {
                     b.Navigation("Deliveries");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.Workspace", b =>
+                {
+                    b.Navigation("Members");
+
+                    b.Navigation("Projects");
                 });
 #pragma warning restore 612, 618
         }
