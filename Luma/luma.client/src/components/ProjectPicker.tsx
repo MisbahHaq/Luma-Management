@@ -57,8 +57,8 @@ export default function ProjectPicker({ title, subtitle, onSelect }: ProjectPick
             {loading ? (
                 <p className="muted">Loading...</p>
             ) : projects.length === 0 ? (
-                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
-                    <p className="muted" style={{ fontSize: 15 }}>No projects yet.</p>
+                <div className="modern-bento-card modern-empty-state">
+                    <p className="muted">No projects yet.</p>
                 </div>
             ) : (
                 <div className="modern-stats-row">
@@ -66,16 +66,15 @@ export default function ProjectPicker({ title, subtitle, onSelect }: ProjectPick
                         <div
                             key={p.id}
                             className="modern-stat-card"
-                            style={{ backgroundColor: '#FFFFFF', cursor: 'pointer' }}
                             onClick={() => onSelect(p)}
                         >
-                            <div className="modern-stat-icon" style={{ background: 'rgba(167,139,250,0.12)' }}>
-                                <span style={{ fontSize: 20 }}>📁</span>
+                            <div className="modern-stat-icon">
+                                <span>📁</span>
                             </div>
                             <div className="modern-stat-info">
                                 <div className="modern-stat-value">{p.name}</div>
-                                <div className="modern-stat-label" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                                    <Avatar name={p.createdByUserFullName} size={20} />
+                                <div className="modern-stat-label">
+                                    <Avatar name={p.createdByUserFullName} size={18} />
                                     <span>{p.createdByUserFullName ?? 'Unknown'}</span>
                                 </div>
                             </div>

@@ -59,9 +59,9 @@ export default function ResetPassword() {
                 {error && <div className="alert alert-error">{error}</div>}
 
                 {success ? (
-                    <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                        <p style={{ marginBottom: 12, color: '#16A34A', fontWeight: 600 }}>Password updated</p>
-                        <p className="muted" style={{ fontSize: 14 }}>Redirecting to sign in...</p>
+                    <div className="auth-success">
+                        <p className="auth-success-text">Password updated</p>
+                        <p className="muted">Redirecting to sign in...</p>
                     </div>
                 ) : (
                     <>
@@ -90,8 +90,8 @@ export default function ResetPassword() {
                             {loading ? 'Updating...' : 'Update password'}
                         </button>
 
-                        <p className="muted small" style={{ textAlign: 'center' }}>
-                            <Link to="/login" style={{ color: '#8B5CF6', fontWeight: 600 }}>Back to sign in</Link>
+                        <p className="muted small auth-center-text">
+                            <Link to="/login" className="auth-link">Back to sign in</Link>
                         </p>
                     </>
                 )}

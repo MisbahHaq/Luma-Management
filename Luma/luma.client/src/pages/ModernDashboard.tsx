@@ -130,8 +130,8 @@ export default function ModernDashboard() {
                 {statCards.map((stat) => (
                     <div
                         key={stat.label}
-                        className="modern-stat-card"
-                        style={{ backgroundColor: stat.color }}
+                        className="modern-stat-card modern-stat-colored"
+                        style={{ '--stat-color': stat.color } as React.CSSProperties}
                     >
                         <div className="modern-stat-icon">{stat.icon}</div>
                         <div className="modern-stat-info">

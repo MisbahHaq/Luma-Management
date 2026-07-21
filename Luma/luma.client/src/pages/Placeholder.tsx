@@ -14,8 +14,8 @@ export default function Placeholder({ title, hint }: { title: string; hint: stri
                     Go to projects
                 </button>
             </div>
-            <div className="modern-bento-card" style={{ maxWidth: 520, textAlign: 'center', padding: 48 }}>
-                <p className="muted" style={{ fontSize: 15 }}>{hint}</p>
+            <div className="modern-bento-card modern-empty-state">
+                <p className="muted">{hint}</p>
             </div>
         </AppShell>
     );

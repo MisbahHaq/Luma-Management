@@ -38,14 +38,12 @@ export default function ForgotPassword() {
                 {error && <div className="alert alert-error">{error}</div>}
 
                 {sent ? (
-                    <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                        <p style={{ marginBottom: 12, color: '#16A34A', fontWeight: 600 }}>Check your inbox</p>
-                        <p className="muted" style={{ fontSize: 14 }}>
+                    <div className="auth-success">
+                        <p className="auth-success-text">Check your inbox</p>
+                        <p className="muted">
                             If an account exists for <strong>{email}</strong>, you will receive a password reset link shortly.
                         </p>
-                        <Link to="/login" style={{ color: '#8B5CF6', fontWeight: 600, fontSize: 14 }}>
-                            Back to sign in
-                        </Link>
+                        <Link to="/login" className="auth-link">Back to sign in</Link>
                     </div>
                 ) : (
                     <>
@@ -64,8 +62,8 @@ export default function ForgotPassword() {
                             {loading ? 'Sending...' : 'Send reset link'}
                         </button>
 
-                        <p className="muted small" style={{ textAlign: 'center' }}>
-                            Remember your password? <Link to="/login" style={{ color: '#8B5CF6', fontWeight: 600 }}>Sign in</Link>
+                        <p className="muted small auth-center-text">
+                            Remember your password? <Link to="/login" className="auth-link">Sign in</Link>
                         </p>
                     </>
                 )}

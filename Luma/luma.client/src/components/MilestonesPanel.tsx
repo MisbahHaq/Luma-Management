@@ -121,9 +121,9 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
     const unassignedTasks = tasks.filter(t => !t.milestoneId);
 
     return (
-        <div className="card" style={{ padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h3 style={{ margin: 0 }}>Milestones</h3>
+        <div className="card milestones-panel">
+            <div className="milestones-header">
+                <h3 className="milestones-title">Milestones</h3>
                 {canEdit && (
                     <button className="modern-btn-primary" onClick={() => setShowCreate(true)}>
                         + New Milestone
@@ -136,16 +136,16 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
             ) : milestones.length === 0 ? (
                 <p className="muted">No milestones yet.</p>
             ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div className="milestones-list">
                     {milestones.map((m) => (
-                        <div key={m.id} className="modern-bento-card" style={{ padding: 16 }}>
+                        <div key={m.id} className="milestone-item">
                             {editingId === m.id ? (
                                 <form onSubmit={(e) => { e.preventDefault(); void handleUpdate(m); }}>
                                     <input
                                         value={editName}
                                         onChange={(e) => setEditName(e.target.value)}
                                         placeholder="Milestone name"
-                                        style={{ width: '100%', marginBottom: 8 }}
+                                        className="milestone-input"
                                         autoFocus
                                     />
                                     <textarea
@@ -153,15 +153,15 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
                                         onChange={(e) => setEditDescription(e.target.value)}
                                         placeholder="Description"
                                         rows={2}
-                                        style={{ width: '100%', marginBottom: 8 }}
+                                        className="milestone-input"
                                     />
                                     <input
                                         type="date"
                                         value={editDueDate}
                                         onChange={(e) => setEditDueDate(e.target.value)}
-                                        style={{ width: '100%', marginBottom: 8 }}
+                                        className="milestone-input"
                                     />
-                                    <div style={{ display: 'flex', gap: 8 }}>
+                                    <div className="milestone-actions">
                                         <button type="submit" className="modern-btn-primary" disabled={saving}>
                                             {saving ? 'Saving...' : 'Save'}
                                         </button>
@@ -172,21 +172,20 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
                                 </form>
                             ) : (
                                 <>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                    <div className="milestone-header">
                                         <div>
-                                            <div style={{ fontWeight: 600, fontSize: 16 }}>{m.name}</div>
-                                            {m.description && <div style={{ color: '#71717A', fontSize: 14, marginTop: 4 }}>{m.description}</div>}
-                                            <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: 13, color: '#71717A' }}>
+                                            <div className="milestone-name">{m.name}</div>
+                                            {m.description && <div className="milestone-description">{m.description}</div>}
+                                            <div className="milestone-meta">
                                                 {m.dueDate && <span>Due: {new Date(m.dueDate).toLocaleDateString()}</span>}
                                                 <span>{m.taskCount} tasks</span>
                                                 <span>{m.progressPercentage}% complete</span>
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        <div className="milestone-actions">
                                             <button
-                                                className={`btn ${m.status === 'Open' ? 'btn-primary' : 'btn-ghost'}`}
+                                                className={`btn milestone-status-btn ${m.status === 'Open' ? 'btn-primary' : 'btn-ghost'}`}
                                                 onClick={() => handleStatusToggle(m)}
-                                                style={{ fontSize: 12 }}
                                             >
                                                 {m.status === 'Open' ? 'Mark Complete' : 'Reopen'}
                                             </button>
@@ -198,18 +197,18 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
                                                         setEditDescription(m.description ?? '');
                                                         setEditDueDate(m.dueDate ?? '');
                                                     }}>Edit</button>
-                                                    <button className="btn btn-ghost" onClick={() => handleDelete(m.id)} style={{ color: '#DC2626' }}>Delete</button>
+                                                    <button className="btn btn-ghost milestone-delete" onClick={() => handleDelete(m.id)}>Delete</button>
                                                 </>
                                             )}
                                         </div>
                                     </div>
-                                    <div style={{ marginTop: 12 }}>
-                                        <div style={{ height: 6, background: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
-                                            <div style={{ width: `${m.progressPercentage}%`, height: '100%', background: '#7C3AED', borderRadius: 3 }} />
+                                    <div className="milestone-progress">
+                                        <div className="milestone-progress-track">
+                                            <div className="milestone-progress-fill" style={{ width: `${m.progressPercentage}%` }} />
                                         </div>
                                     </div>
                                     {canEdit && (
-                                        <div style={{ marginTop: 12 }}>
+                                        <div className="milestone-assign">
                                             <select
                                                 className="modern-select"
                                                 onChange={(e) => {
@@ -225,11 +224,11 @@ export default function MilestonesPanel({ projectId, tasks, canEdit, onTasksChan
                                                     <option key={t.id} value={t.id}>{t.issueKey} - {t.title}</option>
                                                 ))}
                                             </select>
-                                            <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                            <div className="milestone-chips">
                                                 {tasks.filter(t => t.milestoneId === m.id).map(t => (
-                                                    <span key={t.id} className="modern-chip" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                                    <span key={t.id} className="modern-chip milestone-chip">
                                                         {t.issueKey} - {t.title}
-                                                        <button onClick={() => handleUnassignTask(m.id, t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, lineHeight: 1 }}>×</button>
+                                                        <button onClick={() => handleUnassignTask(m.id, t.id)} className="milestone-chip-remove">×</button>
                                                     </span>
                                                 ))}
                                             </div>

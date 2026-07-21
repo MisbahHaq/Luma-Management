@@ -55,9 +55,9 @@ export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved, labels }:
                                     <span className={`priority priority-${task.priority}`}>
                                         {PRIORITY_LABELS[task.priority]}
                                     </span>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                                        <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#18181B' }}>{task.title}</h4>
-                                        <small className="muted" style={{ fontFamily: 'var(--instrument)', fontSize: 12 }}>{task.issueKey}</small>
+                                    <div className="kanban-card-header">
+                                        <h4 className="kanban-card-title">{task.title}</h4>
+                                        <small className="muted kanban-card-key">{task.issueKey}</small>
                                     </div>
                                     {task.assigneeFullName && (
                                         <small className="muted">

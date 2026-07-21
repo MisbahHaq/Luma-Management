@@ -36,11 +36,7 @@ export default function Dashboard() {
         const total = tasks.length;
         const done = tasks.filter((t) => t.status === 'Done').length;
         const completion = total === 0 ? 0 : Math.round((done / total) * 100);
-        const lastUpdated = tasks.reduce<string | null>(
-            (acc, t) => (acc === null || t.createdAt > acc ? t.createdAt : acc),
-            project.createdAt,
-        );
-        return { project, taskCount: total, completion, lastUpdated };
+        return { project, taskCount: total, completion, lastUpdated: null };
     };
 
     const loadProjects = useCallback(async (workspaceId?: string) => {
@@ -123,7 +119,9 @@ export default function Dashboard() {
             <div className="modern-greeting-row">
                 <div>
                     <h1 className="modern-greeting">Welcome back, {userName}</h1>
-                    <p className="modern-subtitle">{stats.length} project{stats.length === 1 ? '' : 's'} in {currentWorkspace?.name ?? 'your workspace'}</p>
+                    <p className="modern-subtitle">
+                        {stats.length} project{stats.length === 1 ? '' : 's'} in {currentWorkspace?.name ?? 'your workspace'}
+                    </p>
                 </div>
                 <div className="modern-greeting-actions">
                     {workspaces.length > 1 && (
@@ -154,8 +152,8 @@ export default function Dashboard() {
             {error && <div className="alert alert-error">{error}</div>}
 
             {!currentWorkspace ? (
-                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
-                    <p className="muted" style={{ fontSize: 15, marginBottom: 16 }}>You need a workspace before you can create projects.</p>
+                <div className="modern-bento-card modern-empty-state">
+                    <p className="muted">You need a workspace before you can create projects.</p>
                     {canWrite && (
                         <button className="modern-btn-primary" onClick={() => setShowWorkspaceModal(true)}>
                             + Create Workspace
@@ -165,10 +163,10 @@ export default function Dashboard() {
             ) : loading ? (
                 <p className="muted">Loading...</p>
             ) : stats.length === 0 ? (
-                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
-                    <p className="muted" style={{ fontSize: 15 }}>No projects yet. Create your first project to get started.</p>
+                <div className="modern-bento-card modern-empty-state">
+                    <p className="muted">No projects yet. Create your first project to get started.</p>
                     {canWrite && (
-                        <button className="modern-btn-primary" style={{ marginTop: 16 }} onClick={() => setShowProjectModal(true)}>
+                        <button className="modern-btn-primary" onClick={() => setShowProjectModal(true)}>
                             + New Project
                         </button>
                     )}
@@ -179,11 +177,10 @@ export default function Dashboard() {
                         <div
                             key={s.project.id}
                             className="modern-stat-card"
-                            style={{ backgroundColor: '#FFFFFF', cursor: 'pointer' }}
                             onClick={() => openProject(s.project.id)}
                         >
-                            <div className="modern-stat-icon" style={{ background: 'rgba(167,139,250,0.12)' }}>
-                                <span style={{ fontSize: 20 }}>📁</span>
+                            <div className="modern-stat-icon">
+                                <span>📁</span>
                             </div>
                             <div className="modern-stat-info">
                                 <div className="modern-stat-value">{s.project.name}</div>
@@ -197,11 +194,14 @@ export default function Dashboard() {
             {showProjectModal && currentWorkspace && (
                 <div className="modal-backdrop" onClick={() => setShowProjectModal(false)}>
                     <form
-                        className="card modal modal-lg"
+                        className="modal modal-lg"
                         onClick={(e) => e.stopPropagation()}
                         onSubmit={handleCreateProject}
                     >
-                        <h3>New project</h3>
+                        <div className="modal-head">
+                            <h3>New project</h3>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowProjectModal(false)}>✕</button>
+                        </div>
                         <label>
                             Name
                             <input
@@ -239,7 +239,7 @@ export default function Dashboard() {
             {showWorkspaceModal && (
                 <div className="modal-backdrop" onClick={() => setShowWorkspaceModal(false)}>
                     <form
-                        className="card modal modal-lg"
+                        className="modal modal-lg"
                         onClick={(e) => e.stopPropagation()}
                         onSubmit={handleCreateWorkspace}
                     >
@@ -247,7 +247,7 @@ export default function Dashboard() {
                             <h3>Create workspace</h3>
                             <button type="button" className="btn btn-ghost" onClick={() => setShowWorkspaceModal(false)}>✕</button>
                         </div>
-                        <p className="muted" style={{ marginBottom: 16 }}>A workspace is where your projects live. You'll be the owner.</p>
+                        <p className="muted">A workspace is where your projects live. You'll be the owner.</p>
                         <label>
                             Workspace name
                             <input
