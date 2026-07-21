@@ -11,15 +11,14 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 | **Backend** | ASP.NET Core 8 (Web API) + C# 12 |
 | **Database** | SQLite via Entity Framework Core 8 |
 | **Auth** | ASP.NET Core Identity + JWT Bearer (12h) |
-| **SSO** | OpenID Connect |
+| **SSO** | OpenID Connect + GitHub OAuth |
 | **Real-time** | SignalR (`NotificationHub`) |
 | **PDF Export** | QuestPDF |
 | **Excel Export** | ClosedXML |
 | **API Docs** | Swashbuckle (Swagger / OpenAPI) |
 | **Frontend** | React 19 + TypeScript + Vite 8 |
 | **Routing** | React Router 6 |
-| **Styling** | Plain CSS with modern design system |
-| **Gantt** | Frappe Gantt |
+| **Styling** | Tailwind CSS v4 + custom design tokens |
 
 ---
 
@@ -30,12 +29,22 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 - **Global roles**: `Admin`, `Member`, `Viewer`
 - **Per-project roles**: `Owner`, `Editor`, `Viewer`
 - **SSO via OpenID Connect** (configurable authority/client/secret)
+- **GitHub OAuth** — sign in with GitHub (auto-provisions account on first login)
 - **API Key authentication** for third-party integrations (`X-Api-Key`)
-- **Rate limiting** — 100 requests/minute per API key or IP
+- **Rate limiting** — 1000 requests/minute per API key or IP
 - **Seeded admin account** — `admin@luma.com` / `Admin@123`
 
+### Workspaces
+- **Workspaces** sit inside a Tenant as an organizational grouping of projects
+- **Hierarchy**: Tenant → Workspace → Project → Task
+- **Workspace roles**: `Owner`, `Admin`, `Member`
+- Create, rename, and delete workspaces
+- **Workspace switcher** in the top header — switch context instantly
+- Member management: invite, remove, change roles
+- Every project belongs to exactly one workspace
+
 ### Project Management
-- Create, update, and delete projects
+- Create, update, and delete projects (requires selecting a workspace)
 - Project listing with task counts and completion percentages
 - **Project members** — add/remove members, change roles (Owner/Editor/Viewer)
 - **Last Owner protection** — last Owner cannot be removed or demoted
@@ -44,8 +53,14 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 - **Project templates** — create reusable templates with nested task structures
 - Create projects from templates
 
+### Issue Keys
+- **Real per-project issue keys** (e.g. `LUMA-42`) — not client-derived
+- `IssueKeyPrefix` set at project creation, editable by Owner only
+- `IssueNumber` auto-incremented per project starting at 1
+- Displayed in task list, Kanban, detail modal, search results, notifications, and activity log
+
 ### Task & Issue Management
-- Full CRUD for tasks with title, description, status, priority, type, assignee, and due date
+- Full CRUD for tasks with title, description, status, priority, type, assignee, milestone, and due date
 - **Task types**: Epic, Story, Bug, Task
 - **Priorities**: Low, Medium, High, Critical
 - **Statuses**: ToDo, InProgress, Done
@@ -55,6 +70,14 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 - **List view** with collapsible Epic groups, search, and filter popover
 - **Task detail modal** with full editing, comments, attachments, and activity log
 - Pagination on task lists
+
+### Milestones
+- **Milestones** are goal-based markers distinct from time-boxed sprints
+- Optional due date, no start date
+- Assign tasks to milestones independently of sprins
+- Progress tracking (% of linked tasks completed)
+- CRUD endpoints (`/api/milestones`) and panel per project
+- Milestone assignment in task detail modal and bulk actions
 
 ### Sprint Management
 - Create, update, and delete sprints with name, description, status, and dates
@@ -80,6 +103,7 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 - **Comments** on tasks (paginated)
 - **Activity logs** per task and per project (25 action types)
 - Tracked actions: ProjectCreated/Updated/Deleted, TaskCreated/Updated/Moved/Deleted, CommentAdded, AttachmentAdded/Removed, MemberAdded/Removed, SprintCreated/Updated/Completed, DependencyAdded/Removed, TimeLogged
+- **Recent Activity** feed on dashboard (real data, not hardcoded)
 
 ### File Attachments
 - Upload, download, and delete attachments on tasks
@@ -134,6 +158,7 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 
 ### Multi-Tenancy
 - Tenant entity with name, slug, and active status
+- Workspace entity inside Tenant for organizational grouping
 - TenantId on Project (optional)
 - Global query filters for tenant isolation
 - Cross-tenant Admin views
@@ -168,7 +193,7 @@ Luma is a full-stack, self-hosted project management and work-tracking platform.
 
 ```bash
 cd Luma.Server
-dotnet run
+dotnet run watch
 ```
 
 The API starts at `https://localhost:52613` (or the port shown in console output).
@@ -217,8 +242,10 @@ Key endpoint groups:
 | Area | Base Route |
 |------|-----------|
 | Auth | `/api/auth` |
+| Workspaces | `/api/workspaces` |
 | Projects | `/api/projects` |
 | Tasks | `/api/tasks` |
+| Milestones | `/api/milestones` |
 | Sprints | `/api/sprints` |
 | Dependencies | `/api/taskdependencies` |
 | Time Logs | `/api/timelogs` |
@@ -237,6 +264,24 @@ Key endpoint groups:
 | Workload | `/api/workload` |
 | Tenants | `/api/tenants` |
 | Background Jobs | `/api/jobs` |
+| GitHub OAuth | `/api/github` |
+
+---
+
+## Configuration
+
+Key settings in `Luma.Server/appsettings.json`:
+
+| Section | Purpose |
+|---------|---------|
+| `ConnectionStrings:DefaultConnection` | SQLite database path |
+| `Jwt` | Signing key, issuer, audience |
+| `Sso` | OpenID Connect authority/client/secret/scopes |
+| `GitHub` | GitHub OAuth client ID/secret/callback path |
+| `RateLimiting` | Requests limit and window (default: 1000/min) |
+| `Storage` | Local/MinIO file storage configuration |
+| `Email` | SendGrid/SMTP/None email provider |
+| `Frontend:BaseUrl` | Frontend URL for email links |
 
 ---
 
@@ -270,7 +315,6 @@ Compared to mature project management tools like Linear, Jira, and Asana, Luma c
 
 ### Planning & Tracking
 - **Story points** — Velocity uses task count, not story points
-- **Milestones** — Only sprints; no separate milestone concept
 - **Releases / versions**
 - **Portfolio / epic management** across projects
 - **Cross-project epics**
@@ -331,13 +375,13 @@ Browser (React SPA)
    │  GET/POST /api/...
    ▼
 Vite dev server ──proxies /api──► ASP.NET Core API
-                                           │  JWT Bearer auth
-                                           ▼
-                                     EF Core ──► SQLite (luma.db)
+                                            │  JWT Bearer auth
+                                            ▼
+                                      EF Core ──► SQLite (luma.db)
 
 Middleware Pipeline:
   Request
-    → RateLimitingMiddleware (100 req/min)
+    → RateLimitingMiddleware (1000 req/min)
     → ApiKeyAuthenticationMiddleware (X-Api-Key)
     → TenantResolutionMiddleware (X-Tenant-Id)
     → Authentication / Authorization

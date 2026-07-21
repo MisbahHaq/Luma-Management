@@ -2070,7 +2070,7 @@ select:focus {
 
 /* Sidebar */
 .modern-sidebar {
-    width: 260px;
+    width: 250px;
     flex-shrink: 0;
     background: #18181B;
     color: #E4E4E7;
@@ -2081,26 +2081,26 @@ select:focus {
     left: 0;
     bottom: 0;
     z-index: 50;
-    padding: 24px 16px;
-    border-radius: 0 24px 24px 0;
-    margin: 16px 0 16px 16px;
+    padding: 20px 14px;
+    border-radius: 0 20px 20px 0;
+    margin: 12px 0 12px 12px;
     box-shadow: 0 20px 60px rgba(0,0,0,0.25);
 }
 
 .modern-sidebar-brand {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 8px 12px 24px;
+    gap: 10px;
+    padding: 6px 10px 20px;
 }
 
 .modern-sidebar-mark {
-    font-size: 26px;
+    font-size: 24px;
     color: #A78BFA;
 }
 
 .modern-sidebar-title {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     letter-spacing: -0.3px;
     color: #FAFAFA;
@@ -2109,19 +2109,19 @@ select:focus {
 .modern-sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
     flex: 1;
 }
 
 .modern-sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
     color: #A1A1AA;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     transition: all 0.15s ease;
 }
@@ -2138,26 +2138,26 @@ select:focus {
 }
 
 .modern-sidebar-icon {
-    width: 20px;
+    width: 18px;
     text-align: center;
-    font-size: 15px;
+    font-size: 14px;
     flex-shrink: 0;
 }
 
 .modern-sidebar-section {
-    margin-top: 16px;
+    margin-top: 12px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .modern-sidebar-category {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     color: #71717A;
-    padding: 8px 12px 4px;
+    padding: 6px 12px 4px;
 }
 
 .modern-sidebar-logout {
@@ -2165,10 +2165,10 @@ select:focus {
     background: transparent;
     border: 1px solid #3F3F46;
     color: #A1A1AA;
-    border-radius: 12px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 9px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     font-family: inherit;
     transition: all 0.15s ease;
 }
@@ -2179,10 +2179,103 @@ select:focus {
     border-color: #52525B;
 }
 
+/* Workspace Switcher (header) */
+.modern-workspace-switcher {
+    position: relative;
+}
+
+.modern-workspace-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #FFFFFF;
+    color: #18181B;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    white-space: nowrap;
+}
+
+.modern-workspace-trigger:hover {
+    background: #F4F4F5;
+    border-color: rgba(0,0,0,0.12);
+}
+
+.modern-workspace-icon {
+    font-size: 14px;
+    color: #7C3AED;
+}
+
+.modern-workspace-arrow {
+    font-size: 10px;
+    color: #71717A;
+    margin-left: 2px;
+}
+
+.modern-workspace-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 220px;
+    background: #FFFFFF;
+    border: 1px solid rgba(0,0,0,0.08);
+    border-radius: 14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+    padding: 6px;
+    z-index: 50;
+}
+
+.modern-workspace-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #18181B;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.1s ease;
+    text-align: left;
+}
+
+.modern-workspace-option:hover {
+    background: #F4F4F5;
+}
+
+.modern-workspace-option.active {
+    background: rgba(167,139,250,0.1);
+    color: #7C3AED;
+}
+
+.modern-workspace-slug {
+    font-size: 11px;
+    color: #71717A;
+    font-family: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.modern-workspace-create {
+    margin-top: 4px;
+    border-top: 1px solid rgba(0,0,0,0.06);
+    padding-top: 10px;
+    color: #7C3AED;
+    font-weight: 600;
+}
+
 /* Main Content */
 .modern-main {
     flex: 1;
-    margin-left: 276px;
+    margin-left: 262px;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -2194,21 +2287,21 @@ select:focus {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 32px;
+    padding: 14px 28px;
     background: rgba(249,246,240,0.8);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(0,0,0,0.06);
     position: sticky;
     top: 0;
     z-index: 30;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
 .modern-header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     flex: 1;
     min-width: 0;
 }
@@ -2216,8 +2309,8 @@ select:focus {
 .modern-search-wrap {
     position: relative;
     flex: 1;
-    max-width: 420px;
-    min-width: 200px;
+    max-width: 360px;
+    min-width: 180px;
 }
 
 .modern-search-icon {
@@ -2231,11 +2324,11 @@ select:focus {
 
 .modern-search {
     width: 100%;
-    padding: 10px 16px 10px 42px;
+    padding: 9px 16px 9px 38px;
     border: 1px solid rgba(0,0,0,0.08);
     border-radius: 999px;
     background: #FFFFFF;
-    font-size: 14px;
+    font-size: 13px;
     font-family: inherit;
     color: #18181B;
     transition: all 0.15s ease;
@@ -2252,50 +2345,19 @@ select:focus {
     color: #A1A1AA;
 }
 
-.modern-filter-chips {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.modern-chip {
-    padding: 6px 16px;
-    border-radius: 999px;
-    border: 1px solid rgba(0,0,0,0.08);
-    background: #FFFFFF;
-    color: #52525B;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-}
-
-.modern-chip:hover {
-    background: #F4F4F5;
-    border-color: rgba(0,0,0,0.12);
-}
-
-.modern-chip.active {
-    background: #18181B;
-    color: #FAFAFA;
-    border-color: #18181B;
-}
-
 .modern-header-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .modern-icon-btn {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
+    border-radius: 10px;
     border: 1px solid rgba(0,0,0,0.08);
     background: #FFFFFF;
     color: #52525B;
@@ -2310,15 +2372,15 @@ select:focus {
 }
 
 .modern-avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
     background: linear-gradient(135deg, #A78BFA, #8B5CF6);
     color: #FFFFFF;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     flex-shrink: 0;
@@ -2327,10 +2389,10 @@ select:focus {
 /* Content */
 .modern-content {
     flex: 1;
-    padding: 32px;
+    padding: 28px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
 }
 
 /* Greeting Row */
@@ -2338,20 +2400,20 @@ select:focus {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
 .modern-greeting {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 700;
     letter-spacing: -0.5px;
     color: #18181B;
-    margin: 0 0 6px;
+    margin: 0 0 4px;
 }
 
 .modern-subtitle {
-    font-size: 15px;
+    font-size: 14px;
     color: #71717A;
     margin: 0;
 }
@@ -2359,17 +2421,17 @@ select:focus {
 .modern-actions {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 .modern-btn-primary {
-    padding: 10px 20px;
+    padding: 9px 18px;
     border-radius: 999px;
     border: none;
     background: #18181B;
     color: #FAFAFA;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
@@ -2384,12 +2446,12 @@ select:focus {
 }
 
 .modern-btn-secondary {
-    padding: 10px 20px;
+    padding: 9px 18px;
     border-radius: 999px;
     border: 1px solid rgba(0,0,0,0.08);
     background: #FFFFFF;
     color: #18181B;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
@@ -2413,12 +2475,12 @@ select:focus {
 }
 
 .modern-view-btn {
-    padding: 6px 16px;
+    padding: 5px 14px;
     border-radius: 999px;
     border: none;
     background: transparent;
     color: #71717A;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     cursor: pointer;
     font-family: inherit;
@@ -2438,34 +2500,34 @@ select:focus {
 .modern-stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+    gap: 14px;
 }
 
 .modern-stat-card {
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 18px;
     display: flex;
     align-items: center;
-    gap: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    gap: 14px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
     border: 1px solid rgba(0,0,0,0.04);
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .modern-stat-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
 }
 
 .modern-stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: rgba(255,255,255,0.6);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
+    font-size: 20px;
     flex-shrink: 0;
     backdrop-filter: blur(4px);
 }
@@ -2476,7 +2538,7 @@ select:focus {
 }
 
 .modern-stat-value {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 700;
     color: #18181B;
     line-height: 1.1;
@@ -2484,7 +2546,7 @@ select:focus {
 }
 
 .modern-stat-label {
-    font-size: 13px;
+    font-size: 12px;
     color: #52525B;
     font-weight: 500;
     margin-top: 2px;
@@ -2779,30 +2841,30 @@ select:focus {
 /* Page Header */
 .modern-page-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 20px;
+    gap: 16px;
     flex-wrap: wrap;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .modern-page-header-left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
 }
 
 .modern-breadcrumb {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
+    gap: 6px;
+    font-size: 12px;
     color: #71717A;
 }
 
 .modern-page-title {
-    font-size: 19px;
+    font-size: 17px;
     font-weight: 700;
     color: #18181B;
     margin: 0;
@@ -2814,7 +2876,31 @@ select:focus {
 }
 
 .modern-page-progress {
-    width: 160px;
+    width: 140px;
+}
+
+.modern-select {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #FFFFFF;
+    color: #18181B;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: all 0.15s ease;
+}
+
+.modern-select:hover {
+    border-color: rgba(0,0,0,0.12);
+}
+
+.modern-select:focus {
+    outline: none;
+    border-color: rgba(167,139,250,0.4);
+    box-shadow: 0 0 0 4px rgba(167,139,250,0.08);
 }
 
 /* Sidebar toggle (mobile) */

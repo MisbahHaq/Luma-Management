@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Luma.Server.Middleware;
@@ -8,14 +9,16 @@ public class RateLimitingMiddleware
     private readonly RequestDelegate _next;
     private readonly ILogger<RateLimitingMiddleware> _logger;
     private static readonly Dictionary<string, (int Count, DateTime WindowStart)> _requests = new();
-    private const int Limit = 100;
-    private static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
+    private readonly int _limit;
+    private readonly TimeSpan _window;
     private static readonly object _lock = new();
 
-    public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger)
+    public RateLimitingMiddleware(RequestDelegate next, ILogger<RateLimitingMiddleware> logger, IConfiguration configuration)
     {
         _next = next;
         _logger = logger;
+        _limit = configuration.GetValue<int>("RateLimiting:Limit", 1000);
+        _window = TimeSpan.FromMinutes(configuration.GetValue<int>("RateLimiting:WindowMinutes", 1));
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -28,12 +31,12 @@ public class RateLimitingMiddleware
         {
             if (_requests.TryGetValue(key, out var entry))
             {
-                if (now - entry.WindowStart > Window)
+                if (now - entry.WindowStart > _window)
                 {
                     _requests[key] = (1, now);
                     exceeded = false;
                 }
-                else if (entry.Count >= Limit)
+                else if (entry.Count >= _limit)
                 {
                     exceeded = true;
                 }

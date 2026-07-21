@@ -50,6 +50,8 @@ export const activityApi = {
         client.get<{ items: ActivityLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/activity/task/${taskId}?page=${page}&pageSize=${pageSize}`),
     forProject: (projectId: string, page = 1, pageSize = 20) =>
         client.get<{ items: ActivityLog[]; total: number; page: number; pageSize: number; totalPages: number }>(`/activity/project/${projectId}?page=${page}&pageSize=${pageSize}`),
+    mine: (page = 1, pageSize = 20) =>
+        client.get<ActivityLog[]>(`/activity/mine?page=${page}&pageSize=${pageSize}`),
 };
 
 export const notificationsApi = {

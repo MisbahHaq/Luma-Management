@@ -4,7 +4,7 @@ import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useWorkspace } from '../context/WorkspaceContext';
 import AppShell from '../components/AppShell';
-import { tasksApi } from '../api/endpoints';
+import { tasksApi, workspacesApi } from '../api/endpoints';
 import type { Project, Task } from '../types/types';
 
 interface ProjectStat {
@@ -16,16 +16,18 @@ interface ProjectStat {
 
 export default function Dashboard() {
     const { currentUser } = useAuth();
-    const { currentWorkspace, workspaces, switchWorkspace } = useWorkspace();
+    const { currentWorkspace, workspaces, switchWorkspace, refreshWorkspaces } = useWorkspace();
     const navigate = useNavigate();
 
     const [stats, setStats] = useState<ProjectStat[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [showModal, setShowModal] = useState(false);
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
+    const [showProjectModal, setShowProjectModal] = useState(false);
+    const [showWorkspaceModal, setShowWorkspaceModal] = useState(false);
+    const [projectName, setProjectName] = useState('');
+    const [projectDescription, setProjectDescription] = useState('');
+    const [workspaceName, setWorkspaceName] = useState('');
     const [saving, setSaving] = useState(false);
 
     const canWrite = currentUser?.role === 'Admin' || currentUser?.role === 'Member';
@@ -41,12 +43,13 @@ export default function Dashboard() {
         return { project, taskCount: total, completion, lastUpdated };
     };
 
-    const loadProjects = useCallback(async () => {
+    const loadProjects = useCallback(async (workspaceId?: string) => {
         setLoading(true);
         try {
             const params: Record<string, string> = {};
-            if (currentWorkspace?.id) {
-                params.workspaceId = currentWorkspace.id;
+            const wsId = workspaceId ?? currentWorkspace?.id;
+            if (wsId) {
+                params.workspaceId = wsId;
             }
             const { data: projects } = await client.get<Project[]>('/projects', { params });
             const enriched = await Promise.all(
@@ -74,19 +77,19 @@ export default function Dashboard() {
 
     const openProject = (id: string) => navigate(`/projects/${id}`);
 
-    const handleCreate = async (e: FormEvent) => {
+    const handleCreateProject = async (e: FormEvent) => {
         e.preventDefault();
-        if (!name.trim() || !currentWorkspace?.id) return;
+        if (!projectName.trim() || !currentWorkspace?.id) return;
         setSaving(true);
         try {
             await client.post<Project>('/projects', {
-                name: name.trim(),
-                description: description.trim() || null,
+                name: projectName.trim(),
+                description: projectDescription.trim() || null,
                 workspaceId: currentWorkspace.id,
             });
-            setName('');
-            setDescription('');
-            setShowModal(false);
+            setProjectName('');
+            setProjectDescription('');
+            setShowProjectModal(false);
             await loadProjects();
         } catch {
             setError('Failed to create project.');
@@ -95,10 +98,21 @@ export default function Dashboard() {
         }
     };
 
-    const handleWorkspaceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const id = e.target.value;
-        if (id) {
-            switchWorkspace(id);
+    const handleCreateWorkspace = async (e: FormEvent) => {
+        e.preventDefault();
+        if (!workspaceName.trim()) return;
+        setSaving(true);
+        try {
+            const { data } = await workspacesApi.create(workspaceName.trim());
+            setWorkspaceName('');
+            setShowWorkspaceModal(false);
+            await refreshWorkspaces();
+            switchWorkspace(data.id);
+            await loadProjects(data.id);
+        } catch {
+            setError('Failed to create workspace.');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -116,7 +130,13 @@ export default function Dashboard() {
                         <select
                             className="modern-select"
                             value={currentWorkspace?.id ?? ''}
-                            onChange={handleWorkspaceChange}
+                            onChange={(e) => {
+                                const id = e.target.value;
+                                if (id) {
+                                    switchWorkspace(id);
+                                    loadProjects(id);
+                                }
+                            }}
                         >
                             {workspaces.map(ws => (
                                 <option key={ws.id} value={ws.id}>{ws.name}</option>
@@ -124,7 +144,7 @@ export default function Dashboard() {
                         </select>
                     )}
                     {canWrite && (
-                        <button className="modern-btn-primary" onClick={() => setShowModal(true)}>
+                        <button className="modern-btn-primary" onClick={() => setShowProjectModal(true)}>
                             + New Project
                         </button>
                     )}
@@ -133,11 +153,25 @@ export default function Dashboard() {
 
             {error && <div className="alert alert-error">{error}</div>}
 
-            {loading ? (
+            {!currentWorkspace ? (
+                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
+                    <p className="muted" style={{ fontSize: 15, marginBottom: 16 }}>You need a workspace before you can create projects.</p>
+                    {canWrite && (
+                        <button className="modern-btn-primary" onClick={() => setShowWorkspaceModal(true)}>
+                            + Create Workspace
+                        </button>
+                    )}
+                </div>
+            ) : loading ? (
                 <p className="muted">Loading...</p>
             ) : stats.length === 0 ? (
                 <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
                     <p className="muted" style={{ fontSize: 15 }}>No projects yet. Create your first project to get started.</p>
+                    {canWrite && (
+                        <button className="modern-btn-primary" style={{ marginTop: 16 }} onClick={() => setShowProjectModal(true)}>
+                            + New Project
+                        </button>
+                    )}
                 </div>
             ) : (
                 <div className="modern-stats-row">
@@ -160,19 +194,19 @@ export default function Dashboard() {
                 </div>
             )}
 
-            {showModal && (
-                <div className="modal-backdrop" onClick={() => setShowModal(false)}>
+            {showProjectModal && currentWorkspace && (
+                <div className="modal-backdrop" onClick={() => setShowProjectModal(false)}>
                     <form
                         className="card modal modal-lg"
                         onClick={(e) => e.stopPropagation()}
-                        onSubmit={handleCreate}
+                        onSubmit={handleCreateProject}
                     >
                         <h3>New project</h3>
                         <label>
                             Name
                             <input
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
+                                value={projectName}
+                                onChange={(e) => setProjectName(e.target.value)}
                                 placeholder="Project name"
                                 autoFocus
                             />
@@ -180,25 +214,59 @@ export default function Dashboard() {
                         <label>
                             Description
                             <textarea
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
+                                value={projectDescription}
+                                onChange={(e) => setProjectDescription(e.target.value)}
                                 placeholder="Optional description"
                                 rows={3}
                             />
                         </label>
-                        {!currentWorkspace?.id && (
-                            <div className="alert alert-warning">Select a workspace before creating a project.</div>
-                        )}
                         <div className="modal-actions">
                             <button
                                 type="button"
                                 className="btn btn-ghost"
-                                onClick={() => setShowModal(false)}
+                                onClick={() => setShowProjectModal(false)}
                             >
                                 Cancel
                             </button>
-                            <button type="submit" className="modern-btn-primary" disabled={saving || !currentWorkspace?.id}>
+                            <button type="submit" className="modern-btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Create'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {showWorkspaceModal && (
+                <div className="modal-backdrop" onClick={() => setShowWorkspaceModal(false)}>
+                    <form
+                        className="card modal modal-lg"
+                        onClick={(e) => e.stopPropagation()}
+                        onSubmit={handleCreateWorkspace}
+                    >
+                        <div className="modal-head">
+                            <h3>Create workspace</h3>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowWorkspaceModal(false)}>✕</button>
+                        </div>
+                        <p className="muted" style={{ marginBottom: 16 }}>A workspace is where your projects live. You'll be the owner.</p>
+                        <label>
+                            Workspace name
+                            <input
+                                value={workspaceName}
+                                onChange={(e) => setWorkspaceName(e.target.value)}
+                                placeholder="e.g. Acme Corp"
+                                autoFocus
+                            />
+                        </label>
+                        <div className="modal-actions">
+                            <button
+                                type="button"
+                                className="btn btn-ghost"
+                                onClick={() => setShowWorkspaceModal(false)}
+                            >
+                                Cancel
+                            </button>
+                            <button type="submit" className="modern-btn-primary" disabled={saving || !workspaceName.trim()}>
+                                {saving ? 'Creating...' : 'Create workspace'}
                             </button>
                         </div>
                     </form>

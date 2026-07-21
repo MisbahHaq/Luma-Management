@@ -51,8 +51,7 @@ namespace Luma.Server
                 {
                     OnMessageReceived = context =>
                     {
-                        if (context.Request.Query.TryGetValue("access_token", out var token) &&
-                            context.HttpContext.WebSockets.IsWebSocketRequest)
+                        if (context.Request.Query.TryGetValue("access_token", out var token))
                         {
                             context.Token = token.ToString();
                         }

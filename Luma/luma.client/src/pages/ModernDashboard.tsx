@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { reportsApi } from '../api/endpoints';
+import { useWorkspace } from '../context/WorkspaceContext';
+import { reportsApi, activityApi } from '../api/endpoints';
 import AppShell from '../components/AppShell';
-import type { DashboardSummary } from '../types/types';
+import type { DashboardSummary, ActivityLog } from '../types/types';
 
 interface TimeBlock {
     id: string;
@@ -33,28 +34,35 @@ const generateWeekDays = (): DaySchedule[] => {
         const date = new Date(monday);
         date.setDate(monday.getDate() + i);
         const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-        const blocks: TimeBlock[] = [];
-        if (i < 5) {
-            const blockTemplates = [
-                { id: '1', title: 'Team Standup', time: '09:00', duration: '30m', color: '#ADC6FF', status: 'In progress...' },
-                { id: '2', title: 'Design Review', time: '10:30', duration: '1h', color: '#D3ADF7', status: 'Upcoming' },
-                { id: '3', title: 'Sprint Planning', time: '14:00', duration: '2h', color: '#FFE58F', status: 'Scheduled' },
-            ];
-            const numBlocks = Math.floor(Math.random() * 2) + 1;
-            for (let j = 0; j < numBlocks; j++) {
-                blocks.push(blockTemplates[j]);
-            }
-        }
-        return { day, date: dateStr, blocks };
+        return { day, date: dateStr, blocks: [] };
     });
 };
 
+const ACTIVITY_COLORS: Record<string, string> = {
+    'TaskCreated': '#ADC6FF',
+    'TaskUpdated': '#FFE58F',
+    'TaskCompleted': '#B7E4A7',
+    'TaskMoved': '#D3ADF7',
+    'CommentAdded': '#ADC6FF',
+    'MemberAdded': '#D3ADF7',
+    'ProjectCreated': '#FFE58F',
+};
+
+function getActivityColor(action: string): string {
+    return ACTIVITY_COLORS[action] ?? '#A5A5A5';
+}
+
+function formatActivityAction(action: string): string {
+    return action.replace(/([A-Z])/g, ' $1').trim();
+}
+
 export default function ModernDashboard() {
     const { currentUser } = useAuth();
+    const { currentWorkspace: _currentWorkspace } = useWorkspace();
     const navigate = useNavigate();
     const weekDays = useMemo<DaySchedule[]>(() => generateWeekDays(), []);
     const [stats, setStats] = useState<DashboardSummary | null>(null);
+    const [activities, setActivities] = useState<ActivityLog[]>([]);
     const [viewMode, setViewMode] = useState<'Today' | 'Week' | 'Month'>('Week');
 
     const loadStats = async () => {
@@ -66,9 +74,20 @@ export default function ModernDashboard() {
         }
     };
 
+    const loadActivity = async () => {
+        try {
+            const { data } = await activityApi.mine(1, 10);
+            setActivities(data);
+        } catch {
+            setActivities([]);
+        }
+    };
+
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
-        loadStats();
+        void loadStats();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void loadActivity();
     }, []);
 
     const userName = currentUser?.fullName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User';
@@ -79,6 +98,8 @@ export default function ModernDashboard() {
         { label: 'Completed', value: stats?.completedTasks ?? 0, color: '#B7E4A7', icon: '✓' },
         { label: 'Overdue', value: stats?.overdueTasks ?? 0, color: '#FFADAD', icon: '!' },
     ];
+
+    const recentActivities = activities.slice(0, 6);
 
     return (
         <AppShell>
@@ -140,20 +161,6 @@ export default function ModernDashboard() {
                                 <span className={`modern-day-date ${day.day === 'Wed' ? 'today-date' : ''}`}>{day.date}</span>
                             </div>
                             <div className="modern-calendar-col-body">
-                                {day.blocks.map((block) => (
-                                    <div
-                                        key={block.id}
-                                        className="modern-time-block"
-                                        style={{ backgroundColor: block.color }}
-                                    >
-                                        <div className="modern-time-block-time">{block.time}</div>
-                                        <div className="modern-time-block-title">{block.title}</div>
-                                        <div className="modern-time-block-meta">
-                                            <span className="modern-time-block-duration">{block.duration}</span>
-                                            <span className="modern-time-block-status">{block.status}</span>
-                                        </div>
-                                    </div>
-                                ))}
                                 {day.blocks.length === 0 && (
                                     <div className="modern-empty-block">No events</div>
                                 )}
@@ -196,21 +203,18 @@ export default function ModernDashboard() {
                 <div className="modern-bento-card">
                     <h3 className="modern-bento-title">Recent Activity</h3>
                     <div className="modern-activity-list">
-                        {[
-                            { action: 'Task completed', target: 'Fix login bug', time: '2m ago', color: '#B7E4A7' },
-                            { action: 'Comment added', target: 'API redesign', time: '15m ago', color: '#ADC6FF' },
-                            { action: 'Sprint started', target: 'Sprint 12', time: '1h ago', color: '#FFE58F' },
-                            { action: 'Member joined', target: 'Design team', time: '3h ago', color: '#D3ADF7' },
-                        ].map((item, i) => (
-                            <div key={i} className="modern-activity-item">
-                                <div className="modern-activity-dot" style={{ backgroundColor: item.color }} />
+                        {recentActivities.length > 0 ? recentActivities.map((item) => (
+                            <div key={item.id} className="modern-activity-item">
+                                <div className="modern-activity-dot" style={{ backgroundColor: getActivityColor(item.action) }} />
                                 <div className="modern-activity-content">
-                                    <div className="modern-activity-action">{item.action}</div>
-                                    <div className="modern-activity-target">{item.target}</div>
+                                    <div className="modern-activity-action">{formatActivityAction(item.action)}</div>
+                                    <div className="modern-activity-target">{item.description}</div>
                                 </div>
-                                <span className="modern-activity-time">{item.time}</span>
+                                <span className="modern-activity-time">{new Date(item.createdAt).toLocaleDateString()}</span>
                             </div>
-                        ))}
+                        )) : (
+                            <p className="modern-muted-text">No recent activity.</p>
+                        )}
                     </div>
                 </div>
             </div>
