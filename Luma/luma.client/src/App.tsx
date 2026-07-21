@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import ModernDashboard from './pages/ModernDashboard';
+import MyTasksPage from './pages/MyTasksPage';
 import ProjectDetail from './pages/ProjectDetail';
 import Reports from './pages/Reports';
 import ReportsPage from './pages/ReportsPage';
@@ -40,6 +41,14 @@ export default function App() {
                 element={
                     <ProtectedRoute>
                         <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
+            <Route
+                path="/my-tasks"
+                element={
+                    <ProtectedRoute>
+                        <MyTasksPage />
                     </ProtectedRoute>
                 }
             />

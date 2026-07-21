@@ -18,8 +18,8 @@ interface AppShellProps {
 const NAV_ITEMS = [
     { label: 'Home', icon: '⌂', href: '/', active: true },
     { label: 'Projects', icon: '▦', href: '/projects' },
+    { label: 'My Tasks', icon: '☑', href: '/my-tasks' },
     { label: 'Sprints', icon: '◷', href: '/sprints' },
-    { label: 'Tasks', icon: '☑', href: '/tasks' },
     { label: 'Reports', icon: '◔', href: '/reports' },
     { label: 'Members', icon: '☺', href: '/members' },
 ];

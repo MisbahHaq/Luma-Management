@@ -73,6 +73,13 @@ export interface Comment {
     canDelete: boolean;
 }
 
+export interface Label {
+    id: string;
+    name: string;
+    color: string;
+    projectId: string;
+}
+
 export interface AuthResponse {
     token: string;
     user: User;

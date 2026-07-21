@@ -25,7 +25,12 @@ public enum ActivityAction
     PasswordResetRequested,
     PasswordResetCompleted,
     CommentUpdated,
-    CommentRemoved
+    CommentRemoved,
+    LabelCreated,
+    LabelUpdated,
+    LabelRemoved,
+    TaskLabelAdded,
+    TaskLabelRemoved
 }
 
 public class ActivityLog

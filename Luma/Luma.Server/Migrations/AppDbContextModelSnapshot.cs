@@ -325,6 +325,36 @@ namespace Luma.Server.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Label", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("ProjectId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Labels");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -745,6 +775,31 @@ namespace Luma.Server.Migrations
                     b.HasIndex("SprintId");
 
                     b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TaskLabel", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("LabelId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LabelId");
+
+                    b.HasIndex("TaskId", "LabelId")
+                        .IsUnique();
+
+                    b.ToTable("TaskLabels");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>
@@ -1262,6 +1317,17 @@ namespace Luma.Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Luma.Server.Models.Label", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Luma.Server.Models.Notification", b =>
                 {
                     b.HasOne("Luma.Server.Models.ApplicationUser", "Recipient")
@@ -1445,6 +1511,25 @@ namespace Luma.Server.Migrations
                     b.Navigation("Project");
 
                     b.Navigation("Sprint");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.TaskLabel", b =>
+                {
+                    b.HasOne("Luma.Server.Models.Label", "Label")
+                        .WithMany()
+                        .HasForeignKey("LabelId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Luma.Server.Models.TaskItem", "Task")
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Label");
+
+                    b.Navigation("Task");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.TeamCalendar", b =>

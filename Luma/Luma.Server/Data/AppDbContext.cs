@@ -39,6 +39,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
     public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+    public DbSet<Label> Labels => Set<Label>();
+    public DbSet<TaskLabel> TaskLabels => Set<TaskLabel>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -439,6 +441,35 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
             entity.HasKey(t => t.Id);
 
             entity.HasIndex(t => new { t.Token, t.UsedAt });
+        });
+
+        builder.Entity<Label>(entity =>
+        {
+            entity.HasKey(l => l.Id);
+
+            entity.HasOne(l => l.Project)
+                .WithMany()
+                .HasForeignKey(l => l.ProjectId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(l => new { l.ProjectId, l.Name }).IsUnique();
+        });
+
+        builder.Entity<TaskLabel>(entity =>
+        {
+            entity.HasKey(tl => tl.Id);
+
+            entity.HasOne(tl => tl.Task)
+                .WithMany()
+                .HasForeignKey(tl => tl.TaskId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(tl => tl.Label)
+                .WithMany()
+                .HasForeignKey(tl => tl.LabelId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(tl => new { tl.TaskId, tl.LabelId }).IsUnique();
         });
 
         // =====================================================================
