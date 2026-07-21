@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import ModernDashboard from './pages/ModernDashboard';
 import ProjectDetail from './pages/ProjectDetail';
 import Reports from './pages/Reports';
 import ReportsPage from './pages/ReportsPage';
@@ -26,7 +27,7 @@ export default function App() {
                 path="/"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <ModernDashboard />
                     </ProtectedRoute>
                 }
             />

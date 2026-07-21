@@ -147,10 +147,10 @@ export default function TaskDetailModal({
 
     return (
         <div className="modal-backdrop" onClick={onClose}>
-            <div className="card modal modal-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
                     <h3>{title}</h3>
-                    <button className="btn btn-ghost" onClick={onClose}>
+                    <button type="button" className="btn btn-ghost" onClick={onClose}>
                         ✕
                     </button>
                 </div>

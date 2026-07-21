@@ -151,7 +151,7 @@ export default function IssueHierarchyTable({
                 />
                 <div className="filter-wrap">
                     <button
-                        className={`btn btn-ghost small ${showFilters ? 'btn-active' : ''}`}
+                        className={`btn btn-ghost ${showFilters ? 'btn-active' : ''}`}
                         onClick={() => setShowFilters((s) => !s)}
                     >
                         ⛃ Filters
