@@ -13,6 +13,7 @@ import type {
     ProjectHealth,
     DashboardSummary,
     Task,
+    SearchResponse,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -152,4 +153,8 @@ export const publicPortalApi = {
         client.get(`/public/projects/${projectId}/members`, { headers: { 'X-Public-Token': token } }),
     health: (projectId: string, token: string) =>
         client.get(`/public/projects/${projectId}/health`, { headers: { 'X-Public-Token': token } }),
+};
+
+export const searchApi = {
+    query: (q: string) => client.get<SearchResponse>('/search', { params: { q } }),
 };

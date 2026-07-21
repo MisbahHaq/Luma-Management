@@ -22,6 +22,29 @@ export interface Project {
     createdByUserFullName: string | null;
 }
 
+export interface SearchProjectResult {
+    id: string;
+    name: string;
+    description: string | null;
+    taskCount: number;
+}
+
+export interface SearchTaskResult {
+    id: string;
+    title: string;
+    description: string | null;
+    projectId: string;
+    projectName: string;
+    status: TaskStatus;
+    assigneeFullName: string | null;
+}
+
+export interface SearchResponse {
+    query: string;
+    projects: SearchProjectResult[];
+    tasks: SearchTaskResult[];
+}
+
 export interface Task {
     id: string;
     title: string;
