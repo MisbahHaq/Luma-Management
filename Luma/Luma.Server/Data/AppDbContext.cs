@@ -38,6 +38,7 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
     public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
     public DbSet<WebhookDelivery> WebhookDeliveries => Set<WebhookDelivery>();
     public DbSet<BackgroundJob> BackgroundJobs => Set<BackgroundJob>();
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -92,6 +93,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
                 .WithMany()
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(c => c.DeletedBy)
+                .WithMany()
+                .HasForeignKey(c => c.DeletedById)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Attachment>(entity =>
@@ -426,6 +432,13 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
             entity.HasIndex(j => new { j.Status, j.NextAttemptAt });
             entity.HasIndex(j => new { j.Type, j.Status });
+        });
+
+        builder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(t => t.Id);
+
+            entity.HasIndex(t => new { t.Token, t.UsedAt });
         });
 
         // =====================================================================

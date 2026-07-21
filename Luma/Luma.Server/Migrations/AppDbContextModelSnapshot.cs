@@ -293,6 +293,15 @@ namespace Luma.Server.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeletedById")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
                     b.Property<Guid>("TaskId")
                         .HasColumnType("TEXT");
 
@@ -306,6 +315,8 @@ namespace Luma.Server.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DeletedById");
 
                     b.HasIndex("TaskId");
 
@@ -355,6 +366,38 @@ namespace Luma.Server.Migrations
                     b.HasIndex("RecipientId", "IsRead");
 
                     b.ToTable("Notifications");
+                });
+
+            modelBuilder.Entity("Luma.Server.Models.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token", "UsedAt");
+
+                    b.ToTable("PasswordResetTokens");
                 });
 
             modelBuilder.Entity("Luma.Server.Models.Project", b =>
@@ -1195,6 +1238,11 @@ namespace Luma.Server.Migrations
 
             modelBuilder.Entity("Luma.Server.Models.Comment", b =>
                 {
+                    b.HasOne("Luma.Server.Models.ApplicationUser", "DeletedBy")
+                        .WithMany()
+                        .HasForeignKey("DeletedById")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Luma.Server.Models.TaskItem", "Task")
                         .WithMany("Comments")
                         .HasForeignKey("TaskId")
@@ -1206,6 +1254,8 @@ namespace Luma.Server.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DeletedBy");
 
                     b.Navigation("Task");
 

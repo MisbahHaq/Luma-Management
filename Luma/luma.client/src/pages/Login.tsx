@@ -65,8 +65,9 @@ export default function Login() {
                     {loading ? 'Signing in...' : 'Sign In'}
                 </button>
 
-                <p className="muted small" style={{ textAlign: 'center' }}>
-                    No account? <Link to="/register" style={{ color: '#8B5CF6', fontWeight: 600 }}>Create one</Link>
+                <p className="muted small" style={{ textAlign: 'center', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>No account? <Link to="/register" style={{ color: '#8B5CF6', fontWeight: 600 }}>Create one</Link></span>
+                    <Link to="/forgot-password" style={{ color: '#8B5CF6', fontWeight: 600 }}>Forgot password?</Link>
                 </p>
             </form>
         </div>

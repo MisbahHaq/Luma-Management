@@ -21,7 +21,11 @@ public enum ActivityAction
     SprintCompleted,
     DependencyAdded,
     DependencyRemoved,
-    TimeLogged
+    TimeLogged,
+    PasswordResetRequested,
+    PasswordResetCompleted,
+    CommentUpdated,
+    CommentRemoved
 }
 
 public class ActivityLog

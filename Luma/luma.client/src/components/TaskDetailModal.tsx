@@ -3,6 +3,7 @@ import client from '../api/client';
 import {
     attachmentsApi,
     activityApi,
+    commentsApi,
 } from '../api/endpoints';
 import {
     STATUS_LABELS,
@@ -10,7 +11,7 @@ import {
     TASK_TYPE_LABELS,
     type ActivityLog,
     type Attachment,
-    type Comment,
+    type Comment as CommentModel,
     type Task,
     type TaskItemType,
     type TaskPriority,
@@ -45,20 +46,22 @@ export default function TaskDetailModal({
     const [parentTaskId, setParentTaskId] = useState<string>(task.parentTaskId ?? '');
     const [assigneeId, setAssigneeId] = useState<string | null>(task.assigneeId);
     const [users, setUsers] = useState<UserSummary[]>([]);
-    const [comments, setComments] = useState<Comment[]>([]);
+    const [comments, setComments] = useState<CommentModel[]>([]);
     const [attachments, setAttachments] = useState<Attachment[]>([]);
     const [activity, setActivity] = useState<ActivityLog[]>([]);
     const [newComment, setNewComment] = useState('');
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editText, setEditText] = useState('');
 
     useEffect(() => {
         let active = true;
         const load = async () => {
             try {
                 const [commentsRes, usersRes, attachmentsRes, activityRes] = await Promise.all([
-                    client.get<{ items: Comment[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${task.id}?page=1&pageSize=50`),
+                    client.get<{ items: CommentModel[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${task.id}?page=1&pageSize=50`),
                     canEdit ? client.get<UserSummary[]>('/users') : Promise.resolve({ data: [] as UserSummary[] }),
                     attachmentsApi.list(task.id),
                     activityApi.forTask(task.id, 1, 50),
@@ -105,7 +108,7 @@ export default function TaskDetailModal({
         e.preventDefault();
         if (!newComment.trim()) return;
         try {
-            const { data } = await client.post<Comment>('/comments', {
+            const { data } = await client.post<CommentModel>('/comments', {
                 taskId: task.id,
                 text: newComment.trim(),
             });
@@ -142,6 +145,37 @@ export default function TaskDetailModal({
             setAttachments((prev) => prev.filter((a) => a.id !== id));
         } catch {
             setError('Failed to delete attachment.');
+        }
+    };
+
+    const startEdit = (comment: CommentModel) => {
+        setEditingId(comment.id);
+        setEditText(comment.text);
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditText('');
+    };
+
+    const saveEdit = async (commentId: string) => {
+        if (!editText.trim()) return;
+        try {
+            const { data } = await commentsApi.update(commentId, editText.trim());
+            setComments((prev) => prev.map((c) => (c.id === commentId ? data : c)));
+            setEditingId(null);
+            setEditText('');
+        } catch {
+            setError('Failed to update comment.');
+        }
+    };
+
+    const deleteComment = async (commentId: string) => {
+        try {
+            await commentsApi.remove(commentId);
+            setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, isDeleted: true, text: '[deleted]' } : c)));
+        } catch {
+            setError('Failed to delete comment.');
         }
     };
 
@@ -311,14 +345,64 @@ export default function TaskDetailModal({
                     ) : (
                         <ul className="comment-list">
                             {comments.map((c) => (
-                                <li key={c.id} className="comment">
-                                    <div className="comment-head">
-                                        <strong>{c.userFullName}</strong>
-                                        <small className="muted timestamp">
-                                            {new Date(c.createdAt).toLocaleString()}
-                                        </small>
-                                    </div>
-                                    <p>{c.text}</p>
+                                <li key={c.id} className={`comment ${c.isDeleted ? 'comment-deleted' : ''}`}>
+                                    {editingId === c.id ? (
+                                        <>
+                                            <textarea
+                                                value={editText}
+                                                onChange={(e) => setEditText(e.target.value)}
+                                                rows={3}
+                                                autoFocus
+                                            />
+                                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    onClick={() => void saveEdit(c.id)}
+                                                    disabled={!editText.trim()}
+                                                >
+                                                    Save
+                                                </button>
+                                                <button type="button" className="btn btn-ghost" onClick={cancelEdit}>
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="comment-head">
+                                                <strong>{c.userFullName}</strong>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                    <small className="muted timestamp">
+                                                        {new Date(c.createdAt).toLocaleString()}
+                                                    </small>
+                                                    {c.canEdit && !c.isDeleted && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost small"
+                                                            onClick={() => startEdit(c)}
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    )}
+                                                    {c.canDelete && (
+                                                        <button
+                                                            type="button"
+                                                            className="btn btn-ghost small"
+                                                            onClick={() => {
+                                                                if (confirm('Delete this comment?')) {
+                                                                    void deleteComment(c.id);
+                                                                }
+                                                            }}
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <p>{c.isDeleted ? '[deleted]' : c.text}</p>
+                                        </>
+                                    )}
                                 </li>
                             ))}
                         </ul>

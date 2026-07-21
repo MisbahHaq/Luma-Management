@@ -16,6 +16,7 @@ export default function SearchResults({ query, onClose }: SearchResultsProps) {
 
     useEffect(() => {
         if (!query.trim()) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setResults(null);
             return;
         }

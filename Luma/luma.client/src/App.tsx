@@ -3,6 +3,8 @@ import { useAuth } from './context/AuthContext';
 import type { ReactNode } from 'react';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import ModernDashboard from './pages/ModernDashboard';
 import ProjectDetail from './pages/ProjectDetail';
@@ -22,6 +24,8 @@ export default function App() {
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/register" element={<Register />} />
             <Route
                 path="/"

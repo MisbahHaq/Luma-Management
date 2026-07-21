@@ -21,4 +21,12 @@ public class Comment
     public string Text { get; set; } = string.Empty;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public bool IsDeleted { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
+    public string? DeletedById { get; set; }
+
+    public ApplicationUser? DeletedBy { get; set; }
 }
