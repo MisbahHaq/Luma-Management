@@ -40,7 +40,7 @@ export default function PublicPortal() {
                 <header className="topbar">
                     <h1>Luma - Client Portal</h1>
                 </header>
-                <main className="container" style={{ maxWidth: 480 }}>
+                <main className="container portal-container">
                     <div className="card">
                         <h2>Access Project</h2>
                         <p className="muted">Enter the project access token provided by the project owner.</p>
@@ -55,7 +55,7 @@ export default function PublicPortal() {
                                     autoFocus
                                 />
                             </label>
-                            <button type="submit" className="modern-btn-primary" style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
+                            <button type="submit" className="modern-btn-primary portal-submit">
                                 View Project
                             </button>
                         </form>
@@ -125,28 +125,30 @@ export default function PublicPortal() {
                     {tasks.length === 0 ? (
                         <p className="muted">No tasks yet.</p>
                     ) : (
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
-                                    <th>Assignee</th>
-                                    <th>Due Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {tasks.map((task) => (
-                                    <tr key={task.id}>
-                                        <td>{task.title}</td>
-                                        <td>{task.status}</td>
-                                        <td>{task.priority}</td>
-                                        <td>{task.assignee || 'Unassigned'}</td>
-                                        <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
+                        <div className="table-wrap">
+                            <table className="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Assignee</th>
+                                        <th>Due Date</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {tasks.map((task) => (
+                                        <tr key={task.id}>
+                                            <td>{task.title}</td>
+                                            <td>{task.status}</td>
+                                            <td>{task.priority}</td>
+                                            <td>{task.assignee || 'Unassigned'}</td>
+                                            <td>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     )}
                 </div>
 

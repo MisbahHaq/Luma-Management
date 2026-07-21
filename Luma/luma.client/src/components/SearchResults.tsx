@@ -117,7 +117,7 @@ export default function SearchResults({ query, onClose }: SearchResultsProps) {
                                     <div className="modern-search-item-content">
                                         <div className="modern-search-item-primary">{t.title}</div>
                                         <div className="modern-search-item-secondary">
-                                            {t.projectName} · <span className={`modern-search-status status-${t.status.toLowerCase()}`}>{t.status}</span> · <span className="muted" style={{ fontFamily: 'var(--instrument)', fontSize: 12 }}>{t.issueKey}</span>
+                                            {t.projectName} · <span className={`modern-search-status status-${t.status.toLowerCase()}`}>{t.status}</span> · <span className="modern-search-item-key">{t.issueKey}</span>
                                         </div>
                                     </div>
                                     {t.assigneeFullName && (

@@ -197,8 +197,8 @@ export default function TaskDetailModal({
             <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
                 <div className="modal-head">
                     <div>
-                        <small className="muted" style={{ fontFamily: 'var(--instrument)', fontSize: 12 }}>{task.issueKey}</small>
-                        <h3 style={{ margin: 0 }}>{title}</h3>
+                        <small className="muted modal-issue-key">{task.issueKey}</small>
+                        <h3 className="modal-title">{title}</h3>
                     </div>
                     <button type="button" className="btn btn-ghost" onClick={onClose}>
                         ✕
@@ -333,8 +333,8 @@ export default function TaskDetailModal({
                     )}
                 </form>
 
-                <div style={{ marginBottom: 18 }}>
-                    <h4 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#52525B' }}>Labels</h4>
+                <div className="modal-section">
+                    <h4 className="modal-section-title">Labels</h4>
                     <LabelPicker
                         projectId={task.projectId}
                         taskId={task.id}
@@ -397,7 +397,7 @@ export default function TaskDetailModal({
                                                 rows={3}
                                                 autoFocus
                                             />
-                                            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                            <div className="comment-actions">
                                                 <button
                                                     type="button"
                                                     className="btn btn-primary"
@@ -415,7 +415,7 @@ export default function TaskDetailModal({
                                         <>
                                             <div className="comment-head">
                                                 <strong>{c.userFullName}</strong>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                <div className="comment-actions">
                                                     <small className="muted timestamp">
                                                         {new Date(c.createdAt).toLocaleString()}
                                                     </small>

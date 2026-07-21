@@ -131,67 +131,49 @@ export default function MyTasksPage() {
 
             {error && <div className="alert alert-error">{error}</div>}
 
-            <div className="modern-view-toggle" style={{ marginBottom: 18 }}>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                    <label style={{ marginBottom: 0, fontSize: 13, color: '#71717A' }}>
-                        Status
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
-                            style={{ padding: '6px 10px', fontSize: 13 }}
-                        >
-                            {STATUSES.map((s) => (
-                                <option key={s} value={s}>{s === 'all' ? 'All' : s}</option>
+            <div className="modern-filter-bar">
+                <label className="modern-filter-label">
+                    Status
+                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}>
+                        {STATUSES.map((s) => (
+                            <option key={s} value={s}>{s === 'all' ? 'All' : s}</option>
+                        ))}
+                    </select>
+                </label>
+                <label className="modern-filter-label">
+                    Priority
+                    <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as FilterPriority)}>
+                        {PRIORITIES.map((p) => (
+                            <option key={p} value={p}>{p === 'all' ? 'All' : p}</option>
+                        ))}
+                    </select>
+                </label>
+                <label className="modern-filter-label">
+                    Type
+                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as FilterType)}>
+                        {TYPES.map((t) => (
+                            <option key={t} value={t}>{t === 'all' ? 'All' : t}</option>
+                        ))}
+                    </select>
+                </label>
+                {projects.length > 0 && (
+                    <label className="modern-filter-label">
+                        Project
+                        <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
+                            <option value="all">All projects</option>
+                            {projects.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name}</option>
                             ))}
                         </select>
                     </label>
-                    <label style={{ marginBottom: 0, fontSize: 13, color: '#71717A' }}>
-                        Priority
-                        <select
-                            value={priorityFilter}
-                            onChange={(e) => setPriorityFilter(e.target.value as FilterPriority)}
-                            style={{ padding: '6px 10px', fontSize: 13 }}
-                        >
-                            {PRIORITIES.map((p) => (
-                                <option key={p} value={p}>{p === 'all' ? 'All' : p}</option>
-                            ))}
-                        </select>
-                    </label>
-                    <label style={{ marginBottom: 0, fontSize: 13, color: '#71717A' }}>
-                        Type
-                        <select
-                            value={typeFilter}
-                            onChange={(e) => setTypeFilter(e.target.value as FilterType)}
-                            style={{ padding: '6px 10px', fontSize: 13 }}
-                        >
-                            {TYPES.map((t) => (
-                                <option key={t} value={t}>{t === 'all' ? 'All' : t}</option>
-                            ))}
-                        </select>
-                    </label>
-                    {projects.length > 0 && (
-                        <label style={{ marginBottom: 0, fontSize: 13, color: '#71717A' }}>
-                            Project
-                            <select
-                                value={projectFilter}
-                                onChange={(e) => setProjectFilter(e.target.value)}
-                                style={{ padding: '6px 10px', fontSize: 13 }}
-                            >
-                                <option value="all">All projects</option>
-                                {projects.map((p) => (
-                                    <option key={p.id} value={p.id}>{p.name}</option>
-                                ))}
-                            </select>
-                        </label>
-                    )}
-                </div>
+                )}
             </div>
 
             {loading ? (
                 <p className="muted">Loading...</p>
             ) : tasks.length === 0 ? (
-                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
-                    <p className="muted" style={{ fontSize: 15 }}>No tasks assigned to you yet.</p>
+                <div className="modern-bento-card modern-empty-state">
+                    <p className="muted">No tasks assigned to you yet.</p>
                 </div>
             ) : (
                 <IssueHierarchyTable

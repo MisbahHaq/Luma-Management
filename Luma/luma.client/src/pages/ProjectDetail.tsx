@@ -11,6 +11,7 @@ import GanttView from '../components/GanttView';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
 import MilestonesPanel from '../components/MilestonesPanel';
 import AppShell from '../components/AppShell';
+import Avatar from '../components/Avatar';
 import { membersApi, usersApi, tasksApi } from '../api/endpoints';
 import { labelsApi } from '../api/endpoints';
 import {
@@ -208,9 +209,9 @@ export default function ProjectDetail() {
             breadcrumb={
                 <>
                     <span className="crumb-link" onClick={() => navigate('/projects')}>{project?.workspaceName ?? 'Workspace'}</span>
-                    <span className="crumb-sep">›</span>
+                    <span className="crumb-sep">/</span>
                     <span>Projects</span>
-                    <span className="crumb-sep">›</span>
+                    <span className="crumb-sep">/</span>
                     <span>{project?.name ?? '…'}</span>
                 </>
             }
@@ -226,52 +227,71 @@ export default function ProjectDetail() {
                 <>
                     {project.description && <p className="muted project-sub">{project.description}</p>}
 
-                    <div className="modern-view-toggle">
-                        <button className={`modern-view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
-                        <button className={`modern-view-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>Kanban</button>
-                        <button className={`modern-view-btn ${view === 'plan' ? 'active' : ''}`} onClick={() => setView('plan')}>Plan</button>
-                        <button className={`modern-view-btn ${showMembers ? 'active' : ''}`} onClick={() => setShowMembers((s) => !s)}>Members ({members.length})</button>
+                    <div className="project-toolbar">
+                        <div className="modern-view-toggle">
+                            <button className={`modern-view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
+                            <button className={`modern-view-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>Kanban</button>
+                            <button className={`modern-view-btn ${view === 'plan' ? 'active' : ''}`} onClick={() => setView('plan')}>Plan</button>
+                            <button className={`modern-view-btn ${showMembers ? 'active' : ''}`} onClick={() => setShowMembers((s) => !s)}>Members ({members.length})</button>
+                        </div>
+                        {canEdit && (
+                            <button className="modern-btn-primary" onClick={() => setShowCreate(true)}>+ New Task</button>
+                        )}
                     </div>
-                    {canEdit && (
-                        <button className="modern-btn-primary" onClick={() => setShowCreate(true)} style={{ marginLeft: 'auto' }}>+ New Task</button>
-                    )}
 
                     {showMembers && (
-                        <div className="card members-panel">
-                            <h4>Project members</h4>
-                            <ul className="member-list">
+                        <div className="members-panel">
+                            <div className="members-header">
+                                <h3 className="members-title">Project members</h3>
+                                <span className="members-count">{members.length}</span>
+                            </div>
+
+                            <div className="members-list">
                                 {members.map((m) => (
-                                    <li key={m.id} className="member">
-                                        <span>{m.fullName ?? m.email}</span>
-                                        {isProjectOwner ? (
-                                            <select
-                                                className="role-select"
-                                                value={m.projectRole}
-                                                onChange={(e) => void changeMemberRole(m.id, e.target.value as ProjectRole)}
-                                            >
-                                                <option value="Owner">Owner</option>
-                                                <option value="Editor">Editor</option>
-                                                <option value="Viewer">Viewer</option>
-                                            </select>
-                                        ) : (
-                                            <small className="muted">{m.projectRole}</small>
-                                        )}
-                                        {canEdit && m.id !== currentUser?.id && (
-                                            <button className="btn btn-ghost small" onClick={() => void removeMember(m.id)}>Remove</button>
-                                        )}
-                                    </li>
+                                    <div key={m.id} className="member-item">
+                                        <Avatar name={m.fullName ?? m.email} size={34} />
+                                        <div className="member-info">
+                                            <div className="member-name">{m.fullName ?? m.email}</div>
+                                            <div className="member-email">{m.email}</div>
+                                        </div>
+                                        <div className="member-actions">
+                                            {isProjectOwner ? (
+                                                <select
+                                                    className="member-role-select"
+                                                    value={m.projectRole}
+                                                    onChange={(e) => void changeMemberRole(m.id, e.target.value as ProjectRole)}
+                                                >
+                                                    <option value="Owner">Owner</option>
+                                                    <option value="Editor">Editor</option>
+                                                    <option value="Viewer">Viewer</option>
+                                                </select>
+                                            ) : (
+                                                <span className={`member-role-badge role-${m.projectRole.toLowerCase()}`}>{m.projectRole}</span>
+                                            )}
+                                            {canEdit && m.id !== currentUser?.id && (
+                                                <button className="member-remove" onClick={() => void removeMember(m.id)} title="Remove member">
+                                                    ✕
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
                                 ))}
-                                {members.length === 0 && <li className="muted small">No members yet.</li>}
-                            </ul>
+                                {members.length === 0 && (
+                                    <div className="members-empty">
+                                        <p className="muted">No members yet.</p>
+                                    </div>
+                                )}
+                            </div>
+
                             {canEdit && (
-                                <form className="member-add" onSubmit={addMember}>
-                                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)}>
-                                        <option value="">Select user…</option>
+                                <form className="member-add-form" onSubmit={addMember}>
+                                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)} className="member-add-select">
+                                        <option value="">Add member…</option>
                                         {allUsers.filter((u) => !members.some((m) => m.id === u.id)).map((u) => (
                                             <option key={u.id} value={u.id}>{u.fullName ?? u.email}</option>
                                         ))}
                                     </select>
-                                    <button type="submit" className="btn btn-primary" disabled={!newMemberId}>Add</button>
+                                    <button type="submit" className="modern-btn-primary member-add-btn" disabled={!newMemberId}>Add</button>
                                 </form>
                             )}
                         </div>

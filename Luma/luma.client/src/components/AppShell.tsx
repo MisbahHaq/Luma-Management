@@ -48,7 +48,7 @@ export default function AppShell({
 
             <aside className={`modern-sidebar ${sidebarOpen ? 'modern-sidebar-open' : ''}`}>
                 <div className="modern-sidebar-brand">
-                    <div className="modern-sidebar-mark">◓</div>
+                    <span className="modern-sidebar-mark">◓</span>
                     <span className="modern-sidebar-title">Luma</span>
                 </div>
 
@@ -66,28 +66,18 @@ export default function AppShell({
                     ))}
                 </nav>
 
-                <div className="modern-sidebar-section">
-                    <div className="modern-sidebar-category">General</div>
-                    <a href="/settings" className="modern-sidebar-link" onClick={() => setSidebarOpen(false)}>
-                        <span className="modern-sidebar-icon">⚙</span>
-                        <span className="modern-sidebar-label">Settings</span>
-                    </a>
-                    <a href="#" className="modern-sidebar-link" onClick={() => setSidebarOpen(false)}>
-                        <span className="modern-sidebar-icon">?</span>
-                        <span className="modern-sidebar-label">Help</span>
-                    </a>
+                <div className="modern-sidebar-footer">
+                    <button className="modern-sidebar-logout" onClick={logout}>
+                        Log out
+                    </button>
                 </div>
-
-                <button className="modern-sidebar-logout" onClick={logout}>
-                    Log out
-                </button>
             </aside>
 
             <div className="modern-main">
                 <header className="modern-header">
                     <div className="modern-header-left">
                         <button className="modern-sidebar-toggle" onClick={() => setSidebarOpen((o) => !o)} aria-label="Toggle menu">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <line x1="3" y1="6" x2="21" y2="6" />
                                 <line x1="3" y1="12" x2="21" y2="12" />
                                 <line x1="3" y1="18" x2="21" y2="18" />
@@ -133,7 +123,7 @@ export default function AppShell({
 
                         <div className="modern-search-container">
                             <div className="modern-search-wrap">
-                                <svg className="modern-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg className="modern-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <circle cx="11" cy="11" r="8" />
                                     <path d="m21 21-4.35-4.35" />
                                 </svg>
@@ -150,12 +140,6 @@ export default function AppShell({
                     </div>
                     <div className="modern-header-right">
                         <NotificationsBell />
-                        <button className="modern-icon-btn" title="Settings">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="3" />
-                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09a1.65 1.65 0 0 0 1.51 1z" />
-                            </svg>
-                        </button>
                         <div className="modern-avatar" title={currentUser?.fullName ?? currentUser?.email}>
                             {(currentUser?.fullName?.[0] ?? currentUser?.email?.[0] ?? '?').toUpperCase()}
                         </div>

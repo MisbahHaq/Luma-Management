@@ -79,75 +79,75 @@ export default function Reports() {
             breadcrumb={
                 <>
                     <span className="crumb-link" onClick={() => navigate('/')}>Workspace</span>
-                    <span className="crumb-sep">›</span>
+                    <span className="crumb-sep">/</span>
                     <span>Reports</span>
                 </>
             }
             title="Reports & Insights"
         >
-            <main className="modern-content">
-                {error && <div className="alert alert-error">{error}</div>}
+            {error && <div className="alert alert-error">{error}</div>}
 
-                {loading ? (
-                    <p className="muted">Loading...</p>
-                ) : (
-                    <>
-                        <div className="modern-view-toggle">
-                            {(['health', 'burndown', 'velocity', 'exports'] as const).map((t) => (
-                                <button
-                                    key={t}
-                                    className={`modern-view-btn ${tab === t ? 'active' : ''}`}
-                                    onClick={() => setTab(t)}
-                                >
-                                    {t === 'health' ? 'Project Health' : t === 'burndown' ? 'Burndown' : t === 'velocity' ? 'Velocity' : 'Exports'}
-                                </button>
-                            ))}
-                        </div>
+            {loading ? (
+                <p className="muted">Loading...</p>
+            ) : (
+                <>
+                    <div className="modern-view-toggle">
+                        {(['health', 'burndown', 'velocity', 'exports'] as const).map((t) => (
+                            <button
+                                key={t}
+                                className={`modern-view-btn ${tab === t ? 'active' : ''}`}
+                                onClick={() => setTab(t)}
+                            >
+                                {t === 'health' ? 'Project Health' : t === 'burndown' ? 'Burndown' : t === 'velocity' ? 'Velocity' : 'Exports'}
+                            </button>
+                        ))}
+                    </div>
 
-                        {tab === 'health' && health && (
-                            <div className="modern-bento-card">
-                                <h3 className="modern-bento-title">{health.projectName} - Health</h3>
-                                <div className="stats-grid">
-                                    <div className="stat">
-                                        <span className="stat-value">{health.totalTasks}</span>
-                                        <span className="stat-label">Total Tasks</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value">{health.completedTasks}</span>
-                                        <span className="stat-label">Completed</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value">{health.inProgressTasks}</span>
-                                        <span className="stat-label">In Progress</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value">{health.todoTasks}</span>
-                                        <span className="stat-label">To Do</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value">{health.overdueTasks}</span>
-                                        <span className="stat-label">Overdue</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value">{health.completionPercentage}%</span>
-                                        <span className="stat-label">Completion</span>
-                                    </div>
+                    {tab === 'health' && health && (
+                        <div className="modern-bento-card">
+                            <h3 className="modern-bento-title">{health.projectName} - Health</h3>
+                            <div className="stats-grid">
+                                <div className="stat">
+                                    <span className="stat-value">{health.totalTasks}</span>
+                                    <span className="stat-label">Total Tasks</span>
                                 </div>
-                                <div style={{ marginTop: 16 }}>
-                                    <strong>Status: </strong>
-                                    <span className={`badge ${health.healthStatus === 'Good' ? 'badge-success' : health.healthStatus === 'At Risk' ? 'badge-warning' : 'badge-danger'}`}>
-                                        {health.healthStatus}
-                                    </span>
+                                <div className="stat">
+                                    <span className="stat-value">{health.completedTasks}</span>
+                                    <span className="stat-label">Completed</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-value">{health.inProgressTasks}</span>
+                                    <span className="stat-label">In Progress</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-value">{health.todoTasks}</span>
+                                    <span className="stat-label">To Do</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-value">{health.overdueTasks}</span>
+                                    <span className="stat-label">Overdue</span>
+                                </div>
+                                <div className="stat">
+                                    <span className="stat-value">{health.completionPercentage}%</span>
+                                    <span className="stat-label">Completion</span>
                                 </div>
                             </div>
-                        )}
+                            <div className="report-status">
+                                <strong>Status: </strong>
+                                <span className={`badge ${health.healthStatus === 'Good' ? 'badge-success' : health.healthStatus === 'At Risk' ? 'badge-warning' : 'badge-danger'}`}>
+                                    {health.healthStatus}
+                                </span>
+                            </div>
+                        </div>
+                    )}
 
-                        {tab === 'burndown' && burndown && (
-                            <div className="modern-bento-card">
-                                <h3 className="modern-bento-title">{burndown.sprintName} - Burndown</h3>
-                                {burndown.dataPoints.length === 0 ? (
-                                    <p className="muted">No burndown data available.</p>
-                                ) : (
+                    {tab === 'burndown' && burndown && (
+                        <div className="modern-bento-card">
+                            <h3 className="modern-bento-title">{burndown.sprintName} - Burndown</h3>
+                            {burndown.dataPoints.length === 0 ? (
+                                <p className="muted">No burndown data available.</p>
+                            ) : (
+                                <div className="table-wrap">
                                     <table className="table">
                                         <thead>
                                             <tr>
@@ -166,17 +166,19 @@ export default function Reports() {
                                             ))}
                                         </tbody>
                                     </table>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
-                        {tab === 'velocity' && velocity && (
-                            <div className="modern-bento-card">
-                                <h3 className="modern-bento-title">Velocity - {velocity.projectName}</h3>
-                                <p style={{ marginBottom: 12 }}><strong>Average Velocity:</strong> {velocity.averageVelocity} tasks/sprint</p>
-                                {velocity.dataPoints.length === 0 ? (
-                                    <p className="muted">No velocity data available.</p>
-                                ) : (
+                    {tab === 'velocity' && velocity && (
+                        <div className="modern-bento-card">
+                            <h3 className="modern-bento-title">Velocity - {velocity.projectName}</h3>
+                            <p className="report-summary"><strong>Average Velocity:</strong> {velocity.averageVelocity} tasks/sprint</p>
+                            {velocity.dataPoints.length === 0 ? (
+                                <p className="muted">No velocity data available.</p>
+                            ) : (
+                                <div className="table-wrap">
                                     <table className="table">
                                         <thead>
                                             <tr>
@@ -197,29 +199,29 @@ export default function Reports() {
                                             ))}
                                         </tbody>
                                     </table>
-                                )}
-                            </div>
-                        )}
-
-                        {tab === 'exports' && (
-                            <div className="modern-bento-card">
-                                <h3 className="modern-bento-title">Export Data</h3>
-                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                    <button className="modern-btn-primary" onClick={downloadExcel}>
-                                        Export to Excel
-                                    </button>
-                                    <button className="modern-btn-primary" onClick={downloadPdf}>
-                                        Export Project PDF
-                                    </button>
-                                    <button className="modern-btn-primary" onClick={downloadBurndownPdf}>
-                                        Export Burndown PDF
-                                    </button>
                                 </div>
+                            )}
+                        </div>
+                    )}
+
+                    {tab === 'exports' && (
+                        <div className="modern-bento-card">
+                            <h3 className="modern-bento-title">Export Data</h3>
+                            <div className="export-actions">
+                                <button className="modern-btn-primary" onClick={downloadExcel}>
+                                    Export to Excel
+                                </button>
+                                <button className="modern-btn-primary" onClick={downloadPdf}>
+                                    Export Project PDF
+                                </button>
+                                <button className="modern-btn-primary" onClick={downloadBurndownPdf}>
+                                    Export Burndown PDF
+                                </button>
                             </div>
-                        )}
-                    </>
-                )}
-            </main>
+                        </div>
+                    )}
+                </>
+            )}
         </AppShell>
     );
 }
