@@ -4,6 +4,7 @@ import {
     attachmentsApi,
     activityApi,
     commentsApi,
+    labelsApi,
 } from '../api/endpoints';
 import {
     STATUS_LABELS,
@@ -12,12 +13,14 @@ import {
     type ActivityLog,
     type Attachment,
     type Comment as CommentModel,
+    type Label,
     type Task,
     type TaskItemType,
     type TaskPriority,
     type TaskStatus,
     type UserSummary,
 } from '../types/types';
+import LabelPicker from './LabelPicker';
 
 interface TaskDetailModalProps {
     task: Task;
@@ -55,22 +58,25 @@ export default function TaskDetailModal({
     const [error, setError] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editText, setEditText] = useState('');
+    const [labels, setLabels] = useState<Label[]>([]);
 
     useEffect(() => {
         let active = true;
         const load = async () => {
             try {
-                const [commentsRes, usersRes, attachmentsRes, activityRes] = await Promise.all([
+                const [commentsRes, usersRes, attachmentsRes, activityRes, labelsRes] = await Promise.all([
                     client.get<{ items: CommentModel[]; total: number; page: number; pageSize: number; totalPages: number }>(`/comments/task/${task.id}?page=1&pageSize=50`),
                     canEdit ? client.get<UserSummary[]>('/users') : Promise.resolve({ data: [] as UserSummary[] }),
                     attachmentsApi.list(task.id),
                     activityApi.forTask(task.id, 1, 50),
+                    labelsApi.forTask(task.id),
                 ]);
                 if (!active) return;
                 setComments(commentsRes.data.items);
                 setUsers(usersRes.data);
                 setAttachments(attachmentsRes.data);
                 setActivity(activityRes.data.items);
+                setLabels(labelsRes.data);
             } catch {
                 if (active) setError('Failed to load task details.');
             }
@@ -300,6 +306,17 @@ export default function TaskDetailModal({
                         </div>
                     )}
                 </form>
+
+                <div style={{ marginBottom: 18 }}>
+                    <h4 style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 600, color: '#52525B' }}>Labels</h4>
+                    <LabelPicker
+                        projectId={task.projectId}
+                        taskId={task.id}
+                        selectedLabels={labels}
+                        canEdit={canEdit}
+                        onLabelsChanged={setLabels}
+                    />
+                </div>
 
                 <div className="comments">
                     <h4>Attachments</h4>

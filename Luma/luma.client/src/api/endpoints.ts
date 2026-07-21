@@ -15,6 +15,7 @@ import type {
     DashboardSummary,
     Task,
     SearchResponse,
+    Label,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -72,6 +73,8 @@ export const usersApi = {
 export const tasksApi = {
     byProject: (projectId: string, page = 1, pageSize = 20) =>
         client.get<{ items: Task[]; total: number; page: number; pageSize: number; totalPages: number }>(`/tasks/project/${projectId}?page=${page}&pageSize=${pageSize}`),
+    myTasks: (params: { page?: number; pageSize?: number; status?: string; priority?: string; type?: string; projectId?: string }) =>
+        client.get<{ items: Task[]; total: number }>('/tasks/my', { params }),
     move: (taskId: string, status: string) =>
         client.put(`/tasks/${taskId}/move`, { status }),
     create: (payload: {
@@ -85,6 +88,7 @@ export const tasksApi = {
         projectId: string;
         assigneeId?: string | null;
     }) => client.post<Task>('/tasks', payload),
+    remove: (id: string) => client.delete(`/tasks/${id}`),
 };
 
 export const sprintsApi = {
@@ -168,4 +172,16 @@ export const publicPortalApi = {
 
 export const searchApi = {
     query: (q: string) => client.get<SearchResponse>('/search', { params: { q } }),
+};
+
+export const labelsApi = {
+    forProject: (projectId: string) => client.get<Label[]>(`/projects/${projectId}/labels`),
+    create: (projectId: string, name: string, color: string) =>
+        client.post<Label>(`/projects/${projectId}/labels`, { name, color }),
+    update: (projectId: string, id: string, name?: string, color?: string) =>
+        client.put(`/projects/${projectId}/labels/${id}`, { name, color }),
+    remove: (projectId: string, id: string) => client.delete(`/projects/${projectId}/labels/${id}`),
+    forTask: (taskId: string) => client.get<Label[]>(`/tasks/${taskId}/labels`),
+    attach: (taskId: string, labelId: string) => client.post(`/tasks/${taskId}/labels/${labelId}`),
+    detach: (taskId: string, labelId: string) => client.delete(`/tasks/${taskId}/labels/${labelId}`),
 };

@@ -30,6 +30,60 @@ public class TasksController : ControllerBase
         _authz = authz;
     }
 
+    [HttpGet("my")]
+    public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TaskResponseDto>>> GetMyTasks(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? status = null,
+        [FromQuery] string? priority = null,
+        [FromQuery] Guid? projectId = null)
+    {
+        var userId = GetCurrentUserId();
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var globalRole = GetCurrentUserRole();
+        var accessibleProjectIds = await GetAccessibleProjectIdsAsync(userId, globalRole);
+
+        IQueryable<TaskItem> query = _context.Tasks
+            .Where(t => t.AssigneeId == userId && accessibleProjectIds.Contains(t.ProjectId))
+            .Include(t => t.Assignee);
+
+        if (!string.IsNullOrEmpty(status) && Enum.TryParse<Models.TaskStatus>(status, true, out var taskStatus))
+        {
+            query = query.Where(t => t.Status == taskStatus);
+        }
+
+        if (!string.IsNullOrEmpty(priority) && Enum.TryParse<Models.TaskPriority>(priority, true, out var taskPriority))
+        {
+            query = query.Where(t => t.Priority == taskPriority);
+        }
+
+        if (projectId.HasValue)
+        {
+            query = query.Where(t => t.ProjectId == projectId.Value);
+        }
+
+        var total = await query.CountAsync();
+
+        var tasks = await query
+            .OrderByDescending(t => t.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(t => ToDto(t))
+            .ToListAsync();
+
+        return Ok(new Luma.Server.DTOs.Common.PagedResult<TaskResponseDto>
+        {
+            Items = tasks,
+            Total = total,
+            Page = page,
+            PageSize = pageSize
+        });
+    }
+
     [HttpGet("project/{projectId}")]
     public async Task<ActionResult<Luma.Server.DTOs.Common.PagedResult<TaskResponseDto>>> GetByProject(Guid projectId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
@@ -372,4 +426,19 @@ public class TasksController : ControllerBase
 
     private string? GetCurrentUserRole() =>
         User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+    private async Task<List<Guid>> GetAccessibleProjectIdsAsync(string userId, string? globalRole)
+    {
+        if (_authz.IsGlobalAdmin(globalRole))
+        {
+            return await _context.Projects
+                .Select(p => p.Id)
+                .ToListAsync();
+        }
+
+        return await _context.ProjectMembers
+            .Where(m => m.UserId == userId)
+            .Select(m => m.ProjectId)
+            .ToListAsync();
+    }
 }
