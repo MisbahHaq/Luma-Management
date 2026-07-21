@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import NotificationsBell from './NotificationsBell';
 import ProgressTrack from './ProgressTrack';
 import StatusPill from './StatusPill';
 import type { Project } from '../types/types';
+import SearchResults from './SearchResults';
 
 interface AppShellProps {
     children: ReactNode;
@@ -32,6 +33,11 @@ export default function AppShell({
 }: AppShellProps) {
     const { currentUser, logout } = useAuth();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const handleSearchClose = useCallback(() => {
+        setSearchQuery('');
+    }, []);
 
     return (
         <div className="modern-shell">
@@ -100,16 +106,21 @@ export default function AppShell({
                                 <line x1="3" y1="18" x2="21" y2="18" />
                             </svg>
                         </button>
-                        <div className="modern-search-wrap">
-                            <svg className="modern-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <path d="m21 21-4.35-4.35" />
-                            </svg>
-                            <input
-                                type="text"
-                                placeholder="Search projects, tasks, sprints..."
-                                className="modern-search"
-                            />
+                        <div className="modern-search-container">
+                            <div className="modern-search-wrap">
+                                <svg className="modern-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.35-4.35" />
+                                </svg>
+                                <input
+                                    type="text"
+                                    placeholder="Search projects, tasks, sprints..."
+                                    className="modern-search"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            <SearchResults query={searchQuery} onClose={handleSearchClose} />
                         </div>
                         <div className="modern-filter-chips">
                             {['Projects', 'Sprints', 'Tasks', 'Members'].map((chip) => (

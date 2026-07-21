@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "/6CDN/FrzBA=",
+  "dgSpecHash": "P1eXmwyd2ZU=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\Luma.Server.csproj",
+  "projectFilePath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\Luma.Server.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Misbah\\.nuget\\packages\\bouncycastle.cryptography\\2.4.0\\bouncycastle.cryptography.2.4.0.nupkg.sha512",
     "C:\\Users\\Misbah\\.nuget\\packages\\closedxml\\0.104.2\\closedxml.0.104.2.nupkg.sha512",
@@ -98,9 +98,9 @@
       "code": "NU1902",
       "level": "Warning",
       "message": "Package 'MailKit' 4.7.1 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-9j88-vvj5-vhgr",
-      "projectPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\Luma.Server.csproj",
+      "projectPath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\Luma.Server.csproj",
       "warningLevel": 1,
-      "filePath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\luma.server\\Luma.Server.csproj",
+      "filePath": "C:\\Users\\Misbah\\Desktop\\Luma Management\\Luma\\Luma.Server\\Luma.Server.csproj",
       "libraryId": "MailKit",
       "targetGraphs": [
         "net8.0"
