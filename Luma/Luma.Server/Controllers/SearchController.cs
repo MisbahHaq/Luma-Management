@@ -84,7 +84,8 @@ public class SearchController : ControllerBase
                     ProjectId = t.ProjectId,
                     ProjectName = t.Project != null ? t.Project.Name : string.Empty,
                     Status = t.Status.ToString(),
-                    AssigneeFullName = t.Assignee != null ? t.Assignee.FullName : null
+                    AssigneeFullName = t.Assignee != null ? t.Assignee.FullName : null,
+                    IssueKey = (t.Project != null ? t.Project.IssueKeyPrefix : "ISS") + "-" + t.IssueNumber
                 });
 
             response.Tasks = await taskQuery.ToListAsync();

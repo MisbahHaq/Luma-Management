@@ -19,4 +19,6 @@ public class TaskResponseDto
     public string? AssigneeId { get; set; }
     public string? AssigneeFullName { get; set; }
     public DateTime CreatedAt { get; set; }
+    public int IssueNumber { get; set; }
+    public string IssueKey { get; set; } = string.Empty;
 }

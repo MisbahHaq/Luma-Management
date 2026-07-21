@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Luma.Server.Models;
 
 namespace Luma.Server.DTOs.Tasks;
 
@@ -11,13 +12,13 @@ public class BulkTaskIdsDto
 public class BulkStatusDto : BulkTaskIdsDto
 {
     [Required]
-    public TaskStatus Status { get; set; }
+    public Models.TaskStatus Status { get; set; }
 }
 
 public class BulkPriorityDto : BulkTaskIdsDto
 {
     [Required]
-    public TaskPriority Priority { get; set; }
+    public Models.TaskPriority Priority { get; set; }
 }
 
 public class BulkAssigneeDto : BulkTaskIdsDto

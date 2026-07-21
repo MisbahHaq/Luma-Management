@@ -96,13 +96,37 @@ namespace Luma.Server
                     });
             }
 
+            var githubClientId = builder.Configuration["GitHub:ClientId"];
+            var githubClientSecret = builder.Configuration["GitHub:ClientSecret"];
+            if (!string.IsNullOrWhiteSpace(githubClientId) && !string.IsNullOrWhiteSpace(githubClientSecret))
+            {
+                builder.Services.AddAuthentication()
+                    .AddOAuth("GitHub", options =>
+                    {
+                        options.ClientId = githubClientId;
+                        options.ClientSecret = githubClientSecret;
+                        options.CallbackPath = builder.Configuration["GitHub:CallbackPath"] ?? "/api/github/callback";
+                        options.AuthorizationEndpoint = "https://github.com/login/oauth/authorize";
+                        options.TokenEndpoint = "https://github.com/login/oauth/access_token";
+                        options.UserInformationEndpoint = "https://api.github.com/user";
+                        options.Scope.Add("user:email");
+                        options.SaveTokens = true;
+                        options.ClaimActions.MapJsonKey("id", "id");
+                        options.ClaimActions.MapJsonKey("login", "login");
+                        options.ClaimActions.MapJsonKey("name", "name");
+                        options.ClaimActions.MapJsonKey("email", "email");
+                    });
+            }
+
             builder.Services.AddAuthorization();
 
             builder.Services.Configure<SsoOptions>(builder.Configuration.GetSection("Sso"));
+            builder.Services.Configure<GitHubOptions>(builder.Configuration.GetSection("GitHub"));
             builder.Services.AddScoped<IJwtService, JwtService>();
             builder.Services.AddScoped<ActivityService>();
             builder.Services.AddScoped<NotificationService>();
             builder.Services.AddScoped<ProjectAuthorizationService>();
+            builder.Services.AddScoped<WorkspaceAuthorizationService>();
             builder.Services.AddScoped<WebhookDispatcherService>();
             builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             builder.Services.AddScoped<TenantContext>();

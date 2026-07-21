@@ -12,10 +12,12 @@ namespace Luma.Server.Services;
 public class ProjectAuthorizationService
 {
     private readonly AppDbContext _context;
+    private readonly WorkspaceAuthorizationService _workspaceAuthz;
 
-    public ProjectAuthorizationService(AppDbContext context)
+    public ProjectAuthorizationService(AppDbContext context, WorkspaceAuthorizationService workspaceAuthz)
     {
         _context = context;
+        _workspaceAuthz = workspaceAuthz;
     }
 
     public bool IsGlobalAdmin(string? globalRole) =>
@@ -33,6 +35,23 @@ public class ProjectAuthorizationService
             return false;
         }
 
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project is null)
+        {
+            return false;
+        }
+
+        if (project.WorkspaceId.HasValue)
+        {
+            var workspaceRole = await _workspaceAuthz.GetWorkspaceRoleAsync(project.WorkspaceId.Value, userId);
+            if (workspaceRole is not WorkspaceRole.Owner and not WorkspaceRole.Admin and not WorkspaceRole.Member)
+            {
+                return false;
+            }
+        }
+
         return await _context.ProjectMembers.AnyAsync(m =>
             m.ProjectId == projectId &&
             m.UserId == userId &&
@@ -42,6 +61,22 @@ public class ProjectAuthorizationService
     public async Task<ProjectRole?> GetProjectRoleAsync(Guid projectId, string? userId)
     {
         if (string.IsNullOrEmpty(userId))
+        {
+            return null;
+        }
+
+        var project = await _context.Projects
+            .FirstOrDefaultAsync(p => p.Id == projectId);
+
+        if (project is null)
+        {
+            return null;
+        }
+
+        var workspaceRole = project.WorkspaceId.HasValue
+            ? await _workspaceAuthz.GetWorkspaceRoleAsync(project.WorkspaceId.Value, userId)
+            : null;
+        if (workspaceRole is not WorkspaceRole.Owner and not WorkspaceRole.Admin and not WorkspaceRole.Member)
         {
             return null;
         }

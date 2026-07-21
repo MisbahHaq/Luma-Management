@@ -17,6 +17,9 @@ import type {
     SearchResponse,
     Label,
     BulkResult,
+    Workspace,
+    WorkspaceMember,
+    Milestone,
 } from '../types/types';
 
 export const attachmentsApi = {
@@ -65,6 +68,11 @@ export const membersApi = {
         client.delete(`/projects/${projectId}/members/${userId}`),
     changeRole: (projectId: string, userId: string, role: string) =>
         client.put(`/projects/${projectId}/members/${userId}/role`, { role }),
+};
+
+export const projectsApi = {
+    updateIssueKeyPrefix: (projectId: string, prefix: string) =>
+        client.put(`/projects/${projectId}/issue-key-prefix`, { prefix }),
 };
 
 export const usersApi = {
@@ -196,4 +204,43 @@ export const labelsApi = {
     forTask: (taskId: string) => client.get<Label[]>(`/tasks/${taskId}/labels`),
     attach: (taskId: string, labelId: string) => client.post(`/tasks/${taskId}/labels/${labelId}`),
     detach: (taskId: string, labelId: string) => client.delete(`/tasks/${taskId}/labels/${labelId}`),
+};
+
+export const workspacesApi = {
+    list: () => client.get<Workspace[]>('/workspaces'),
+    get: (id: string) => client.get<Workspace>(`/workspaces/${id}`),
+    create: (name: string, slug?: string) =>
+        client.post<Workspace>('/workspaces', { name, slug }),
+    update: (id: string, name?: string) =>
+        client.put(`/workspaces/${id}`, { name }),
+    remove: (id: string) => client.delete(`/workspaces/${id}`),
+    members: (id: string) => client.get<WorkspaceMember[]>(`/workspaces/${id}/members`),
+    addMember: (id: string, userId: string, role: string) =>
+        client.post(`/workspaces/${id}/members`, { userId, role }),
+    removeMember: (id: string, userId: string) =>
+        client.delete(`/workspaces/${id}/members/${userId}`),
+    changeMemberRole: (id: string, userId: string, role: string) =>
+        client.put(`/workspaces/${id}/members/${userId}/role`, { role }),
+};
+
+export const milestonesApi = {
+    forProject: (projectId: string) =>
+        client.get<Milestone[]>(`/milestones/project/${projectId}`),
+    get: (id: string) => client.get<Milestone>(`/milestones/${id}`),
+    create: (projectId: string, payload: {
+        name: string;
+        description?: string | null;
+        dueDate?: string | null;
+    }) => client.post<Milestone>(`/milestones/project/${projectId}`, payload),
+    update: (id: string, payload: {
+        name?: string;
+        description?: string | null;
+        dueDate?: string | null;
+        status?: string;
+    }) => client.put(`/milestones/${id}`, payload),
+    remove: (id: string) => client.delete(`/milestones/${id}`),
+    addTask: (milestoneId: string, taskId: string) =>
+        client.put(`/milestones/${milestoneId}/tasks/${taskId}`),
+    removeTask: (milestoneId: string, taskId: string) =>
+        client.delete(`/milestones/${milestoneId}/tasks/${taskId}`),
 };

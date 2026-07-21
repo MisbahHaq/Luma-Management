@@ -15,7 +15,7 @@ export default function Avatar({
     const label = name ? initials(name) : '?';
     return (
         <span
-            className="avatar"
+            className="inline-flex items-center justify-center bg-gray-200 text-gray-600 rounded-full font-['Inter'] font-medium select-none"
             title={name ?? 'Unassigned'}
             style={{ width: size, height: size, fontSize: size * 0.4 }}
         >
