@@ -55,7 +55,7 @@ export default function PublicPortal() {
                                     autoFocus
                                 />
                             </label>
-                            <button type="submit" className="btn btn-primary" style={{ marginTop: 12 }}>
+                            <button type="submit" className="modern-btn-primary" style={{ marginTop: 12, width: '100%', justifyContent: 'center' }}>
                                 View Project
                             </button>
                         </form>
@@ -78,7 +78,7 @@ export default function PublicPortal() {
                 {error && <div className="alert alert-error">{error}</div>}
 
                 {project && (
-                    <div className="card" style={{ marginBottom: 24 }}>
+                    <div className="card">
                         <h2>{project.name}</h2>
                         <p className="muted">{project.description || 'No description'}</p>
                         <small className="muted">
@@ -88,7 +88,7 @@ export default function PublicPortal() {
                 )}
 
                 {health && (
-                    <div className="card" style={{ marginBottom: 24 }}>
+                    <div className="card">
                         <h3>Project Health</h3>
                         <div className="stats-grid">
                             <div className="stat">
@@ -120,7 +120,7 @@ export default function PublicPortal() {
                     </div>
                 )}
 
-                <div className="card" style={{ marginBottom: 24 }}>
+                <div className="card">
                     <h3>Tasks ({tasks.length})</h3>
                     {tasks.length === 0 ? (
                         <p className="muted">No tasks yet.</p>

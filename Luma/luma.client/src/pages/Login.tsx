@@ -33,7 +33,7 @@ export default function Login() {
 
     return (
         <div className="auth-page">
-            <form className="card auth-card" onSubmit={handleSubmit}>
+            <form className="auth-card" onSubmit={handleSubmit}>
                 <h1>Luma</h1>
                 <p className="muted">Sign in to your workspace</p>
 
@@ -61,12 +61,12 @@ export default function Login() {
                     />
                 </label>
 
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button type="submit" className="modern-btn-primary" disabled={loading}>
                     {loading ? 'Signing in...' : 'Sign In'}
                 </button>
 
-                <p className="muted small">
-                    No account? <Link to="/register">Create one</Link>
+                <p className="muted small" style={{ textAlign: 'center' }}>
+                    No account? <Link to="/register" style={{ color: '#8B5CF6', fontWeight: 600 }}>Create one</Link>
                 </p>
             </form>
         </div>

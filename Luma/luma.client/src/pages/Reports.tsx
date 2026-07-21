@@ -52,9 +52,11 @@ export default function Reports() {
     };
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setLoading(true);
         Promise.all([loadHealth(), loadBurndown(), loadVelocity()])
             .finally(() => setLoading(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectId]);
 
     const downloadExcel = () => {
@@ -83,23 +85,28 @@ export default function Reports() {
             }
             title="Reports & Insights"
         >
-            <main className="container shell-inner">
+            <main className="modern-content">
                 {error && <div className="alert alert-error">{error}</div>}
 
                 {loading ? (
                     <p className="muted">Loading...</p>
                 ) : (
                     <>
-                        <div className="tabs">
-                            <button className={`tab ${tab === 'health' ? 'active' : ''}`} onClick={() => setTab('health')}>Project Health</button>
-                            <button className={`tab ${tab === 'burndown' ? 'active' : ''}`} onClick={() => setTab('burndown')}>Burndown</button>
-                            <button className={`tab ${tab === 'velocity' ? 'active' : ''}`} onClick={() => setTab('velocity')}>Velocity</button>
-                            <button className={`tab ${tab === 'exports' ? 'active' : ''}`} onClick={() => setTab('exports')}>Exports</button>
+                        <div className="modern-view-toggle">
+                            {(['health', 'burndown', 'velocity', 'exports'] as const).map((t) => (
+                                <button
+                                    key={t}
+                                    className={`modern-view-btn ${tab === t ? 'active' : ''}`}
+                                    onClick={() => setTab(t)}
+                                >
+                                    {t === 'health' ? 'Project Health' : t === 'burndown' ? 'Burndown' : t === 'velocity' ? 'Velocity' : 'Exports'}
+                                </button>
+                            ))}
                         </div>
 
                         {tab === 'health' && health && (
-                            <div className="card">
-                                <h2>{health.projectName} - Health</h2>
+                            <div className="modern-bento-card">
+                                <h3 className="modern-bento-title">{health.projectName} - Health</h3>
                                 <div className="stats-grid">
                                     <div className="stat">
                                         <span className="stat-value">{health.totalTasks}</span>
@@ -126,7 +133,7 @@ export default function Reports() {
                                         <span className="stat-label">Completion</span>
                                     </div>
                                 </div>
-                                <div className="health-status">
+                                <div style={{ marginTop: 16 }}>
                                     <strong>Status: </strong>
                                     <span className={`badge ${health.healthStatus === 'Good' ? 'badge-success' : health.healthStatus === 'At Risk' ? 'badge-warning' : 'badge-danger'}`}>
                                         {health.healthStatus}
@@ -136,8 +143,8 @@ export default function Reports() {
                         )}
 
                         {tab === 'burndown' && burndown && (
-                            <div className="card">
-                                <h2>{burndown.sprintName} - Burndown</h2>
+                            <div className="modern-bento-card">
+                                <h3 className="modern-bento-title">{burndown.sprintName} - Burndown</h3>
                                 {burndown.dataPoints.length === 0 ? (
                                     <p className="muted">No burndown data available.</p>
                                 ) : (
@@ -164,9 +171,9 @@ export default function Reports() {
                         )}
 
                         {tab === 'velocity' && velocity && (
-                            <div className="card">
-                                <h2>Velocity - {velocity.projectName}</h2>
-                                <p><strong>Average Velocity:</strong> {velocity.averageVelocity} tasks/sprint</p>
+                            <div className="modern-bento-card">
+                                <h3 className="modern-bento-title">Velocity - {velocity.projectName}</h3>
+                                <p style={{ marginBottom: 12 }}><strong>Average Velocity:</strong> {velocity.averageVelocity} tasks/sprint</p>
                                 {velocity.dataPoints.length === 0 ? (
                                     <p className="muted">No velocity data available.</p>
                                 ) : (
@@ -195,16 +202,16 @@ export default function Reports() {
                         )}
 
                         {tab === 'exports' && (
-                            <div className="card">
-                                <h2>Export Data</h2>
-                                <div className="export-actions">
-                                    <button className="btn btn-primary" onClick={downloadExcel}>
+                            <div className="modern-bento-card">
+                                <h3 className="modern-bento-title">Export Data</h3>
+                                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                    <button className="modern-btn-primary" onClick={downloadExcel}>
                                         Export to Excel
                                     </button>
-                                    <button className="btn btn-primary" onClick={downloadPdf}>
+                                    <button className="modern-btn-primary" onClick={downloadPdf}>
                                         Export Project PDF
                                     </button>
-                                    <button className="btn btn-primary" onClick={downloadBurndownPdf}>
+                                    <button className="modern-btn-primary" onClick={downloadBurndownPdf}>
                                         Export Burndown PDF
                                     </button>
                                 </div>

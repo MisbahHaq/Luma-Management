@@ -46,7 +46,7 @@ export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved }: KanbanB
                             {columnTasks.map((task) => (
                                 <button
                                     key={task.id}
-                                    className="card task-card"
+                                    className="task-card"
                                     draggable
                                     onDragStart={() => setDragId(task.id)}
                                     onClick={() => onTaskClick(task)}
@@ -54,7 +54,7 @@ export default function KanbanBoard({ tasks, onTaskClick, onTaskMoved }: KanbanB
                                     <span className={`priority priority-${task.priority}`}>
                                         {PRIORITY_LABELS[task.priority]}
                                     </span>
-                                    <h4>{task.title}</h4>
+                                    <h4 style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#18181B' }}>{task.title}</h4>
                                     {task.assigneeFullName && (
                                         <small className="muted">
                                             👤 {task.assigneeFullName}

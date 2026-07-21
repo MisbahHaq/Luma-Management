@@ -42,7 +42,7 @@ export default function Register() {
 
     return (
         <div className="auth-page">
-            <form className="card auth-card" onSubmit={handleSubmit}>
+            <form className="auth-card" onSubmit={handleSubmit}>
                 <h1>Create account</h1>
                 <p className="muted">Join your team on Luma</p>
 
@@ -91,12 +91,12 @@ export default function Register() {
                     </select>
                 </label>
 
-                <button type="submit" className="btn btn-primary" disabled={loading}>
+                <button type="submit" className="modern-btn-primary" disabled={loading}>
                     {loading ? 'Creating...' : 'Create account'}
                 </button>
 
-                <p className="muted small">
-                    Already have an account? <Link to="/login">Sign in</Link>
+                <p className="muted small" style={{ textAlign: 'center' }}>
+                    Already have an account? <Link to="/login" style={{ color: '#8B5CF6', fontWeight: 600 }}>Sign in</Link>
                 </p>
             </form>
         </div>

@@ -215,15 +215,15 @@ export default function ProjectDetail() {
                 <>
                     {project.description && <p className="muted project-sub">{project.description}</p>}
 
-                    <div className="view-switch">
-                        <button className={view === 'list' ? 'btn btn-active' : 'btn btn-ghost'} onClick={() => setView('list')}>List</button>
-                        <button className={view === 'kanban' ? 'btn btn-active' : 'btn btn-ghost'} onClick={() => setView('kanban')}>Kanban</button>
-                        <button className={view === 'plan' ? 'btn btn-active' : 'btn btn-ghost'} onClick={() => setView('plan')}>Plan</button>
-                        <button className={showMembers ? 'btn btn-active' : 'btn btn-ghost'} onClick={() => setShowMembers((s) => !s)}>Members ({members.length})</button>
-                        {canEdit && (
-                            <button className="btn btn-primary" onClick={() => setShowCreate(true)}>+ New Task</button>
-                        )}
+                    <div className="modern-view-toggle">
+                        <button className={`modern-view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
+                        <button className={`modern-view-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>Kanban</button>
+                        <button className={`modern-view-btn ${view === 'plan' ? 'active' : ''}`} onClick={() => setView('plan')}>Plan</button>
+                        <button className={`modern-view-btn ${showMembers ? 'active' : ''}`} onClick={() => setShowMembers((s) => !s)}>Members ({members.length})</button>
                     </div>
+                    {canEdit && (
+                        <button className="modern-btn-primary" onClick={() => setShowCreate(true)} style={{ marginLeft: 'auto' }}>+ New Task</button>
+                    )}
 
                     {showMembers && (
                         <div className="card members-panel">
@@ -321,8 +321,13 @@ export default function ProjectDetail() {
 
             {showCreate && (
                 <div className="modal-backdrop" onClick={() => setShowCreate(false)}>
-                    <form className="card modal" onClick={(e) => e.stopPropagation()} onSubmit={createTask}>
-                        <h3>New task</h3>
+                    <form className="modal modal-lg" onClick={(e) => e.stopPropagation()} onSubmit={createTask}>
+                        <div className="modal-head">
+                            <h3>New task</h3>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowCreate(false)}>
+                                ✕
+                            </button>
+                        </div>
                         <label>
                             Title
                             <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Task title" autoFocus />
@@ -360,7 +365,7 @@ export default function ProjectDetail() {
                         </div>
                         <div className="modal-actions">
                             <button type="button" className="btn btn-ghost" onClick={() => setShowCreate(false)}>Cancel</button>
-                            <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Add task'}</button>
+                            <button type="submit" className="modern-btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Add task'}</button>
                         </div>
                     </form>
                 </div>

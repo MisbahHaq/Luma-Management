@@ -1,9 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, useCallback, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import AppShell from '../components/AppShell';
-import ProjectListRow from '../components/ProjectListRow';
 import { tasksApi } from '../api/endpoints';
 import type { Project, Task } from '../types/types';
 
@@ -40,7 +39,7 @@ export default function Dashboard() {
         return { project, taskCount: total, completion, lastUpdated };
     };
 
-    const loadProjects = async () => {
+    const loadProjects = useCallback(async () => {
         setLoading(true);
         try {
             const { data: projects } = await client.get<Project[]>('/projects');
@@ -60,11 +59,12 @@ export default function Dashboard() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        loadProjects();
-    }, []);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void loadProjects();
+    }, [loadProjects]);
 
     const openProject = (id: string) => navigate(`/projects/${id}`);
 
@@ -88,15 +88,17 @@ export default function Dashboard() {
         }
     };
 
+    const userName = currentUser?.fullName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User';
+
     return (
         <AppShell breadcrumb={<span>Workspace</span>} title="Projects">
-            <div className="section-head">
+            <div className="modern-greeting-row">
                 <div>
-                    <h2>All projects</h2>
-                    <p className="muted small">{stats.length} project{stats.length === 1 ? '' : 's'}</p>
+                    <h1 className="modern-greeting">Welcome back, {userName}</h1>
+                    <p className="modern-subtitle">{stats.length} project{stats.length === 1 ? '' : 's'} across your workspace</p>
                 </div>
                 {canWrite && (
-                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                    <button className="modern-btn-primary" onClick={() => setShowModal(true)}>
                         + New Project
                     </button>
                 )}
@@ -107,40 +109,34 @@ export default function Dashboard() {
             {loading ? (
                 <p className="muted">Loading...</p>
             ) : stats.length === 0 ? (
-                <p className="muted">No projects yet.</p>
+                <div className="modern-bento-card" style={{ textAlign: 'center', padding: 48 }}>
+                    <p className="muted" style={{ fontSize: 15 }}>No projects yet. Create your first project to get started.</p>
+                </div>
             ) : (
-                <div className="card table-card">
-                    <table className="table project-table">
-                        <thead>
-                            <tr>
-                                <th>Project</th>
-                                <th>Tasks</th>
-                                <th>Completion</th>
-                                <th>Status</th>
-                                <th>Updated</th>
-                                <th>Owner</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stats.map((s) => (
-                                <ProjectListRow
-                                    key={s.project.id}
-                                    project={s.project}
-                                    taskCount={s.taskCount}
-                                    completion={s.completion}
-                                    lastUpdated={s.lastUpdated}
-                                    onOpen={() => openProject(s.project.id)}
-                                />
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="modern-stats-row">
+                    {stats.map((s) => (
+                        <div
+                            key={s.project.id}
+                            className="modern-stat-card"
+                            style={{ backgroundColor: '#FFFFFF', cursor: 'pointer' }}
+                            onClick={() => openProject(s.project.id)}
+                        >
+                            <div className="modern-stat-icon" style={{ background: 'rgba(167,139,250,0.12)' }}>
+                                <span style={{ fontSize: 20 }}>📁</span>
+                            </div>
+                            <div className="modern-stat-info">
+                                <div className="modern-stat-value">{s.project.name}</div>
+                                <div className="modern-stat-label">{s.taskCount} tasks · {s.completion}% complete</div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 
             {showModal && (
                 <div className="modal-backdrop" onClick={() => setShowModal(false)}>
                     <form
-                        className="card modal"
+                        className="card modal modal-lg"
                         onClick={(e) => e.stopPropagation()}
                         onSubmit={handleCreate}
                     >
@@ -171,7 +167,7 @@ export default function Dashboard() {
                             >
                                 Cancel
                             </button>
-                            <button type="submit" className="btn btn-primary" disabled={saving}>
+                            <button type="submit" className="modern-btn-primary" disabled={saving}>
                                 {saving ? 'Saving...' : 'Create'}
                             </button>
                         </div>

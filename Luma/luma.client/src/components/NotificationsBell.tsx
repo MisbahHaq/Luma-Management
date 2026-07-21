@@ -21,7 +21,7 @@ export default function NotificationsBell() {
 
     return (
         <div className="notif">
-            <button className="btn btn-ghost notif-bell" onClick={toggle} aria-label="Notifications">
+            <button className="modern-icon-btn" onClick={toggle} aria-label="Notifications" style={{ position: 'relative' }}>
                 🔔
                 {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
             </button>
@@ -29,7 +29,7 @@ export default function NotificationsBell() {
             {open && (
                 <>
                     <div className="notif-overlay" onClick={() => setOpen(false)} />
-                    <div className="notif-panel card">
+                    <div className="notif-panel">
                         <div className="notif-head">
                             <strong>Notifications</strong>
                             {unreadCount > 0 && (
