@@ -1,25 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useWorkspace } from '../context/WorkspaceContext';
 import { reportsApi, activityApi } from '../api/endpoints';
 import AppShell from '../components/AppShell';
 import type { DashboardSummary, ActivityLog } from '../types/types';
-
-interface TimeBlock {
-    id: string;
-    title: string;
-    time: string;
-    duration: string;
-    color: string;
-    status: string;
-    attendees?: string[];
-}
+import { FolderOpen, Activity, Plus } from 'lucide-react';
 
 interface DaySchedule {
     day: string;
     date: string;
-    blocks: TimeBlock[];
+    blocks: { id: string; title: string; time: string; duration: string; color: string; status: string }[];
 }
 
 const generateWeekDays = (): DaySchedule[] => {
@@ -38,17 +28,16 @@ const generateWeekDays = (): DaySchedule[] => {
     });
 };
 
-const ACTIVITY_COLORS: Record<string, string> = {
-    'TaskCreated': '#ADC6FF',
-    'TaskUpdated': '#FFE58F',
-    'TaskCompleted': '#B7E4A7',
-    'TaskMoved': '#D3ADF7',
-    'CommentAdded': '#ADC6FF',
-    'MemberAdded': '#D3ADF7',
-    'ProjectCreated': '#FFE58F',
-};
-
 function getActivityColor(action: string): string {
+    const ACTIVITY_COLORS: Record<string, string> = {
+        'TaskCreated': '#ADC6FF',
+        'TaskUpdated': '#FFE58F',
+        'TaskCompleted': '#B7E4A7',
+        'TaskMoved': '#D3ADF7',
+        'CommentAdded': '#ADC6FF',
+        'MemberAdded': '#D3ADF7',
+        'ProjectCreated': '#FFE58F',
+    };
     return ACTIVITY_COLORS[action] ?? '#A5A5A5';
 }
 
@@ -56,14 +45,26 @@ function formatActivityAction(action: string): string {
     return action.replace(/([A-Z])/g, ' $1').trim();
 }
 
+function HealthBadge({ status }: { status: string }) {
+    const lower = status.toLowerCase();
+    const variant = (() => {
+        if (lower === 'healthy' || lower === 'ontrack') return 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10';
+        if (lower === 'atrisk' || lower === 'atrisk') return 'text-amber-400 border-amber-400/30 bg-amber-400/10';
+        return 'text-red-400 border-red-400/30 bg-red-400/10';
+    })();
+    return (
+        <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${variant}`}>
+            {status}
+        </span>
+    );
+}
+
 export default function ModernDashboard() {
     const { currentUser } = useAuth();
-    const { currentWorkspace: _currentWorkspace } = useWorkspace();
     const navigate = useNavigate();
     const weekDays = useMemo<DaySchedule[]>(() => generateWeekDays(), []);
     const [stats, setStats] = useState<DashboardSummary | null>(null);
     const [activities, setActivities] = useState<ActivityLog[]>([]);
-    const [viewMode, setViewMode] = useState<'Today' | 'Week' | 'Month'>('Week');
 
     const loadStats = async () => {
         try {
@@ -84,139 +85,135 @@ export default function ModernDashboard() {
     };
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         void loadStats();
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         void loadActivity();
     }, []);
 
     const userName = currentUser?.fullName?.split(' ')[0] || currentUser?.email?.split('@')[0] || 'User';
 
-    const statCards = [
-        { label: 'Total Projects', value: stats?.totalProjects ?? 0, color: '#FFE58F', icon: '📁' },
-        { label: 'Active Tasks', value: stats?.inProgressTasks ?? 0, color: '#ADC6FF', icon: '⚡' },
-        { label: 'Completed', value: stats?.completedTasks ?? 0, color: '#B7E4A7', icon: '✓' },
-        { label: 'Overdue', value: stats?.overdueTasks ?? 0, color: '#FFADAD', icon: '!' },
+    const statItems = [
+        { label: 'Total Projects', value: stats?.totalProjects ?? 0 },
+        { label: 'Active', value: stats?.inProgressTasks ?? 0 },
+        { label: 'Completed', value: stats?.completedTasks ?? 0 },
+        { label: 'Overdue', value: stats?.overdueTasks ?? 0 },
     ];
 
     const recentActivities = activities.slice(0, 6);
 
     return (
         <AppShell>
-            {/* Greeting + Actions */}
-            <div className="modern-greeting-row">
-                <div>
-                    <h1 className="modern-greeting">Stay up to date, {userName}</h1>
-                    <p className="modern-subtitle">Here's what's happening across your projects this week.</p>
-                </div>
-                <div className="modern-actions">
-                    <button className="modern-btn-primary" onClick={() => navigate('/projects')}>+ Add Task</button>
-                    <div className="modern-view-toggle">
-                        {(['Today', 'Week', 'Month'] as const).map((mode) => (
-                            <button
-                                key={mode}
-                                className={`modern-view-btn ${viewMode === mode ? 'active' : ''}`}
-                                onClick={() => setViewMode(mode)}
-                            >
-                                {mode}
-                            </button>
-                        ))}
+            <div className="max-w-7xl mx-auto p-4 md:p-5 space-y-5">
+                {/* Welcome Header */}
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-base font-semibold text-text-primary">Stay up to date, {userName}</h1>
+                        <p className="text-xs text-text-muted">Here's what's happening across your projects.</p>
                     </div>
-                </div>
-            </div>
-
-            {/* Stats Bento Row */}
-            <div className="modern-stats-row">
-                {statCards.map((stat) => (
-                    <div
-                        key={stat.label}
-                        className="modern-stat-card modern-stat-colored"
-                        style={{ '--stat-color': stat.color } as React.CSSProperties}
+                    <button
+                        onClick={() => navigate('/projects')}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-surface-1 border border-border-default rounded-lg text-text-primary hover:bg-surface-2 transition-colors"
                     >
-                        <div className="modern-stat-icon">{stat.icon}</div>
-                        <div className="modern-stat-info">
-                            <div className="modern-stat-value">{stat.value}</div>
-                            <div className="modern-stat-label">{stat.label}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Weekly Calendar Bento */}
-            <div className="modern-calendar-bento">
-                <div className="modern-calendar-header">
-                    <h2 className="modern-calendar-title">Weekly Schedule</h2>
-                    <span className="modern-calendar-subtitle">
-                        {weekDays[0]?.date} — {weekDays[weekDays.length - 1]?.date}
-                    </span>
+                        <Plus className="w-3.5 h-3.5" />
+                        New Task
+                    </button>
                 </div>
-                <div className="modern-calendar-grid">
-                    {weekDays.map((day) => (
-                        <div
-                            key={day.day}
-                            className={`modern-calendar-col ${day.day === 'Wed' ? 'today-col' : ''}`}
-                        >
-                            <div className="modern-calendar-col-head">
-                                <span className="modern-day-name">{day.day}</span>
-                                <span className={`modern-day-date ${day.day === 'Wed' ? 'today-date' : ''}`}>{day.date}</span>
+
+                {/* Stats Section */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {statItems.map((stat) => (
+                        <div key={stat.label} className="bg-surface-1 border border-border-subtle rounded-lg p-3">
+                            <div className="flex items-center gap-1.5 mb-1">
+                                <span className="w-1 h-1 rounded-full bg-accent mr-2 inline-block" />
+                                <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">{stat.label}</span>
                             </div>
-                            <div className="modern-calendar-col-body">
-                                {day.blocks.length === 0 && (
-                                    <div className="modern-empty-block">No events</div>
-                                )}
-                            </div>
+                            <div className="text-xl font-semibold text-text-primary tabular-nums font-mono">{stat.value}</div>
                         </div>
                     ))}
                 </div>
-            </div>
 
-            {/* Bottom Bento Row */}
-            <div className="modern-bottom-bento">
-                {/* Project Progress */}
-                <div className="modern-bento-card modern-bento-wide">
-                    <h3 className="modern-bento-title">Project Progress</h3>
-                    <div className="modern-progress-list">
-                        {stats?.projects?.slice(0, 4).map((project) => (
-                            <div key={project.projectId} className="modern-progress-item">
-                                <div className="modern-progress-item-header">
-                                    <span className="modern-progress-item-name">{project.projectName}</span>
-                                    <span className="modern-progress-item-pct">{project.completionPercentage}%</span>
+                {/* Project Progress Section */}
+                <section>
+                    <h2 className="text-sm font-semibold text-text-primary mb-3">Project Progress</h2>
+                    {stats?.projects && stats.projects.length > 0 ? (
+                        <div className="bg-surface-1 border border-border-subtle rounded-lg divide-y divide-border-subtle">
+                            {stats.projects.slice(0, 6).map((project) => (
+                                <div
+                                    key={project.projectId}
+                                    className="flex items-center gap-3 py-2.5 px-3 hover:bg-surface-2/50 rounded-md transition-colors"
+                                >
+                                    <span className="text-sm font-medium text-text-primary flex-1 truncate">{project.projectName}</span>
+                                    <div className="h-1 flex-1 max-w-[120px] bg-surface-2 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-accent rounded-full transition-all duration-500"
+                                            style={{ width: `${Math.min(100, project.completionPercentage)}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-[11px] font-mono tabular-nums text-text-muted w-[36px] text-right">{Math.round(project.completionPercentage)}%</span>
+                                    <span className="text-[11px] text-text-muted">{project.completedTasks}/{project.totalTasks} tasks</span>
+                                    <HealthBadge status={project.healthStatus} />
                                 </div>
-                                <div className="modern-progress-track">
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-surface-1 border border-border-subtle rounded-lg p-8 flex flex-col items-center justify-center text-text-muted">
+                            <FolderOpen className="w-8 h-8 mb-2 text-text-muted" />
+                            <p className="text-sm">No projects yet. Create your first project to get started.</p>
+                        </div>
+                    )}
+                </section>
+
+                {/* Recent Activity Section */}
+                <section>
+                    <h2 className="text-sm font-semibold text-text-primary mb-3">Recent Activity</h2>
+                    {recentActivities.length > 0 ? (
+                        <div className="bg-surface-1 border border-border-subtle rounded-lg divide-y divide-border-subtle">
+                            {recentActivities.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="flex items-start gap-2.5 py-2.5 px-3 hover:bg-surface-2/50 transition-colors"
+                                >
                                     <div
-                                        className="modern-progress-fill"
-                                        style={{ width: `${project.completionPercentage}%` }}
+                                        className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+                                        style={{ backgroundColor: getActivityColor(item.action) }}
                                     />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-xs font-medium text-text-primary">{formatActivityAction(item.action)}</div>
+                                        <div className="text-xs text-text-muted truncate">{item.description}</div>
+                                    </div>
+                                    <span className="text-[10px] font-mono tabular-nums text-text-muted flex-shrink-0">
+                                        {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                    </span>
                                 </div>
-                                <div className="modern-progress-item-meta">
-                                    <span>{project.completedTasks}/{project.totalTasks} tasks</span>
-                                    <span className={`modern-health-${project.healthStatus.toLowerCase()}`}>{project.healthStatus}</span>
-                                </div>
-                            </div>
-                        )) || (
-                            <p className="modern-muted-text">Open a project to see progress.</p>
-                        )}
-                    </div>
-                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-surface-1 border border-border-subtle rounded-lg p-8 flex flex-col items-center justify-center text-text-muted">
+                            <Activity className="w-8 h-8 mb-2 text-text-muted" />
+                            <p className="text-sm">No recent activity.</p>
+                        </div>
+                    )}
+                </section>
 
-                {/* Recent Activity */}
-                <div className="modern-bento-card">
-                    <h3 className="modern-bento-title">Recent Activity</h3>
-                    <div className="modern-activity-list">
-                        {recentActivities.length > 0 ? recentActivities.map((item) => (
-                            <div key={item.id} className="modern-activity-item">
-                                <div className="modern-activity-dot" style={{ backgroundColor: getActivityColor(item.action) }} />
-                                <div className="modern-activity-content">
-                                    <div className="modern-activity-action">{formatActivityAction(item.action)}</div>
-                                    <div className="modern-activity-target">{item.description}</div>
+                {/* Weekly Calendar Section */}
+                <section>
+                    <h2 className="text-sm font-semibold text-text-primary mb-3">This Week</h2>
+                    <div className="grid grid-cols-7 gap-2">
+                        {weekDays.map((day) => (
+                            <div
+                                key={day.day}
+                                className="bg-surface-1 border border-border-subtle rounded-lg p-2 min-h-[100px]"
+                            >
+                                <div className="text-[10px] font-medium text-text-muted uppercase tracking-wider text-center mb-1">{day.day}</div>
+                                <div className="text-xs font-medium text-text-primary text-center mb-1.5">{day.date}</div>
+                                <div className="space-y-1">
+                                    {day.blocks.length === 0 && (
+                                        <div className="text-[10px] text-text-muted text-center py-2 opacity-60">No events</div>
+                                    )}
                                 </div>
-                                <span className="modern-activity-time">{new Date(item.createdAt).toLocaleDateString()}</span>
                             </div>
-                        )) : (
-                            <p className="modern-muted-text">No recent activity.</p>
-                        )}
+                        ))}
                     </div>
-                </div>
+                </section>
             </div>
         </AppShell>
     );

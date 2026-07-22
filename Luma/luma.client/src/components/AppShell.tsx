@@ -1,12 +1,13 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { type ReactNode } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useWorkspace } from '../context/WorkspaceContext';
-import NotificationsBell from './NotificationsBell';
-import ProgressTrack from './ProgressTrack';
-import StatusPill from './StatusPill';
+import { Avatar } from './primitives/Avatar';
+import { Badge } from './primitives/Badge';
+import { KBar, type Command as KBarCommand } from './primitives/KBar';
+import { Search, PanelLeftClose, PanelLeftOpen, LogOut, Plus, Command, LayoutDashboard, FolderOpen, CheckSquare, Timer, BarChart3, Users } from 'lucide-react';
 import type { Project } from '../types/types';
-import SearchResults from './SearchResults';
+import NotificationsBell from './NotificationsBell';
 
 interface AppShellProps {
     children: ReactNode;
@@ -16,13 +17,13 @@ interface AppShellProps {
     completion?: number;
 }
 
-const NAV_ITEMS = [
-    { label: 'Home', icon: '⌂', href: '/', active: true },
-    { label: 'Projects', icon: '▦', href: '/projects' },
-    { label: 'My Tasks', icon: '☑', href: '/my-tasks' },
-    { label: 'Sprints', icon: '◷', href: '/sprints' },
-    { label: 'Reports', icon: '◔', href: '/reports' },
-    { label: 'Members', icon: '☺', href: '/members' },
+const NAV_ITEMS: { label: string; icon: ReactNode; href: string }[] = [
+    { label: 'Home', icon: <LayoutDashboard className="w-4 h-4" />, href: '/' },
+    { label: 'Projects', icon: <FolderOpen className="w-4 h-4" />, href: '/projects' },
+    { label: 'My Tasks', icon: <CheckSquare className="w-4 h-4" />, href: '/my-tasks' },
+    { label: 'Sprints', icon: <Timer className="w-4 h-4" />, href: '/sprints' },
+    { label: 'Reports', icon: <BarChart3 className="w-4 h-4" />, href: '/reports' },
+    { label: 'Members', icon: <Users className="w-4 h-4" />, href: '/members' },
 ];
 
 export default function AppShell({
@@ -33,137 +34,154 @@ export default function AppShell({
     completion,
 }: AppShellProps) {
     const { currentUser, logout } = useAuth();
-    const { currentWorkspace, workspaces, switchWorkspace } = useWorkspace();
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState('');
-    const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [kbarOpen, setKbarOpen] = useState(false);
 
-    const handleSearchClose = useCallback(() => {
-        setSearchQuery('');
+    const isActive = (href: string) => location.pathname === href;
+
+    const handleNavigate = useCallback((path: string) => {
+        navigate(path);
+        setKbarOpen(false);
+    }, [navigate]);
+
+    const kbarCommands: KBarCommand[] = [
+        ...NAV_ITEMS.map((item) => ({
+            id: `nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`,
+            label: item.label,
+            icon: item.icon,
+            shortcut: item.href === '/' ? 'G H' : item.href === '/projects' ? 'G P' : undefined,
+        })),
+        { id: 'new-task', label: 'New Task', icon: <Plus className="w-4 h-4" />, shortcut: 'C' },
+        { id: 'command-bar', label: 'Command Bar', icon: <Command className="w-4 h-4" />, shortcut: '⌘K' },
+    ];
+
+    useEffect(() => {
+        const handler = (e: KeyboardEvent) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setKbarOpen((o) => !o);
+            }
+            if (e.key === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl as HTMLElement).isContentEditable) return;
+                setKbarOpen(true);
+            }
+        };
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
     }, []);
 
     return (
-        <div className="modern-shell">
-            {sidebarOpen && <div className="modern-sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+        <div className="shell">
+            {kbarOpen && (
+                <KBar
+                    open={kbarOpen}
+                    onClose={() => setKbarOpen(false)}
+                    onAction={handleNavigate}
+                    commands={kbarCommands}
+                />
+            )}
 
-            <aside className={`modern-sidebar ${sidebarOpen ? 'modern-sidebar-open' : ''}`}>
-                <div className="modern-sidebar-brand">
-                    <span className="modern-sidebar-mark">◓</span>
-                    <span className="modern-sidebar-title">Luma</span>
+            <aside className={`sidebar ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-[260px] min-w-[260px]'}`}>
+                <div className="flex items-center justify-between px-3 py-3">
+                    {!sidebarCollapsed && (
+                        <span className="text-lg font-bold tracking-tight text-text-primary">Luma</span>
+                    )}
+                    <button
+                        onClick={() => setSidebarCollapsed((c) => !c)}
+                        className="p-1.5 rounded-md hover:bg-surface-2 text-text-muted hover:text-text-secondary transition-colors"
+                    >
+                        {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+                    </button>
                 </div>
 
-                <nav className="modern-sidebar-nav">
+                <nav className="flex flex-col gap-0.5 px-2 flex-1 overflow-y-auto scrollbar-thin">
                     {NAV_ITEMS.map((item) => (
-                        <a
+                        <button
                             key={item.label}
-                            href={item.href}
-                            className={`modern-sidebar-link ${item.active ? 'active' : ''}`}
-                            onClick={() => setSidebarOpen(false)}
+                            onClick={() => navigate(item.href)}
+                            className={`flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
+                                isActive(item.href)
+                                    ? 'bg-accent-soft text-accent'
+                                    : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary'
+                            }`}
                         >
-                            <span className="modern-sidebar-icon">{item.icon}</span>
-                            <span className="modern-sidebar-label">{item.label}</span>
-                        </a>
+                            <span className="flex-shrink-0">{item.icon}</span>
+                            {!sidebarCollapsed && <span>{item.label}</span>}
+                        </button>
                     ))}
                 </nav>
 
-                <div className="modern-sidebar-footer">
-                    <button className="modern-sidebar-logout" onClick={logout}>
-                        Log out
+                <div className="border-t border-border-subtle px-2 py-2">
+                    <button
+                        onClick={logout}
+                        className="flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors duration-150 w-full"
+                    >
+                        <span className="flex-shrink-0"><LogOut className="w-4 h-4" /></span>
+                        {!sidebarCollapsed && <span>Log out</span>}
                     </button>
                 </div>
             </aside>
 
-            <div className="modern-main">
-                <header className="modern-header">
-                    <div className="modern-header-left">
-                        <button className="modern-sidebar-toggle" onClick={() => setSidebarOpen((o) => !o)} aria-label="Toggle menu">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="3" y1="6" x2="21" y2="6" />
-                                <line x1="3" y1="12" x2="21" y2="12" />
-                                <line x1="3" y1="18" x2="21" y2="18" />
-                            </svg>
-                        </button>
-
-                        <div className="modern-workspace-switcher">
-                            <button
-                                className="modern-workspace-trigger"
-                                onClick={() => setWorkspaceMenuOpen(!workspaceMenuOpen)}
-                            >
-                                <span className="modern-workspace-icon">◉</span>
-                                <span className="modern-workspace-label">{currentWorkspace?.name ?? 'Select workspace'}</span>
-                                <span className="modern-workspace-arrow">{workspaceMenuOpen ? '▲' : '▼'}</span>
-                            </button>
-                            {workspaceMenuOpen && (
-                                <div className="modern-workspace-menu">
-                                    {workspaces.map(ws => (
-                                        <button
-                                            key={ws.id}
-                                            className={`modern-workspace-option ${currentWorkspace?.id === ws.id ? 'active' : ''}`}
-                                            onClick={() => {
-                                                switchWorkspace(ws.id);
-                                                setWorkspaceMenuOpen(false);
-                                            }}
-                                        >
-                                            {ws.name}
-                                            <span className="modern-workspace-slug">{ws.slug}</span>
-                                        </button>
-                                    ))}
-                                    <button
-                                        className="modern-workspace-option modern-workspace-create"
-                                        onClick={() => {
-                                            setWorkspaceMenuOpen(false);
-                                            window.location.href = '/projects';
-                                        }}
-                                    >
-                                        + New workspace
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="modern-search-container">
-                            <div className="modern-search-wrap">
-                                <svg className="modern-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="11" cy="11" r="8" />
-                                    <path d="m21 21-4.35-4.35" />
-                                </svg>
-                                <input
-                                    type="text"
-                                    placeholder="Search..."
-                                    className="modern-search"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                />
-                            </div>
-                            <SearchResults query={searchQuery} onClose={handleSearchClose} />
-                        </div>
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                <header className="h-12 flex items-center justify-between px-4 border-b border-border-subtle bg-bg/80 backdrop-blur-md flex-shrink-0">
+                    <div className="flex items-center gap-3 min-w-0">
+                        {breadcrumb && (
+                            <nav className="flex items-center gap-1.5 text-xs text-text-muted truncate">
+                                {breadcrumb}
+                            </nav>
+                        )}
                     </div>
-                    <div className="modern-header-right">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => navigate('/projects')}
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
+                        >
+                            <Plus className="w-3.5 h-3.5" />
+                            New Task
+                        </button>
+                        <button
+                            onClick={() => setKbarOpen(true)}
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-muted hover:text-text-primary hover:border-border-default transition-colors"
+                        >
+                            <Search className="w-3.5 h-3.5" />
+                            Search
+                            <kbd className="hidden md:inline-flex items-center gap-0.5 px-1 py-0.5 text-[10px] font-mono bg-surface-2 rounded border border-border-subtle">⌘K</kbd>
+                        </button>
                         <NotificationsBell />
-                        <div className="modern-avatar" title={currentUser?.fullName ?? currentUser?.email}>
-                            {(currentUser?.fullName?.[0] ?? currentUser?.email?.[0] ?? '?').toUpperCase()}
+                        <div title={(currentUser?.fullName ?? currentUser?.email) ?? ''}>
+                            <Avatar name={(currentUser?.fullName ?? currentUser?.email) ?? ''} size="md" />
                         </div>
                     </div>
                 </header>
 
-                <div className="modern-page-header">
-                    <div className="modern-page-header-left">
-                        {breadcrumb && <nav className="modern-breadcrumb">{breadcrumb}</nav>}
-                        {title && <h1 className="modern-page-title">{title}</h1>}
-                        {project && (
-                            <StatusPill status={completion === 100 ? 'Done' : 'InProgress'} />
-                        )}
+                {title && (
+                    <div className="px-4 py-2.5 border-b border-border-subtle bg-bg/50 flex-shrink-0">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base font-semibold text-text-primary truncate">{title}</h1>
+                            {project && (
+                                <Badge variant={completion === 100 ? 'success' : 'info'}>
+                                    {completion === 100 ? 'Completed' : 'In Progress'}
+                                </Badge>
+                            )}
+                            {typeof completion === 'number' && completion < 100 && (
+                                <div className="flex-1 max-w-[120px]">
+                                    <div className="h-1 flex-1 bg-surface-2 rounded-full overflow-hidden">
+                                        <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${completion}%` }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                    <div className="modern-page-header-right">
-                        {project && typeof completion === 'number' && (
-                            <div className="modern-page-progress">
-                                <ProgressTrack value={completion} tone="accent" />
-                            </div>
-                        )}
-                    </div>
-                </div>
+                )}
 
-                <main className="modern-content">{children}</main>
+                <main className="flex-1 overflow-y-auto scrollbar-thin p-4 md:p-5">
+                    <div className="max-w-7xl mx-auto">
+                        {children}
+                    </div>
+                </main>
             </div>
         </div>
     );

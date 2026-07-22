@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import KanbanBoard from '../components/KanbanBoard';
-import TaskDetailModal from '../components/TaskDetailModal';
 import SprintsPanel from '../components/SprintsPanel';
 import DependenciesPanel from '../components/DependenciesPanel';
 import TimeTracking from '../components/TimeTracking';
@@ -11,9 +10,13 @@ import GanttView from '../components/GanttView';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
 import MilestonesPanel from '../components/MilestonesPanel';
 import AppShell from '../components/AppShell';
+import TaskDetailSheet from '../components/TaskDetailSheet';
 import Avatar from '../components/Avatar';
 import { membersApi, usersApi, tasksApi } from '../api/endpoints';
 import { labelsApi } from '../api/endpoints';
+import { Badge } from '../components/primitives/Badge';
+import { Button } from '../components/primitives/Button';
+import { UserPlus, X, Plus } from 'lucide-react';
 import {
     PRIORITY_LABELS,
     TASK_TYPE_LABELS,
@@ -225,73 +228,104 @@ export default function ProjectDetail() {
                 <p className="muted">Loading...</p>
             ) : project ? (
                 <>
-                    {project.description && <p className="muted project-sub">{project.description}</p>}
+                    {project.description && <p className="text-xs text-text-muted mt-1 mb-3">{project.description}</p>}
 
-                    <div className="project-toolbar">
-                        <div className="modern-view-toggle">
-                            <button className={`modern-view-btn ${view === 'list' ? 'active' : ''}`} onClick={() => setView('list')}>List</button>
-                            <button className={`modern-view-btn ${view === 'kanban' ? 'active' : ''}`} onClick={() => setView('kanban')}>Kanban</button>
-                            <button className={`modern-view-btn ${view === 'plan' ? 'active' : ''}`} onClick={() => setView('plan')}>Plan</button>
-                            <button className={`modern-view-btn ${showMembers ? 'active' : ''}`} onClick={() => setShowMembers((s) => !s)}>Members ({members.length})</button>
+                    <div className="flex items-center justify-between gap-2 mb-4">
+                        <div className="flex items-center gap-0.5 bg-surface-2 rounded-lg p-0.5">
+                            {(['list', 'kanban', 'plan'] as const).map((v) => (
+                                <button
+                                    key={v}
+                                    onClick={() => setView(v)}
+                                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${view === v ? 'bg-surface-1 text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
+                                >
+                                    {v === 'list' ? 'List' : v === 'kanban' ? 'Kanban' : 'Plan'}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setShowMembers((s) => !s)}
+                                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${showMembers ? 'bg-surface-1 text-text-primary shadow-sm' : 'text-text-muted hover:text-text-secondary'}`}
+                            >
+                                Members ({members.length})
+                            </button>
                         </div>
                         {canEdit && (
-                            <button className="modern-btn-primary" onClick={() => setShowCreate(true)}>+ New Task</button>
+                            <Button size="sm" onClick={() => setShowCreate(true)}>
+                                <Plus className="w-3.5 h-3.5" />
+                                New Task
+                            </Button>
                         )}
                     </div>
 
                     {showMembers && (
-                        <div className="members-panel">
-                            <div className="members-header">
-                                <h3 className="members-title">Project members</h3>
-                                <span className="members-count">{members.length}</span>
+                        <div className="border border-border-subtle rounded-md overflow-hidden bg-surface-1 mt-4">
+                            <div className="flex items-center justify-between px-3 py-2.5 border-b border-border-subtle">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-medium text-text-primary">Project members</h3>
+                                    <span className="text-[10px] font-mono tabular-nums text-text-muted bg-surface-2 px-1.5 py-0.5 rounded-md">{members.length}</span>
+                                </div>
                             </div>
 
-                            <div className="members-list">
-                                {members.map((m) => (
-                                    <div key={m.id} className="member-item">
-                                        <Avatar name={m.fullName ?? m.email} size={34} />
-                                        <div className="member-info">
-                                            <div className="member-name">{m.fullName ?? m.email}</div>
-                                            <div className="member-email">{m.email}</div>
+                            {members.length === 0 ? (
+                                <div className="px-3 py-8 text-center">
+                                    <p className="text-xs text-text-muted">No members yet.</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    {members.map((m) => (
+                                        <div key={m.id} className="flex items-center gap-3 px-3 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2/50 transition-colors">
+                                            <Avatar name={m.fullName ?? m.email} size={32} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium text-text-primary truncate">{m.fullName ?? m.email}</div>
+                                                <div className="text-[11px] text-text-muted truncate">{m.email}</div>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                {isProjectOwner ? (
+                                                    <select
+                                                        value={m.projectRole}
+                                                        onChange={(e) => void changeMemberRole(m.id, e.target.value as ProjectRole)}
+                                                        className="bg-surface-2 border border-border-subtle rounded-md px-2 py-1 text-xs text-text-primary focus:outline-none focus:border-accent transition-colors cursor-pointer"
+                                                    >
+                                                        <option value="Owner">Owner</option>
+                                                        <option value="Editor">Editor</option>
+                                                        <option value="Viewer">Viewer</option>
+                                                    </select>
+                                                ) : (
+                                                    <Badge variant={m.projectRole === 'Owner' ? 'info' : m.projectRole === 'Editor' ? 'default' : 'outline'}>
+                                                        {m.projectRole}
+                                                    </Badge>
+                                                )}
+                                                {canEdit && m.id !== currentUser?.id && (
+                                                    <button
+                                                        type="button"
+                                                        className="p-1 rounded-md hover:bg-red-500/10 text-text-muted hover:text-red-400 transition-colors"
+                                                        onClick={() => void removeMember(m.id)}
+                                                        title="Remove member"
+                                                    >
+                                                        <X className="w-3.5 h-3.5" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
-                                        <div className="member-actions">
-                                            {isProjectOwner ? (
-                                                <select
-                                                    className="member-role-select"
-                                                    value={m.projectRole}
-                                                    onChange={(e) => void changeMemberRole(m.id, e.target.value as ProjectRole)}
-                                                >
-                                                    <option value="Owner">Owner</option>
-                                                    <option value="Editor">Editor</option>
-                                                    <option value="Viewer">Viewer</option>
-                                                </select>
-                                            ) : (
-                                                <span className={`member-role-badge role-${m.projectRole.toLowerCase()}`}>{m.projectRole}</span>
-                                            )}
-                                            {canEdit && m.id !== currentUser?.id && (
-                                                <button className="member-remove" onClick={() => void removeMember(m.id)} title="Remove member">
-                                                    ✕
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                                {members.length === 0 && (
-                                    <div className="members-empty">
-                                        <p className="muted">No members yet.</p>
-                                    </div>
-                                )}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
 
                             {canEdit && (
-                                <form className="member-add-form" onSubmit={addMember}>
-                                    <select value={newMemberId} onChange={(e) => setNewMemberId(e.target.value)} className="member-add-select">
+                                <form onSubmit={addMember} className="flex items-center gap-2 px-3 py-2.5 border-t border-border-subtle">
+                                    <select
+                                        value={newMemberId}
+                                        onChange={(e) => setNewMemberId(e.target.value)}
+                                        className="flex-1 bg-surface-2 border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent transition-colors cursor-pointer"
+                                    >
                                         <option value="">Add member…</option>
                                         {allUsers.filter((u) => !members.some((m) => m.id === u.id)).map((u) => (
                                             <option key={u.id} value={u.id}>{u.fullName ?? u.email}</option>
                                         ))}
                                     </select>
-                                    <button type="submit" className="modern-btn-primary member-add-btn" disabled={!newMemberId}>Add</button>
+                                    <Button type="submit" size="sm" disabled={!newMemberId}>
+                                        <UserPlus className="w-3.5 h-3.5" />
+                                        Add
+                                    </Button>
                                 </form>
                             )}
                         </div>
@@ -343,7 +377,7 @@ export default function ProjectDetail() {
             )}
 
             {selected && (
-                <TaskDetailModal
+                <TaskDetailSheet
                     task={selected}
                     tasks={tasks}
                     canEdit={canEdit}

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CheckSquare } from 'lucide-react';
 import client from '../api/client';
 import AppShell from '../components/AppShell';
 import IssueHierarchyTable from '../components/IssueHierarchyTable';
@@ -120,60 +121,59 @@ export default function MyTasksPage() {
 
     const canEdit = true;
 
+    const filterSelectClass = "bg-surface-1 border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent transition-colors cursor-pointer";
+
     return (
         <AppShell breadcrumb={<span>Workspace</span>} title="My Tasks">
-            <div className="modern-greeting-row">
+            <div className="flex items-center justify-between mb-5">
                 <div>
-                    <h1 className="modern-greeting">My Tasks</h1>
-                    <p className="modern-subtitle">{tasks.length} task{tasks.length === 1 ? '' : 's'} assigned to you</p>
+                    <h1 className="text-base font-semibold text-text-primary">My Tasks</h1>
+                    <p className="text-xs text-text-muted mt-0.5">{tasks.length} task{tasks.length === 1 ? '' : 's'} assigned to you</p>
                 </div>
             </div>
 
-            {error && <div className="alert alert-error">{error}</div>}
+            {error && <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-md px-3 py-2 text-xs mb-4">{error}</div>}
 
-            <div className="modern-filter-bar">
-                <label className="modern-filter-label">
-                    Status
-                    <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}>
-                        {STATUSES.map((s) => (
-                            <option key={s} value={s}>{s === 'all' ? 'All' : s}</option>
-                        ))}
-                    </select>
-                </label>
-                <label className="modern-filter-label">
-                    Priority
-                    <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as FilterPriority)}>
-                        {PRIORITIES.map((p) => (
-                            <option key={p} value={p}>{p === 'all' ? 'All' : p}</option>
-                        ))}
-                    </select>
-                </label>
-                <label className="modern-filter-label">
-                    Type
-                    <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as FilterType)}>
-                        {TYPES.map((t) => (
-                            <option key={t} value={t}>{t === 'all' ? 'All' : t}</option>
-                        ))}
-                    </select>
-                </label>
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">Filters</span>
+                </div>
+                <div className="h-4 w-px bg-border-subtle hidden sm:block" />
+                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as FilterStatus)} className={filterSelectClass}>
+                    {STATUSES.map((s) => (
+                        <option key={s} value={s}>{s === 'all' ? 'All' : s}</option>
+                    ))}
+                </select>
+                <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as FilterPriority)} className={filterSelectClass}>
+                    {PRIORITIES.map((p) => (
+                        <option key={p} value={p}>{p === 'all' ? 'All' : p}</option>
+                    ))}
+                </select>
+                <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as FilterType)} className={filterSelectClass}>
+                    {TYPES.map((t) => (
+                        <option key={t} value={t}>{t === 'all' ? 'All' : t}</option>
+                    ))}
+                </select>
                 {projects.length > 0 && (
-                    <label className="modern-filter-label">
-                        Project
-                        <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)}>
-                            <option value="all">All projects</option>
-                            {projects.map((p) => (
-                                <option key={p.id} value={p.id}>{p.name}</option>
-                            ))}
-                        </select>
-                    </label>
+                    <select value={projectFilter} onChange={(e) => setProjectFilter(e.target.value)} className={filterSelectClass}>
+                        <option value="all">All projects</option>
+                        {projects.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
                 )}
             </div>
 
             {loading ? (
-                <p className="muted">Loading...</p>
+                <div className="flex items-center gap-2 py-8">
+                    <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    <span className="text-xs text-text-muted">Loading tasks...</span>
+                </div>
             ) : tasks.length === 0 ? (
-                <div className="modern-bento-card modern-empty-state">
-                    <p className="muted">No tasks assigned to you yet.</p>
+                <div className="border border-border-subtle rounded-md bg-surface-1 py-12 text-center">
+                    <CheckSquare className="w-8 h-8 mx-auto mb-2 text-text-muted" />
+                    <p className="text-sm font-medium text-text-primary mb-1">No tasks assigned</p>
+                    <p className="text-xs text-text-muted">You're all caught up! Check back later or browse projects.</p>
                 </div>
             ) : (
                 <IssueHierarchyTable
