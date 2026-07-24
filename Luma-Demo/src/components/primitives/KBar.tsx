@@ -21,7 +21,7 @@ export function KBar({ open, onClose, onAction, commands }: KBarProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] bg-black/60 backdrop-blur-sm" onClick={onClose}>
             <div
-                className="w-full max-w-lg bg-surface-1 border border-border-subtle rounded-xl shadow-2xl overflow-hidden"
+                className="w-full max-w-lg bg-surface-1 border border-border-subtle rounded overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-border-subtle">
@@ -45,7 +45,7 @@ export function KBar({ open, onClose, onAction, commands }: KBarProps) {
                         <button
                             key={cmd.id}
                             onClick={() => { onAction(cmd.id); onClose(); }}
-                            className="w-full flex items-center gap-3 px-3 py-2 rounded-md hover:bg-surface-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                            className="w-full flex items-center gap-3 px-3 py-2 rounded hover:bg-surface-2 text-sm text-text-secondary hover:text-text-primary transition-colors"
                         >
                             <span className="w-8 h-8 flex items-center justify-center rounded-md bg-surface-2 text-text-muted">
                                 {cmd.icon}

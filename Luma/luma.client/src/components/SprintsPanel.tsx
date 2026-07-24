@@ -22,8 +22,9 @@ interface SprintsPanelProps {
 const SPRINT_STATUSES: SprintStatus[] = ['Planned', 'Active', 'Completed'];
 
 const STATUS_LABELS: Record<Task['status'], string> = {
-    ToDo: 'To Do',
+    ToDo: 'Backlog',
     InProgress: 'In Progress',
+    Review: 'Review',
     Done: 'Done',
 };
 

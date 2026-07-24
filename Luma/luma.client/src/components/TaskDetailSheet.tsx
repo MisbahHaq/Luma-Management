@@ -32,13 +32,14 @@ interface TaskDetailSheetProps {
     onSaved: (updated: Task) => void;
 }
 
-const STATUSES: TaskStatus[] = ['ToDo', 'InProgress', 'Done'];
+    const STATUSES: TaskStatus[] = ['ToDo', 'InProgress', 'Review', 'Done'];
 const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 const TYPES: TaskItemType[] = ['Task', 'Story', 'Bug', 'Epic'];
 
 const STATUS_DOT: Record<TaskStatus, string> = {
     ToDo: 'bg-gray-400',
     InProgress: 'bg-blue-400',
+    Review: 'bg-amber-400',
     Done: 'bg-emerald-400',
 };
 

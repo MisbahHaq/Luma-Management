@@ -77,7 +77,7 @@ export default function Dashboard() {
         <AppShell breadcrumb={<span>Workspace</span>} title="Projects">
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h1 className="text-base font-semibold text-text-primary">Projects</h1>
+                    <h1 className="text-base font-medium text-text-primary">Projects</h1>
                     <p className="text-xs text-text-muted mt-0.5">
                         {stats.length} project{stats.length === 1 ? '' : 's'} in {currentWorkspace?.name ?? 'your workspace'}
                     </p>
@@ -85,7 +85,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                     {workspaces.length > 1 && (
                         <select
-                            className="bg-surface-1 border border-border-subtle rounded-md px-2.5 py-1.5 text-xs text-text-primary"
+                            className="bg-surface-1 border border-border-subtle rounded px-2.5 py-1.5 text-xs text-text-primary"
                             value={currentWorkspace?.id ?? ''}
                             onChange={(e) => {
                                 const id = e.target.value;
@@ -101,7 +101,7 @@ export default function Dashboard() {
                     )}
                     {canWrite && (
                         <button
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-accent text-white hover:bg-accent/90 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/90 transition-colors"
                             onClick={() => setShowProjectModal(true)}
                         >
                             <Plus className="w-3.5 h-3.5" />
@@ -118,7 +118,7 @@ export default function Dashboard() {
                     <p className="text-xs text-text-muted mb-4">You need a workspace before you can create projects.</p>
                     {canWrite && (
                         <button
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-accent text-white hover:bg-accent/90 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/90 transition-colors"
                             onClick={() => setShowWorkspaceModal(true)}
                         >
                             <Plus className="w-3.5 h-3.5" />
@@ -135,7 +135,7 @@ export default function Dashboard() {
                     <p className="text-xs text-text-muted mb-4">Create your first project to get started.</p>
                     {canWrite && (
                         <button
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-accent text-white hover:bg-accent/90 transition-colors"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/90 transition-colors"
                             onClick={() => setShowProjectModal(true)}
                         >
                             <Plus className="w-3.5 h-3.5" />
@@ -144,14 +144,14 @@ export default function Dashboard() {
                     )}
                 </div>
             ) : (
-                <div className="border border-border-subtle rounded-md overflow-hidden bg-surface-1">
+                <div className="border border-border-subtle rounded overflow-hidden bg-surface-1">
                     {stats.map((s) => (
                         <div
                             key={s.project.id}
                             className="group flex items-center gap-3 px-3 py-2.5 border-b border-border-subtle last:border-0 hover:bg-surface-2/50 cursor-pointer transition-colors"
                             onClick={() => navigate(`/projects/${s.project.id}`)}
                         >
-                            <div className="w-8 h-8 rounded-md bg-surface-2 flex items-center justify-center text-text-muted flex-shrink-0">
+                            <div className="w-8 h-8 rounded bg-surface-2 flex items-center justify-center text-text-muted flex-shrink-0">
                                 <Folder className="w-4 h-4" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -161,8 +161,8 @@ export default function Dashboard() {
                                 </div>
                             </div>
                             <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-                                <div className="w-24 h-1 bg-surface-2 rounded-full overflow-hidden">
-                                    <div className="h-full bg-accent rounded-full" style={{ width: `${s.completion}%` }} />
+                                <div className="w-24 h-1 bg-surface-2 rounded overflow-hidden">
+                                    <div className="h-full bg-accent rounded" style={{ width: `${s.completion}%` }} />
                                 </div>
                                 <span className="text-[10px] font-mono tabular-nums text-text-muted w-[32px] text-right">{s.completion}%</span>
                             </div>
@@ -173,15 +173,15 @@ export default function Dashboard() {
             )}
 
             {showProjectModal && currentWorkspace && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowProjectModal(false)}>
+                <div className="modal-overlay" onClick={() => setShowProjectModal(false)}>
                     <form
-                        className="bg-surface-1 border border-border-subtle rounded-xl shadow-2xl w-full max-w-md animate-in fade-in slide-up duration-150"
+                        className="bg-surface-1 border border-border-subtle rounded animate-in fade-in slide-up duration-150"
                         onClick={(e) => e.stopPropagation()}
                         onSubmit={handleCreateProject}
                     >
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-semibold text-text-primary">New project</h3>
-                            <button type="button" className="p-1 rounded-md hover:bg-surface-2 text-text-muted" onClick={() => setShowProjectModal(false)}>
+                            <h3 className="text-sm font-medium text-text-primary">New project</h3>
+                            <button type="button" className="p-1 rounded hover:bg-surface-2 text-text-muted" onClick={() => setShowProjectModal(false)}>
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -192,7 +192,7 @@ export default function Dashboard() {
                                 onChange={(e) => setProjectName(e.target.value)}
                                 placeholder="Project name"
                                 autoFocus
-                                className="w-full bg-surface-2 border border-border-subtle rounded-md px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                                className="w-full bg-surface-2 border border-border-subtle rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                             />
                         </label>
                         <label className="block mb-4">
@@ -202,18 +202,18 @@ export default function Dashboard() {
                                 onChange={(e) => setProjectDescription(e.target.value)}
                                 placeholder="Optional description"
                                 rows={3}
-                                className="w-full bg-surface-2 border border-border-subtle rounded-md px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                                className="w-full bg-surface-2 border border-border-subtle rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                             />
                         </label>
                         <div className="flex items-center justify-end gap-2">
                             <button
                                 type="button"
-                                className="px-3 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
+                                className="px-3 py-1.5 text-xs font-medium rounded border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
                                 onClick={() => setShowProjectModal(false)}
                             >
                                 Cancel
                             </button>
-                            <button type="submit" className="px-3 py-1.5 text-xs font-medium rounded-md bg-accent text-white hover:bg-accent/90 transition-colors" disabled={saving}>
+                            <button type="submit" className="px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/90 transition-colors" disabled={saving}>
                                 {saving ? 'Saving...' : 'Create'}
                             </button>
                         </div>
@@ -222,15 +222,15 @@ export default function Dashboard() {
             )}
 
             {showWorkspaceModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowWorkspaceModal(false)}>
+                <div className="modal-overlay" onClick={() => setShowWorkspaceModal(false)}>
                     <form
-                        className="bg-surface-1 border border-border-subtle rounded-xl shadow-2xl w-full max-w-md animate-in fade-in slide-up duration-150"
+                        className="bg-surface-1 border border-border-subtle rounded animate-in fade-in slide-up duration-150"
                         onClick={(e) => e.stopPropagation()}
                         onSubmit={handleCreateWorkspace}
                     >
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-sm font-semibold text-text-primary">Create workspace</h3>
-                            <button type="button" className="p-1 rounded-md hover:bg-surface-2 text-text-muted" onClick={() => setShowWorkspaceModal(false)}>
+                            <h3 className="text-sm font-medium text-text-primary">Create workspace</h3>
+                            <button type="button" className="p-1 rounded hover:bg-surface-2 text-text-muted" onClick={() => setShowWorkspaceModal(false)}>
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -242,18 +242,18 @@ export default function Dashboard() {
                                 onChange={(e) => setWorkspaceName(e.target.value)}
                                 placeholder="e.g. Acme Corp"
                                 autoFocus
-                                className="w-full bg-surface-2 border border-border-subtle rounded-md px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                                className="w-full bg-surface-2 border border-border-subtle rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
                             />
                         </label>
                         <div className="flex items-center justify-end gap-2">
                             <button
                                 type="button"
-                                className="px-3 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
+                                className="px-3 py-1.5 text-xs font-medium rounded border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
                                 onClick={() => setShowWorkspaceModal(false)}
                             >
                                 Cancel
                             </button>
-                            <button type="submit" className="px-3 py-1.5 text-xs font-medium rounded-md bg-accent text-white hover:bg-accent/90 transition-colors" disabled={saving || !workspaceName.trim()}>
+                            <button type="submit" className="px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/90 transition-colors" disabled={saving || !workspaceName.trim()}>
                                 {saving ? 'Creating...' : 'Create workspace'}
                             </button>
                         </div>

@@ -1,15 +1,8 @@
-import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { Label, Task, TaskStatus, TaskPriority } from '../types/types';
 import { STATUS_LABELS } from '../types/types';
 import Avatar from './Avatar';
-import {
-    Flame,
-    AlertTriangle,
-    Minus,
-    ArrowDown,
-    GripVertical,
-    Plus,
-} from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 interface KanbanBoardProps {
     tasks: Task[];
@@ -19,19 +12,13 @@ interface KanbanBoardProps {
     labels?: Record<string, Label[]>;
 }
 
-const COLUMNS: TaskStatus[] = ['ToDo', 'InProgress', 'Done'];
+const COLUMNS: TaskStatus[] = ['ToDo', 'InProgress', 'Review', 'Done'];
 
-const STATUS_ACCENT: Record<TaskStatus, string> = {
-    ToDo: 'bg-text-muted',
-    InProgress: 'bg-accent',
-    Done: 'bg-emerald-500',
-};
-
-const PRIORITY_ICON: Record<TaskPriority, ReactNode> = {
-    Critical: <Flame className="size-3.5 text-orange-500" />,
-    High: <AlertTriangle className="size-3.5 text-red-400" />,
-    Medium: <Minus className="size-3.5 text-text-muted" />,
-    Low: <ArrowDown className="size-3.5 text-text-muted" />,
+const PRIORITY_COLORS: Record<TaskPriority, string> = {
+    Critical: '#DC2626',
+    High: '#D97706',
+    Medium: '#4B7C74',
+    Low: '#6B7280',
 };
 
 function formatDate(date: string | null): string {
@@ -47,11 +34,14 @@ export default function KanbanBoard({
     onTaskClick,
     onTaskMoved,
     onTaskCreate,
+    labels,
 }: KanbanBoardProps) {
     const [dragId, setDragId] = useState<string | null>(null);
+    const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
     const [addingUnder, setAddingUnder] = useState<TaskStatus | null>(null);
     const [addTitle, setAddTitle] = useState('');
     const addRef = useRef<HTMLInputElement>(null);
+    const dragCountRef = useRef<Record<string, number>>({});
 
     useEffect(() => {
         if (addingUnder && addRef.current) {
@@ -59,7 +49,34 @@ export default function KanbanBoard({
         }
     }, [addingUnder]);
 
+    const handleDragStart = (taskId: string) => {
+        setDragId(taskId);
+    };
+
+    const handleDragEnd = () => {
+        setDragId(null);
+        setDragOverStatus(null);
+        dragCountRef.current = {};
+    };
+
+    const handleDragEnter = (status: TaskStatus, e: React.DragEvent) => {
+        e.preventDefault();
+        dragCountRef.current[status] = (dragCountRef.current[status] || 0) + 1;
+        setDragOverStatus(status);
+    };
+
+    const handleDragLeave = (status: TaskStatus, e: React.DragEvent) => {
+        e.preventDefault();
+        dragCountRef.current[status] = (dragCountRef.current[status] || 0) - 1;
+        if (dragCountRef.current[status] <= 0) {
+            dragCountRef.current[status] = 0;
+            setDragOverStatus((prev) => (prev === status ? null : prev));
+        }
+    };
+
     const handleDrop = (status: TaskStatus) => {
+        dragCountRef.current[status] = 0;
+        setDragOverStatus(null);
         if (!dragId) return;
         const task = tasks.find((t) => t.id === dragId);
         setDragId(null);
@@ -76,99 +93,77 @@ export default function KanbanBoard({
     };
 
     return (
-        <div className="flex gap-3 overflow-x-auto pb-3">
+        <div className="kanban-board">
             {COLUMNS.map((status) => {
                 const columnTasks = tasks.filter((t) => t.status === status);
+                const isOver = dragOverStatus === status;
+
                 return (
                     <div
                         key={status}
-                        className="min-w-[280px] w-[300px] flex-shrink-0 flex flex-col bg-surface-1/40 rounded-lg border border-border-subtle"
-                        onDragOver={(e) => {
-                            e.preventDefault();
-                            e.dataTransfer.dropEffect = 'move';
-                        }}
-                        onDragEnter={(e) => e.preventDefault()}
+                        className={`kanban-column${isOver ? ' drag-over' : ''}`}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnter={(e) => handleDragEnter(status, e)}
+                        onDragLeave={(e) => handleDragLeave(status, e)}
                         onDrop={() => void handleDrop(status)}
                     >
-                        <div className="h-[3px] w-full rounded-t-lg bg-text-muted" style={{ backgroundColor: STATUS_ACCENT[status].replace('bg-', '') === 'text-muted' ? undefined : undefined }}>
-                            {status === 'ToDo' && (
-                                <div className="h-[3px] w-full rounded-t-lg bg-text-muted" />
-                            )}
-                            {status === 'InProgress' && (
-                                <div className="h-[3px] w-full rounded-t-lg bg-accent" />
-                            )}
-                            {status === 'Done' && (
-                                <div className="h-[3px] w-full rounded-t-lg bg-emerald-500" />
-                            )}
+                        <div className="kanban-column-header">
+                            <div className="flex items-center gap-2">
+                                <span className="kanban-column-title">{STATUS_LABELS[status]}</span>
+                                <span className="kanban-column-count">{columnTasks.length}</span>
+                            </div>
+                            <button
+                                onClick={() => setAddingUnder(status)}
+                                className="flex items-center justify-center w-6 h-6 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                            </button>
                         </div>
 
-                        <div className="flex items-center justify-between px-3 pt-3 pb-1">
-                            <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
-                                {STATUS_LABELS[status]}
-                            </span>
-                            <span className="text-[10px] font-mono font-medium tabular-nums px-1.5 py-0.5 rounded bg-surface-2 text-text-muted">
-                                {columnTasks.length}
-                            </span>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto px-2 py-1 space-y-1.5 min-h-[120px]">
-                            {columnTasks.length === 0 && (
-                                <div className="text-text-muted text-xs py-4 text-center select-none">
-                                    No tasks
-                                </div>
-                            )}
+                        <div className="kanban-card-list">
                             {columnTasks.map((task) => {
                                 const isDragging = dragId === task.id;
-                                const col = task.dueDate ? new Date(task.dueDate) : null;
-                                const dueLabel = col ? formatDate(task.dueDate) : '';
+                                const taskLabels = labels?.[task.id] ?? [];
+                                const dueLabel = formatDate(task.dueDate);
+                                const priorityColor = PRIORITY_COLORS[task.priority];
 
                                 return (
                                     <div
                                         key={task.id}
                                         draggable
-                                        onDragStart={(e) => {
-                                            setDragId(task.id);
-                                            e.dataTransfer.effectAllowed = 'move';
-                                            e.dataTransfer.setData('text/plain', task.id);
-                                        }}
-                                        onDragEnd={() => setDragId(null)}
+                                        onDragStart={() => handleDragStart(task.id)}
+                                        onDragEnd={handleDragEnd}
                                         onClick={() => onTaskClick(task)}
                                         className={[
-                                            'group bg-surface-1/60 border border-border-subtle rounded-md p-2.5 cursor-pointer transition-all duration-150',
-                                            isDragging
-                                                ? 'opacity-50 border-accent'
-                                                : 'hover:border-border-default hover:shadow-sm',
+                                            'kanban-card',
+                                            isDragging ? 'dragging' : '',
                                         ].join(' ')}
                                     >
-                                        <div className="flex items-center justify-between gap-2">
-                                            <span className="text-[11px] font-mono font-medium text-text-muted tabular-nums tracking-tight">
-                                                {task.issueKey}
-                                            </span>
-                                            <div className="flex items-center gap-1">
-                                                <span className="flex items-center">
-                                                    {PRIORITY_ICON[task.priority]}
-                                                </span>
-                                                <span className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <GripVertical className="size-3.5 text-text-muted" />
-                                                </span>
+                                        {taskLabels.length > 0 && (
+                                            <div className="kanban-card-tags">
+                                                {taskLabels.map((l) => (
+                                                    <span key={l.id} className="kanban-card-tag">{l.name}</span>
+                                                ))}
                                             </div>
-                                        </div>
+                                        )}
 
-                                        <h3 className="text-sm font-medium text-text-primary leading-tight mt-1 line-clamp-2">
-                                            {task.title}
-                                        </h3>
+                                        <div className="kanban-card-title">{task.title}</div>
 
-                                        <div className="flex items-center justify-between gap-2 mt-2.5">
-                                            <div className="flex items-center gap-2 min-w-0">
-                                                {task.assigneeFullName ? (
-                                                    <Avatar name={task.assigneeFullName} size={20} />
-                                                ) : (
-                                                    <span className="size-5 rounded-full bg-surface-2 flex items-center justify-center text-text-muted">
-                                                        <span className="text-[10px]">?</span>
-                                                    </span>
-                                                )}
+                                        <div className="kanban-card-meta">
+                                            <div className="kanban-card-meta-left">
+                                                <div className="flex items-center gap-1.5">
+                                                    <span
+                                                        className="kanban-card-priority-dot"
+                                                        style={{ backgroundColor: priorityColor }}
+                                                    />
+                                                    {task.assigneeFullName ? (
+                                                        <Avatar name={task.assigneeFullName} size={18} />
+                                                    ) : (
+                                                        <span className="text-[11px] text-gray-400 font-medium">Unassigned</span>
+                                                    )}
+                                                </div>
                                                 {dueLabel && (
-                                                    <span className="text-[11px] text-text-muted font-mono tabular-nums truncate">
+                                                    <span className="text-[11px] text-gray-400 font-medium tabular-nums" style={{ fontFamily: 'var(--font-mono)' }}>
                                                         {dueLabel}
                                                     </span>
                                                 )}
@@ -180,7 +175,7 @@ export default function KanbanBoard({
                         </div>
 
                         {addingUnder === status ? (
-                            <div className="px-2 pb-2">
+                            <div className="px-3 pb-3">
                                 <input
                                     ref={addRef}
                                     type="text"
@@ -197,17 +192,17 @@ export default function KanbanBoard({
                                             setAddTitle('');
                                         }
                                     }}
-                                    placeholder="Issue title"
-                                    className="w-full rounded-md border border-border-default bg-surface-1 px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-accent transition-colors"
+                                    placeholder="Issue title..."
+                                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 outline-none focus:border-blue-300 focus:bg-white transition-colors"
                                 />
                             </div>
                         ) : (
                             <button
                                 onClick={() => setAddingUnder(status)}
-                                className="flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary px-3 pb-2.5 pt-1 w-full text-left transition-colors"
+                                className="kanban-add-card"
                             >
-                                <Plus className="size-3.5" />
-                                Add issue
+                                <Plus className="size-3.5 inline-block mr-1 -mt-0.5" />
+                                Add card
                             </button>
                         )}
                     </div>

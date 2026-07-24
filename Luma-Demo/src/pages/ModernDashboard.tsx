@@ -28,15 +28,15 @@ const generateWeekDays = (): DaySchedule[] => {
 
 function getActivityColor(action: string): string {
     const ACTIVITY_COLORS: Record<string, string> = {
-        TaskCreated: '#ADC6FF',
-        TaskUpdated: '#FFE58F',
-        TaskCompleted: '#B7E4A7',
-        TaskMoved: '#D3ADF7',
-        CommentAdded: '#ADC6FF',
-        MemberAdded: '#D3ADF7',
-        ProjectCreated: '#FFE58F',
+        TaskCreated: '#1C2B3A',
+        TaskUpdated: '#C1541F',
+        TaskCompleted: '#4A7C5E',
+        TaskMoved: '#7A7869',
+        CommentAdded: '#1C2B3A',
+        MemberAdded: '#7A7869',
+        ProjectCreated: '#C1541F',
     };
-    return ACTIVITY_COLORS[action] ?? '#A5A5A5';
+    return ACTIVITY_COLORS[action] ?? '#7A7869';
 }
 
 function formatActivityAction(action: string): string {
@@ -47,10 +47,10 @@ function HealthBadge({ status }: { status: string }) {
     const lower = status.toLowerCase();
     const variant =
         lower === 'healthy' || lower === 'ontrack'
-            ? 'text-emerald-400 border-emerald-400/30 bg-emerald-400/10'
+            ? 'text-emerald-700 border-emerald-500/30 bg-emerald-500/10'
             : lower === 'atrisk' || lower === 'at risk'
-                ? 'text-amber-400 border-amber-400/30 bg-amber-400/10'
-                : 'text-red-400 border-red-400/30 bg-red-400/10';
+                ? 'text-amber-700 border-amber-500/30 bg-amber-500/10'
+                : 'text-red-700 border-red-500/30 bg-red-500/10';
     return (
         <span className={`inline-flex items-center text-[10px] font-medium px-1.5 py-0.5 rounded border ${variant}`}>
             {status}
@@ -81,12 +81,12 @@ export default function ModernDashboard() {
             <div className="max-w-7xl mx-auto p-4 md:p-5 space-y-5">
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-base font-semibold text-text-primary">Stay up to date, {userName}</h1>
+                        <h1 className="text-base font-medium text-text-primary">Stay up to date, {userName}</h1>
                         <p className="text-xs text-text-muted">Here's what's happening across your projects.</p>
                     </div>
                     <button
                         onClick={() => navigate('/projects')}
-                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-surface-1 border border-border-default rounded-lg text-text-primary hover:bg-surface-2 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 bg-surface-1 border border-border-default rounded text-text-primary hover:bg-surface-2 transition-colors"
                     >
                         <Plus className="w-3.5 h-3.5" />
                         New Task
@@ -95,24 +95,24 @@ export default function ModernDashboard() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {statItems.map((stat) => (
-                        <div key={stat.label} className="bg-surface-1 border border-border-subtle rounded-lg p-3">
+                        <div key={stat.label} className="bg-surface-1 border border-border-subtle rounded p-3">
                             <div className="flex items-center gap-1.5 mb-1">
                                 <span className="w-1 h-1 rounded-full bg-accent mr-2 inline-block" />
                                 <span className="text-[11px] font-medium text-text-muted uppercase tracking-wider">{stat.label}</span>
                             </div>
-                            <div className="text-xl font-semibold text-text-primary tabular-nums font-mono">{stat.value}</div>
+                            <div className="text-xl font-medium text-text-primary tabular-nums font-mono">{stat.value}</div>
                         </div>
                     ))}
                 </div>
 
                 <section>
-                    <h2 className="text-sm font-semibold text-text-primary mb-3">Project Progress</h2>
+                    <h2 className="text-sm font-medium text-text-primary mb-3">Project Progress</h2>
                     {stats.projects.length > 0 ? (
-                        <div className="bg-surface-1 border border-border-subtle rounded-lg divide-y divide-border-subtle">
+                        <div className="bg-surface-1 border border-border-subtle rounded divide-y divide-border-subtle">
                             {stats.projects.slice(0, 6).map((project) => (
                                 <div
                                     key={project.projectId}
-                                    className="flex items-center gap-3 py-2.5 px-3 hover:bg-surface-2/50 rounded-md transition-colors"
+                                    className="flex items-center gap-3 py-2.5 px-3 hover:bg-surface-2/50 transition-colors"
                                 >
                                     <span className="text-sm font-medium text-text-primary flex-1 truncate">{project.projectName}</span>
                                     <div className="h-1 flex-1 max-w-[120px] bg-surface-2 rounded-full overflow-hidden">
@@ -128,7 +128,7 @@ export default function ModernDashboard() {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-surface-1 border border-border-subtle rounded-lg p-8 flex flex-col items-center justify-center text-text-muted">
+                        <div className="bg-surface-1 border border-border-subtle rounded p-8 flex flex-col items-center justify-center text-text-muted">
                             <FolderOpen className="w-8 h-8 mb-2 text-text-muted" />
                             <p className="text-sm">No projects yet. Create your first project to get started.</p>
                         </div>
@@ -136,9 +136,9 @@ export default function ModernDashboard() {
                 </section>
 
                 <section>
-                    <h2 className="text-sm font-semibold text-text-primary mb-3">Recent Activity</h2>
+                    <h2 className="text-sm font-medium text-text-primary mb-3">Recent Activity</h2>
                     {recentActivities.length > 0 ? (
-                        <div className="bg-surface-1 border border-border-subtle rounded-lg divide-y divide-border-subtle">
+                        <div className="bg-surface-1 border border-border-subtle rounded divide-y divide-border-subtle">
                             {recentActivities.map((item) => (
                                 <div
                                     key={item.id}
@@ -159,7 +159,7 @@ export default function ModernDashboard() {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-surface-1 border border-border-subtle rounded-lg p-8 flex flex-col items-center justify-center text-text-muted">
+                        <div className="bg-surface-1 border border-border-subtle rounded p-8 flex flex-col items-center justify-center text-text-muted">
                             <Activity className="w-8 h-8 mb-2 text-text-muted" />
                             <p className="text-sm">No recent activity.</p>
                         </div>
@@ -167,10 +167,10 @@ export default function ModernDashboard() {
                 </section>
 
                 <section>
-                    <h2 className="text-sm font-semibold text-text-primary mb-3">This Week</h2>
+                    <h2 className="text-sm font-medium text-text-primary mb-3">This Week</h2>
                     <div className="grid grid-cols-7 gap-2">
                         {weekDays.map((day) => (
-                            <div key={day.day} className="bg-surface-1 border border-border-subtle rounded-lg p-2 min-h-[100px]">
+                            <div key={day.day} className="bg-surface-1 border border-border-subtle rounded p-2 min-h-[100px]">
                                 <div className="text-[10px] font-medium text-text-muted uppercase tracking-wider text-center mb-1">{day.day}</div>
                                 <div className="text-xs font-medium text-text-primary text-center mb-1.5">{day.date}</div>
                                 <div className="space-y-1">

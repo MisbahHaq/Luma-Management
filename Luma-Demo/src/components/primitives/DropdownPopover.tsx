@@ -22,7 +22,7 @@ export function DropdownPopover({ trigger, children }: DropdownPopoverProps) {
         <div className="relative" data-dropdown>
             <div onClick={() => setOpen((o) => !o)}>{trigger}</div>
             {open && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-surface-1 border border-border-subtle rounded-lg shadow-2xl z-50 overflow-hidden py-1">
+                <div className="absolute right-0 top-full mt-1 w-48 bg-surface-1 border border-border-subtle rounded overflow-hidden py-1">
                     {children}
                 </div>
             )}

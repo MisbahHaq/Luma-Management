@@ -1,7 +1,7 @@
 export type UserRole = 'Admin' | 'Member' | 'Viewer';
 export type WorkspaceRole = 'Owner' | 'Admin' | 'Member';
 export type ProjectRole = 'Owner' | 'Editor' | 'Viewer';
-export type TaskStatus = 'ToDo' | 'InProgress' | 'Done';
+export type TaskStatus = 'ToDo' | 'InProgress' | 'Review' | 'Done';
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 export type TaskItemType = 'Epic' | 'Story' | 'Bug' | 'Task';
 export type SprintStatus = 'Planned' | 'Active' | 'Completed';
@@ -222,8 +222,9 @@ export interface Label {
 }
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
-    ToDo: 'To Do',
+    ToDo: 'Backlog',
     InProgress: 'In Progress',
+    Review: 'Review',
     Done: 'Done',
 };
 
