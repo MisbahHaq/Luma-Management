@@ -3,6 +3,8 @@
 Luma is a full-stack, self-hosted project management and work-tracking platform. It supports project planning, task management, sprint tracking, time logging, reporting, team collaboration, and public client portals — all within a modern, unified interface.
 
 ---
+<img width="1324" height="904" alt="image" src="https://github.com/user-attachments/assets/a363fdff-9962-40ac-9a27-efff03f9e968" />
+
 <img width="1919" height="1079" alt="image" src="https://github.com/user-attachments/assets/3697c47a-91c2-4b5e-a4b5-affbab01691f" />
 
 ## Tech Stack
