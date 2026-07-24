@@ -21,7 +21,7 @@ import PublicPortal from './pages/PublicPortal';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
     const { isAuthenticated } = useAuth();
-    return isAuthenticated ? children : <Navigate to="/login" replace />;
+    return isAuthenticated ? children : <Navigate to="/" replace />;
 }
 
 export default function App() {
