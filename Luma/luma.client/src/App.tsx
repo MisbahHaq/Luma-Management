@@ -15,6 +15,7 @@ import ReportsPage from './pages/ReportsPage';
 import SprintsPage from './pages/SprintsPage';
 import TasksPage from './pages/TasksPage';
 import Placeholder from './pages/Placeholder';
+import MembersPage from './pages/MembersPage';
 import PublicPortal from './pages/PublicPortal';
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -98,10 +99,7 @@ export default function App() {
                     path="/members"
                     element={
                         <ProtectedRoute>
-                            <Placeholder
-                                title="Members"
-                                hint="Open a project and use the Members button in its header to manage project members."
-                            />
+                            <MembersPage />
                         </ProtectedRoute>
                     }
                 />
