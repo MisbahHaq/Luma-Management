@@ -11,7 +11,7 @@ type FilterStatus = TaskStatus | 'all';
 type FilterPriority = TaskPriority | 'all';
 type FilterType = TaskItemType | 'all';
 
-const STATUSES: FilterStatus[] = ['all', 'ToDo', 'InProgress', 'Done'];
+    const STATUSES: FilterStatus[] = ['all', 'ToDo', 'InProgress', 'Review', 'Done'];
 const PRIORITIES: FilterPriority[] = ['all', 'Low', 'Medium', 'High', 'Critical'];
 const TYPES: FilterType[] = ['all', 'Task', 'Story', 'Bug', 'Epic'];
 

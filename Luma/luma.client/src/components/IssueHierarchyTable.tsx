@@ -22,14 +22,16 @@ function keyFor(_tasks: Task[], task: Task): string {
 }
 
 const STATUS_LABEL: Record<TaskStatus, string> = {
-    ToDo: 'To Do',
+    ToDo: 'Backlog',
     InProgress: 'In Progress',
+    Review: 'Review',
     Done: 'Done',
 };
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
     ToDo: 'bg-surface-1 text-text-secondary border-border-subtle',
     InProgress: 'bg-accent-soft text-accent border-accent/20',
+    Review: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
     Done: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 };
 
@@ -433,8 +435,9 @@ export default function IssueHierarchyTable({
                             onChange={(v) => setStatusFilter(v as TaskStatus | 'all')}
                             options={[
                                 { value: 'all', label: 'All' },
-                                { value: 'ToDo', label: 'To Do' },
+                                { value: 'ToDo', label: 'Backlog' },
                                 { value: 'InProgress', label: 'In Progress' },
+                                { value: 'Review', label: 'Review' },
                                 { value: 'Done', label: 'Done' },
                             ]}
                         />

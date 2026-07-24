@@ -22,7 +22,7 @@ export interface WorkspaceMember {
     addedAt: string;
 }
 
-export type TaskStatus = 'ToDo' | 'InProgress' | 'Done';
+export type TaskStatus = 'ToDo' | 'InProgress' | 'Review' | 'Done';
 
 export type TaskPriority = 'Low' | 'Medium' | 'High' | 'Critical';
 
@@ -300,8 +300,9 @@ export const SPRINT_STATUS_LABELS: Record<SprintStatus, string> = {
 };
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
-    ToDo: 'To Do',
+    ToDo: 'Backlog',
     InProgress: 'In Progress',
+    Review: 'Review',
     Done: 'Done',
 };
 
@@ -320,8 +321,9 @@ export const TASK_TYPE_LABELS: Record<TaskItemType, string> = {
 };
 
 export const STATUS_META: Record<TaskStatus, { label: string; className: string }> = {
-    ToDo: { label: 'To Do', className: 'status-todo' },
+    ToDo: { label: 'Backlog', className: 'status-todo' },
     InProgress: { label: 'In Progress', className: 'status-inprogress' },
+    Review: { label: 'Review', className: 'status-review' },
     Done: { label: 'Done', className: 'status-done' },
 };
 

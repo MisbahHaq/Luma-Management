@@ -54,11 +54,11 @@ export default function AppShell({
             <aside className={`sidebar ${sidebarCollapsed ? 'w-16 min-w-16' : 'w-[260px] min-w-[260px]'}`}>
                 <div className="flex items-center justify-between px-3 py-3">
                     {!sidebarCollapsed && (
-                        <span className="text-lg font-bold tracking-tight text-text-primary">Luma</span>
+                        <span className="text-lg font-medium tracking-tight text-text-primary">Luma</span>
                     )}
                     <button
                         onClick={() => setSidebarCollapsed((c) => !c)}
-                        className="p-1.5 rounded-md hover:bg-surface-2 text-text-muted hover:text-text-secondary transition-colors"
+                        className="p-1.5 rounded hover:bg-surface-2 text-text-muted hover:text-text-secondary transition-colors"
                     >
                         {sidebarCollapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
                     </button>
@@ -69,7 +69,7 @@ export default function AppShell({
                         <button
                             key={item.label}
                             onClick={() => navigate(item.href)}
-                            className={`flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium transition-colors duration-150 ${
+                            className={`flex items-center gap-3 px-2.5 py-2 rounded text-sm font-medium transition-colors duration-150 ${
                                 isActive(item.href)
                                     ? 'bg-accent-soft text-accent'
                                     : 'text-text-secondary hover:bg-surface-2 hover:text-text-primary'
@@ -84,7 +84,7 @@ export default function AppShell({
                 <div className="border-t border-border-subtle px-2 py-2">
                     <button
                         onClick={logout}
-                        className="flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors duration-150 w-full"
+                        className="flex items-center gap-3 px-2.5 py-2 rounded text-sm font-medium text-text-secondary hover:bg-surface-2 hover:text-text-primary transition-colors duration-150 w-full"
                     >
                         <span className="flex-shrink-0"><LogOut className="w-4 h-4" /></span>
                         {!sidebarCollapsed && <span>Log out</span>}
@@ -104,13 +104,13 @@ export default function AppShell({
                     <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                             onClick={() => navigate('/app')}
-                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded border border-border-subtle text-text-secondary hover:text-text-primary hover:border-border-default transition-colors"
                         >
                             <Plus className="w-3.5 h-3.5" />
                             New Task
                         </button>
                         <button
-                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md border border-border-subtle text-text-muted hover:text-text-primary hover:border-border-default transition-colors"
+                            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded border border-border-subtle text-text-muted hover:text-text-primary hover:border-border-default transition-colors"
                         >
                             <Search className="w-3.5 h-3.5" />
                             Search
@@ -126,7 +126,7 @@ export default function AppShell({
                 {title && (
                     <div className="px-4 py-2.5 border-b border-border-subtle bg-bg/50 flex-shrink-0">
                         <div className="flex items-center gap-2">
-                            <h1 className="text-base font-semibold text-text-primary truncate">{title}</h1>
+                            <h1 className="text-base font-medium text-text-primary truncate">{title}</h1>
                             {project && (
                                 <Badge variant={completion === 100 ? 'success' : 'info'}>
                                     {completion === 100 ? 'Completed' : 'In Progress'}
@@ -134,8 +134,8 @@ export default function AppShell({
                             )}
                             {typeof completion === 'number' && completion < 100 && (
                                 <div className="flex-1 max-w-[120px]">
-                                    <div className="h-1 flex-1 bg-surface-2 rounded-full overflow-hidden">
-                                        <div className="h-full bg-accent rounded-full transition-all duration-500" style={{ width: `${completion}%` }} />
+                                    <div className="h-1 flex-1 bg-surface-2 rounded overflow-hidden">
+                                        <div className="h-full bg-accent rounded transition-all duration-500" style={{ width: `${completion}%` }} />
                                     </div>
                                 </div>
                             )}

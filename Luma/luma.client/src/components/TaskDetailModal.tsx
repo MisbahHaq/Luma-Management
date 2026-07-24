@@ -32,7 +32,7 @@ interface TaskDetailModalProps {
     onSaved: (updated: Task) => void;
 }
 
-const STATUSES: TaskStatus[] = ['ToDo', 'InProgress', 'Done'];
+    const STATUSES: TaskStatus[] = ['ToDo', 'InProgress', 'Review', 'Done'];
 const PRIORITIES: TaskPriority[] = ['Low', 'Medium', 'High', 'Critical'];
 const TYPES: TaskItemType[] = ['Task', 'Story', 'Bug', 'Epic'];
 

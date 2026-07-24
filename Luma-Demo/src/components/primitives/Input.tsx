@@ -17,7 +17,7 @@ export function Input({ label, value, onChange, placeholder, type = 'text', auto
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 autoFocus={autoFocus}
-                className="w-full bg-surface-2 border border-border-subtle rounded-md px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
+                className="w-full bg-surface-2 border border-border-subtle rounded px-2.5 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors"
             />
         </label>
     );

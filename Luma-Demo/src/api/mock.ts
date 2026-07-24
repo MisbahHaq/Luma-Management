@@ -155,8 +155,9 @@ export const mockDashboard: DashboardSummary = {
 };
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
-    ToDo: 'To Do',
+    ToDo: 'Backlog',
     InProgress: 'In Progress',
+    Review: 'Review',
     Done: 'Done',
 };
 

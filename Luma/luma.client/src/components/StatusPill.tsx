@@ -3,6 +3,7 @@ import { STATUS_META, type TaskStatus } from '../types/types';
 const STATUS_STYLES: Record<string, string> = {
     ToDo: 'bg-gray-100 text-gray-500',
     InProgress: 'bg-purple-100 text-purple-700',
+    Review: 'bg-amber-100 text-amber-700',
     Done: 'bg-green-100 text-green-700',
 };
 
