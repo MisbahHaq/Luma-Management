@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="luma.client/luma.client.esproj">
-    <Build />
-    <Deploy />
-  </Project>
-  <Project Path="Luma.Server/Luma.Server.csproj" />
-</Solution>
