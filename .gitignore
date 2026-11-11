@@ -1,68 +1,119 @@
-# ---------------------------------------------------------------------------
-# .NET build output
-# ---------------------------------------------------------------------------
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-*.dll
-*.exe
-*.pdb
-*.cache
-*.user
-*.suo
-*.vsidx
-*.nupkg
-*.snupkg
-project.assets.json
-project.nuget.cache
+node_modules
+.next
+.yarn
 
-# ---------------------------------------------------------------------------
-# Visual Studio / Rider / VS Code
-# ---------------------------------------------------------------------------
-.vs/
-.idea/
-*.sln.docstates
-*.DotSettings.user
+### NextJS ###
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-# ---------------------------------------------------------------------------
-# Local databases and uploaded files
-# ---------------------------------------------------------------------------
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-*.sqlite3
-uploads/
+# Testing
+/coverage
 
-# ---------------------------------------------------------------------------
-# Node / frontend
-# ---------------------------------------------------------------------------
-node_modules/
+# Next.js
+/.next/
+/out/
+
+# Production
 dist/
-dist-ssr/
+out/
 build/
-.vite/
-*.local
+.react-router/
+
+# Misc
+.DS_Store
+*.pem
+.history
+tsconfig.tsbuildinfo
+
+# Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.pnpm-debug.log*
 
-# ---------------------------------------------------------------------------
-# Secrets / environment
-# ---------------------------------------------------------------------------
+# Local env files
 .env
-.env.*
-!.env.example
-appsettings.Local.json
-appsettings.Production.json
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# ---------------------------------------------------------------------------
-# OS / editor noise
-# ---------------------------------------------------------------------------
+# Vercel
+.vercel
+
+# Turborepo
+.turbo
+
+## Django ##
+venv
+.venv
+*.pyc
+staticfiles
+mediafiles
+.env
 .DS_Store
-Thumbs.db
-desktop.ini
-*.swp
-*.tmp
+logs/
+htmlcov/
+.coverage
+
+node_modules/
+assets/dist/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+package-lock.json
+.vscode
+
+# Sentry
+.sentryclirc
+
+# lock files
+package-lock.json
+
+
+
+.secrets
+tmp/
+
+## packages
+dist
+.temp/
+deploy/selfhost/plane-app/
+
+## Storybook
+*storybook.log
+output.css
+
+dev-editor
+# Redis
+*.rdb
+*.rdb.gz
+
+storybook-static
+
+CLAUDE.md
+
+build/
+.react-router/
+
+build/
+.react-router/
+temp/
+scripts/
+!packages/i18n/scripts/
+
+# i18n auto-generated types (regenerated on every build)
+packages/i18n/src/types/keys.generated.ts
+
+# Local security notes (not for version control)
+/security/

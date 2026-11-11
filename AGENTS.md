@@ -1,47 +1,51 @@
-# Luma-Management — Agent Notes
+# Agent Development Guide
 
-## Project Structure
+## Commands
 
-- `Luma/` — .NET backend (Luma.Server) with React client at `Luma/luma.client/`
-- `Luma-Demo/` — Standalone React/TypeScript demo frontend (Vite + React Router + Tailwind CSS v4)
+- `pnpm dev` - Start all dev servers (web:3000, admin:3001)
+- `pnpm build` - Build all packages and apps
+- `pnpm check` - Run all checks (format, lint, types)
+- `pnpm check:lint` - OxLint across all packages
+- `pnpm check:types` - TypeScript type checking
+- `pnpm fix` - Auto-fix format and lint issues
+- `pnpm turbo run <command> --filter=<package>` - Target specific package/app
 
-## Drafting Table UI Scheme (Luma-Demo)
+## Code Style
 
-The `Luma-Demo` project uses the "Drafting Table" aesthetic:
+- **Imports**: Use `workspace:*` for internal packages, `catalog:` for external deps
+- **TypeScript**: Strict mode enabled, all files must be typed
+- **Formatting**: oxfmt, run `pnpm fix:format`
+- **Linting**: OxLint with shared `.oxlintrc.json` config
+- **Naming**: camelCase for variables/functions, PascalCase for components/types
+- **Error Handling**: Use try-catch with proper error types, log errors appropriately
+- **State Management**: MobX stores in `packages/shared-state`, reactive patterns
+- **Testing**: All features require unit tests, use existing test framework per package
+- **Components**: Primitives come from the published `@makeplane/propel` npm package (`@makeplane/propel/components/*`, `elements/*`, `icons`); composite/Plane-specific components live in `@plane/blocks` (`packages/blocks`, subpath imports only, e.g. `@plane/blocks/toast`)
 
-### Color Palette
-- Background: `#F6F4EC` (ivory grid paper)
-- Primary text: `#1C2B3A` (navy ink)
-- Muted text: `#7A7869` (warm gray)
-- Accent (overdue/alerts/CTAs only): `#C1541F` (safety orange)
-- Card surfaces: `#FFFFFF` (white)
-- Borders: `#C9C5B2` (0.5px hairlines)
+## Backend dependencies (uv)
 
-### Design Tokens (`Luma-Demo/src/index.css` `@theme`)
-- `--color-bg`: `#F6F4EC`
-- `--color-surface-1`: `#FFFFFF`
-- `--color-surface-2`: `#F0EDE4`
-- `--color-surface-3`: `#E2DFCF`
-- `--color-text-primary`: `#1C2B3A`
-- `--color-text-secondary`: `#4A493E`
-- `--color-text-muted`: `#7A7869`
-- `--color-border-subtle`: `#C9C5B2`
-- `--color-accent`: `#C1541F`
-- `--radius`: `4px`
-- `--font-sans`: `'Inter', 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif`
-- `--font-mono`: `'IBM Plex Mono', 'JetBrains Mono', ui-monospace, 'SF Mono', monospace`
+`apps/api` dependencies are managed with [uv](https://docs.astral.sh/uv/): declared in `apps/api/pyproject.toml`, pinned in `apps/api/uv.lock` (commit both). Groups: `dev` and `test` (installed by default; they use `psycopg-binary`), `production` (gunicorn + the source-built `psycopg-c`; production image and migration-check only). Lint config lives in `apps/api/ruff.toml`.
 
-### Key Design Rules
-- Grid paper background (`16px` squares, `0.5px` lines via CSS `background-image`)
-- Left-border accent stripes on cards/rows (navy normal, orange urgent)
-- Monospace task IDs (`font-mono`, `tracking-wide`, small size)
-- No shadows on cards/modals — borders only
-- `font-weight: 500` max (no `font-semibold` or `font-bold` in UI)
-- `border-radius: 4px` throughout
+- uv must be exactly the `required-version` in `apps/api/pyproject.toml` (`uv self update <version>`); bump it together with the uv image in both Dockerfiles
+- Set up a local env: `cd apps/api && uv sync`
+- Inside the dev/test containers, always pass `--inexact` (`uv sync --inexact`): uv targets the image's system Python there, and an exact sync would uninstall pip
+- Add/upgrade a dependency: `uv add <pkg>==<version>` (or `--group test`/`--group dev`), or edit `pyproject.toml` and run `uv lock`
+- Run tools: `uv run python manage.py ...`, `uv run ruff check .`
 
-## Build
+## Migrations
 
-```bash
-cd Luma-Demo
-npm run build   # tsc -b && vite build
-```
+- Generate migrations with `uv run python manage.py makemigrations <app> -n <name>`. The command also rewrites `apps/api/migrations_lockfile.txt`; commit it with the migration and never edit it by hand
+- A merge conflict in the lockfile means another PR added a migration to the same app first: merge `preview`, delete your migration, and run `makemigrations` again
+- `migration-check.yml` fails a PR that touches migrations when the lockfile does not match the migration graph
+
+## Backend tests (Docker)
+
+The Django/pytest suite for `apps/api` runs in an isolated stack defined by `docker-compose-test.yml` at the repo root.
+
+Prereq (once): `./setup.sh` — generates `apps/api/.env` from `.env.example`.
+
+- Full suite: `docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests`
+- Subset: `docker compose -f docker-compose-test.yml run --rm --build api-tests pytest -m unit`
+- Teardown: `docker compose -f docker-compose-test.yml down -v`
+
+See `apps/api/tests/RUNNING_TESTS.md` for the full walkthrough and troubleshooting; see `apps/api/tests/TESTING_GUIDE.md` for test conventions and fixtures.

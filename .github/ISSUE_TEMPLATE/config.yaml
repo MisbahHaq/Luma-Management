@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and help
+    url: https://github.com/MisbahHaq/Luma-Management/discussions
+    about: Ask questions and get help in GitHub Discussions.
+  - name: Security issues
+    url: https://github.com/MisbahHaq/Luma-Management/security/advisories/new
+    about: Report security vulnerabilities privately via GitHub security advisories.
