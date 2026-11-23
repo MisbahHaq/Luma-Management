@@ -4,8 +4,15 @@
  * See the LICENSE file for details.
  */
 
-import sanitizeHtml from "sanitize-html";
 import type { Content, JSONContent } from "@plane/types";
+
+const stripHtmlTags = (html: string): string => {
+  if (typeof window === "undefined") {
+    return html.replace(/<[^>]*>/g, "");
+  }
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return doc.body.textContent ?? "";
+};
 
 /**
  * @description Adds space between camelCase words
@@ -56,7 +63,7 @@ export const truncateText = (str: string, length: number) => {
 export const createSimilarString = (str: string) => {
   const shuffled = str
     .split("")
-    .sort(() => Math.random() - 0.5)
+    .toSorted(() => Math.random() - 0.5)
     .join("");
 
   return shuffled;
@@ -136,17 +143,17 @@ export const getNumberCount = (number: number): string => {
 export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
 /**
- * @description : This function will remove all the HTML tags from the string
+ * @description: This function will remove all the HTML tags from the string
  * @param {string} htmlString
  * @return {string}
  * @example :
  * const html = "<p>Some text</p>";
-const text = stripHTML(html);
-console.log(text); // Some text
+ * const text = stripHTML(html);
+ * console.log(text); // Some text
  */
 export const sanitizeHTML = (htmlString: string) => {
-  const sanitizedText = sanitizeHtml(htmlString, { allowedTags: [] }); // sanitize the string to remove all HTML tags
-  return sanitizedText.trim(); // trim the string to remove leading and trailing whitespaces
+  const sanitizedText = stripHtmlTags(htmlString);
+  return sanitizedText.trim();
 };
 
 /**
@@ -172,17 +179,15 @@ export const checkEmailValidity = (email: string): boolean => {
   if (!email) return false;
 
   const isEmailValid =
-    /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(
       email
     );
 
   return isEmailValid;
 };
 
-export const isEmptyHtmlString = (htmlString: string, allowedHTMLTags: string[] = []) => {
-  // Remove HTML tags using sanitize-html
-  const cleanText = sanitizeHtml(htmlString, { allowedTags: allowedHTMLTags });
-  // Trim the string and check if it's empty
+export const isEmptyHtmlString = (htmlString: string, _allowedHTMLTags: string[] = []) => {
+  const cleanText = stripHtmlTags(htmlString);
   return cleanText.trim() === "";
 };
 
@@ -255,7 +260,7 @@ export const isCommentEmpty = (comment: Content | undefined): boolean => {
 
   // Handle JSONContent[] (array)
   if (Array.isArray(comment)) {
-    return comment.length === 0 || comment.every(isJSONContentEmpty);
+    return comment.every(isJSONContentEmpty);
   }
 
   // Handle JSONContent (object)
