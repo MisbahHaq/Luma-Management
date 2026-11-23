@@ -10,7 +10,7 @@ Track work items, run cycles, and manage product roadmaps — without the chaos 
 
 </div>
 
-## ✨ What is Luma?
+## What is Luma?
 
 Luma is an open-source, self-hostable project management platform for software teams. It is maintained as a fork of [Plane](https://github.com/makeplane/plane) and licensed under the [GNU AGPL-3.0](./LICENSE.txt).
 
@@ -26,7 +26,7 @@ Luma is an open-source, self-hostable project management platform for software t
 - **Internationalization** — Translated into multiple languages via `packages/i18n`.
 - **Self-hostable** — Run the entire stack on your own infrastructure with Docker.
 
-## 🏗️ Architecture
+## Architecture
 
 A pnpm + Turborepo monorepo:
 
@@ -40,7 +40,7 @@ A pnpm + Turborepo monorepo:
 | `apps/proxy`       | Reverse proxy for the self-hosted stack                  |
 | `packages/*`       | Shared types, utils, state, i18n, editor, blocks, and more |
 
-## 🚀 Quick start (self-hosting with Docker)
+## Quick start (self-hosting with Docker)
 
 Requirements: Docker Engine installed and running, and **12 GB RAM** recommended.
 
@@ -62,7 +62,7 @@ Requirements: Docker Engine installed and running, and **12 GB RAM** recommended
 
    Open `http://localhost` (or the port set via `LISTEN_HTTP_PORT` in `.env`) in your browser, register the instance admin through **God mode**, then create your workspace and start working.
 
-## 🛠️ Local development
+## Local development
 
 Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), Docker Engine, Python 3.12 with [uv](https://docs.astral.sh/uv/) (only for running the API outside Docker), and pnpm (enabled automatically via `corepack`).
 
@@ -75,7 +75,7 @@ pnpm dev                                          # web on :3000, admin on :3001
 - Register yourself as the instance admin at <http://localhost:3001/god-mode/>, then sign in at <http://localhost:3000> with the same credentials.
 - Backend only: `cd apps/api && uv sync`, then `uv run python manage.py ...`
 
-## 📜 Common commands
+## Common commands
 
 Run from the repository root:
 
@@ -87,7 +87,7 @@ Run from the repository root:
 | `pnpm fix`      | Auto-fix format and lint issues                   |
 | `pnpm doctor`  | Run the React diagnostics playbook                |
 
-## 🧪 Testing
+## Testing
 
 The Django/pytest suite runs in an isolated Docker stack:
 
@@ -97,14 +97,14 @@ docker compose -f docker-compose-test.yml up --build --abort-on-container-exit -
 
 See [apps/api/tests/RUNNING_TESTS.md](./apps/api/tests/RUNNING_TESTS.md) for the full walkthrough.
 
-## 📚 Documentation
+## Documentation
 
 - [Contributing guide](./CONTRIBUTING.md)
 - [Agent development guide](./AGENTS.md)
 - [Linting](./docs/linting.md)
 - [Self-hosting guides](./deployments/)
 
-## 🙏 Acknowledgements and license
+## Acknowledgements and license
 
 Luma is a fork of [Plane](https://github.com/makeplane/plane) by Plane Software Inc. and its contributors. Huge thanks to them and to everyone who built the upstream project.
 
