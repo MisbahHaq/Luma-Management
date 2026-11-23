@@ -14,6 +14,15 @@ Track work items, run cycles, and manage product roadmaps — without the chaos 
 
 Luma is an open-source, self-hostable project management platform for software teams. It is maintained as a fork of [Plane](https://github.com/makeplane/plane) and licensed under the [GNU AGPL-3.0](./LICENSE.txt).
 
+### Why Luma exists
+
+Luma keeps the feature set and AGPL lineage of Plane, but is maintained with a different set of operating defaults:
+
+- **Data control** — run the whole stack on infrastructure you own instead of a hosted service.
+- **Private by default** — instance telemetry is disabled unless an administrator enables it.
+- **Low-friction local development** — the API can run with SQLite, an in-process cache, and eager Celery tasks when PostgreSQL and Redis are not available, while Docker remains the production-shaped path.
+- **Upstream-compatible internals** — the `plane` Python module and `@plane/*` package names are intentionally preserved so upstream fixes can be followed without a fork-wide import rewrite. You will still see those names in code and package READMEs.
+
 ### Highlights
 
 - **Work items** — Create and manage tasks with a rich text editor, file uploads, sub-properties, and cross-references between related items.
@@ -30,15 +39,27 @@ Luma is an open-source, self-hostable project management platform for software t
 
 A pnpm + Turborepo monorepo:
 
-| Path               | Description                                              |
-| ------------------ | -------------------------------------------------------- |
-| `apps/web`         | Primary web application (React Router, MobX)             |
-| `apps/admin`       | Instance administration panel ("God mode")              |
-| `apps/space`       | Public-facing site for published work                    |
-| `apps/live`        | Realtime collaboration service                           |
-| `apps/api`         | Django REST backend                                      |
-| `apps/proxy`       | Reverse proxy for the self-hosted stack                  |
-| `packages/*`       | Shared types, utils, state, i18n, editor, blocks, and more |
+| Path         | Description                                                |
+| ------------ | ---------------------------------------------------------- |
+| `apps/web`   | Primary web application on port 3000 (React Router, MobX)  |
+| `apps/admin` | Instance administration panel on port 3001 ("God mode")    |
+| `apps/space` | Public-facing site on port 3002 for published work         |
+| `apps/live`  | Realtime collaboration service on port 3100                |
+| `apps/api`   | Django REST backend                                        |
+| `apps/proxy` | Caddy reverse proxy for the self-hosted stack              |
+| `packages/*` | Shared types, utils, state, i18n, editor, blocks, and more |
+
+## Technology stack
+
+| Area               | What we use                                                                                                            | Why                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Monorepo           | pnpm 11 workspaces, Turborepo, dependency catalogs                                                                     | One install/build graph with centrally pinned versions         |
+| Frontend           | TypeScript, React 19, React Router 8, MobX, Tailwind CSS 4, `@makeplane/propel`                                        | Typed apps with reactive stores and shared design primitives   |
+| Collaborative docs | Tiptap/ProseMirror, Yjs, Hocuspocus (`apps/live`)                                                                      | Rich text pages with realtime collaboration                    |
+| Backend            | Python 3.12, Django 5.2, Django REST Framework, Celery, Django Channels                                                | REST API, background jobs, and websocket-capable services      |
+| Data and services  | PostgreSQL (SQLite fallback locally), Redis/Valkey (in-memory fallback locally), RabbitMQ, S3-compatible storage/MinIO | Production-grade Docker stack with a lighter local path        |
+| Deployment         | Docker Compose, Caddy proxy; inherited Helm/AIO guides under `deployments/`                                            | Self-hosting on your own infrastructure                        |
+| Tooling and tests  | uv + ruff, pytest/pytest-django, Vitest, oxlint/oxfmt, TypeScript, Husky/lint-staged                                   | Reproducible Python deps and fast checks across both languages |
 
 ## Quick start (self-hosting with Docker)
 
@@ -64,28 +85,29 @@ Requirements: Docker Engine installed and running, and **12 GB RAM** recommended
 
 ## Local development
 
-Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), Docker Engine, Python 3.12 with [uv](https://docs.astral.sh/uv/) (only for running the API outside Docker), and pnpm (enabled automatically via `corepack`).
+Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), pnpm (enabled automatically via `corepack`), and Python 3.12 with [uv](https://docs.astral.sh/uv/) for running the API outside Docker. Docker Engine is needed for the full backing-services stack, but not for the minimal local API path.
 
 ```bash
 ./setup.sh                                        # env files + dependencies
-docker compose -f docker-compose-local.yml up -d   # backing services (db, redis, mq, storage)
-pnpm dev                                          # web on :3000, admin on :3001
+docker compose -f docker-compose-local.yml up -d   # optional: db, redis/valkey, mq, storage
+pnpm dev                                          # web :3000, admin :3001, space :3002, live :3100
 ```
 
 - Register yourself as the instance admin at <http://localhost:3001/god-mode/>, then sign in at <http://localhost:3000> with the same credentials.
+- Without Docker, set `DATABASE_URL=sqlite:///db.sqlite3` in `apps/api/.env` and leave `REDIS_URL` unset. The API then falls back to an in-memory cache and runs Celery tasks eagerly. Use the Docker services for integration and production-shaped testing.
 - Backend only: `cd apps/api && uv sync`, then `uv run python manage.py ...`
 
 ## Common commands
 
 Run from the repository root:
 
-| Command         | Description                                        |
-| --------------- | -------------------------------------------------- |
-| `pnpm dev`      | Start all dev servers (web on 3000, admin on 3001) |
-| `pnpm build`    | Build all packages and apps                       |
-| `pnpm check`    | Run all checks (format, lint, types)               |
-| `pnpm fix`      | Auto-fix format and lint issues                   |
-| `pnpm doctor`  | Run the React diagnostics playbook                |
+| Command       | Description                                   |
+| ------------- | --------------------------------------------- |
+| `pnpm dev`    | Start web, admin, space, and live dev servers |
+| `pnpm build`  | Build all packages and apps                   |
+| `pnpm check`  | Run all checks (format, lint, types)          |
+| `pnpm fix`    | Auto-fix format and lint issues               |
+| `pnpm doctor` | Run the React diagnostics playbook            |
 
 ## Testing
 
@@ -95,6 +117,8 @@ The Django/pytest suite runs in an isolated Docker stack:
 docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests
 ```
 
+With a local `uv sync` in `apps/api`, use `uv run pytest` for focused unit runs.
+
 See [apps/api/tests/RUNNING_TESTS.md](./apps/api/tests/RUNNING_TESTS.md) for the full walkthrough.
 
 ## Documentation
@@ -102,6 +126,8 @@ See [apps/api/tests/RUNNING_TESTS.md](./apps/api/tests/RUNNING_TESTS.md) for the
 - [Contributing guide](./CONTRIBUTING.md)
 - [Agent development guide](./AGENTS.md)
 - [Linting](./docs/linting.md)
+- [API test layout](./apps/api/plane/tests/README.md)
+- [API testing guide](./apps/api/plane/tests/TESTING_GUIDE.md)
 - [Self-hosting guides](./deployments/)
 
 ## Acknowledgements and license

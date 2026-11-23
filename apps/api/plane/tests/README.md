@@ -1,6 +1,6 @@
-# Plane Tests
+# Luma API Tests
 
-This directory contains tests for the Plane application. The tests are organized using pytest.
+This directory contains tests for the Luma API. The tests are organized using pytest. The `plane` module and package names are intentionally preserved from upstream; see the [root README](../../../../README.md) for details.
 
 ## Test Structure
 
@@ -14,7 +14,7 @@ Tests are organized into the following categories:
 
 ## API vs App Endpoints
 
-Plane has two types of API endpoints:
+Luma has two types of API endpoints:
 
 1. **External API** (`plane.api`):
    - Available at `/api/v1/` endpoint
@@ -32,42 +32,44 @@ Plane has two types of API endpoints:
 
 ## Running Tests
 
+The Docker test stack is the source of truth; from the repo root see [RUNNING_TESTS.md](../../tests/RUNNING_TESTS.md). The commands below assume you are in `apps/api` with `uv sync` already run. Contract and smoke tests expect the Postgres, Valkey, RabbitMQ, and MinIO services from that stack.
+
 To run all tests:
 
 ```bash
-python -m pytest
+uv run pytest
 ```
 
 To run specific test categories:
 
 ```bash
 # Run unit tests
-python -m pytest plane/tests/unit/
+uv run pytest plane/tests/unit/
 
 # Run API contract tests
-python -m pytest plane/tests/contract/api/
+uv run pytest plane/tests/contract/api/
 
 # Run App contract tests
-python -m pytest plane/tests/contract/app/
+uv run pytest plane/tests/contract/app/
 
 # Run smoke tests
-python -m pytest plane/tests/smoke/
+uv run pytest plane/tests/smoke/
 ```
 
 For convenience, we also provide a helper script:
 
 ```bash
 # Run all tests
-./run_tests.py
+uv run python run_tests.py
 
 # Run only unit tests
-./run_tests.py -u
+uv run python run_tests.py -u
 
 # Run contract tests with coverage report
-./run_tests.py -c -o
+uv run python run_tests.py -c -o
 
 # Run tests in parallel
-./run_tests.py -p
+uv run python run_tests.py -p
 ```
 
 ## Fixtures
@@ -133,7 +135,7 @@ Tests for components that interact with external services should:
 Generate a coverage report with:
 
 ```bash
-python -m pytest --cov=plane --cov-report=term --cov-report=html
+uv run pytest --cov=plane --cov-report=term --cov-report=html
 ```
 
 This creates an HTML report in the `htmlcov/` directory.
