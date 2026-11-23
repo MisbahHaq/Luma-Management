@@ -190,7 +190,12 @@ export class BaseWorkspaceRootStore implements IWorkspaceRootStore {
       });
       return workspaceResponse;
     } finally {
-      this.loader = false;
+      // `fetchWorkspaces` is an async action: only the code before the first
+      // `await` runs inside the action, so this post-await write needs its own
+      // action context (MobX strict mode).
+      runInAction(() => {
+        this.loader = false;
+      });
     }
   };
 

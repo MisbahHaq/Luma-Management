@@ -51,7 +51,7 @@ export const WorkspaceCreateStep = observer(function WorkspaceCreateStep({
   const { config } = useInstance();
   const { updateUserProfile } = useUserProfile();
   const { fetchCurrentUserSettings } = useUserSettings();
-  const { createWorkspace, fetchWorkspaces } = useWorkspace();
+  const { createWorkspace, fetchWorkspaces, workspaces: existingWorkspacesInStore } = useWorkspace();
 
   const isWorkspaceCreationDisabled = config?.is_workspace_creation_disabled ?? false;
 
@@ -75,28 +75,52 @@ export const WorkspaceCreateStep = observer(function WorkspaceCreateStep({
 
     try {
       const res = (await workspaceService.workspaceSlugCheck(formData.slug)) as { status: boolean };
-      if (res.status === true && !RESTRICTED_URLS.includes(formData.slug)) {
+      const isSlugAvailable = res.status === true && !RESTRICTED_URLS.includes(formData.slug);
+
+      let workspaceId: string;
+      let workspacesRefreshed = false;
+
+      if (isSlugAvailable) {
         setSlugError(false);
         try {
-          const workspaceResponse = await createWorkspace(formData);
-          setToast({
-            type: "success",
-            title: t("workspace_creation.toast.success.title"),
-            message: t("workspace_creation.toast.success.message"),
-          });
-          await fetchWorkspaces();
-          await completeStep(workspaceResponse.id);
-          onComplete(formData.organization_size === "Just myself");
+          workspaceId = (await createWorkspace(formData)).id;
         } catch {
           setToast({
             type: "error",
             title: t("workspace_creation.toast.error.title"),
             message: t("workspace_creation.toast.error.message"),
           });
+          return;
         }
       } else {
-        setSlugError(true);
+        // The slug is already taken. A common cause is that an earlier attempt
+        // successfully created this workspace but onboarding never finished
+        // (e.g. the workspace-list request failed). In that case the workspace
+        // is in the user's list — resume onboarding with it instead of trapping
+        // the user behind an unrecoverable "URL already taken" error.
+        const workspaceList = await fetchWorkspaces();
+        workspacesRefreshed = true;
+        const existingWorkspace =
+          workspaceList.find((workspace) => workspace.slug === formData.slug) ??
+          Object.values(existingWorkspacesInStore ?? {}).find((workspace) => workspace.slug === formData.slug);
+
+        if (!existingWorkspace) {
+          setSlugError(true);
+          return;
+        }
+
+        setSlugError(false);
+        workspaceId = existingWorkspace.id;
       }
+
+      setToast({
+        type: "success",
+        title: t("workspace_creation.toast.success.title"),
+        message: t("workspace_creation.toast.success.message"),
+      });
+      if (!workspacesRefreshed) await fetchWorkspaces();
+      await completeStep(workspaceId);
+      onComplete(formData.organization_size === "Just myself");
     } catch {
       setToast({
         type: "error",
