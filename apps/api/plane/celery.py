@@ -19,7 +19,7 @@ from plane.settings.redis import redis_instance
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "plane.settings.production")
 
-ri = redis_instance()
+ri = redis_instance() if os.environ.get("REDIS_URL") else None
 
 
 # Configurable metrics push interval (in minutes)
@@ -42,6 +42,13 @@ app = Celery("plane")
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.
 app.config_from_object("django.conf:settings", namespace="CELERY")
+
+# Local demo without Redis: run Celery tasks inline instead of dispatching to a broker.
+# Without this, `workspace_seed.delay(...)` fails with a connection error *after* the
+# workspace is saved, so the UI reports "can't be created" even though it exists.
+if not os.environ.get("REDIS_URL"):
+    app.conf.task_always_eager = True
+    app.conf.task_eager_propagates = False
 
 app.conf.beat_schedule = {
     # Intra day recurring jobs

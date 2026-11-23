@@ -99,6 +99,9 @@ dev-editor
 *.rdb
 *.rdb.gz
 
+# Local development database
+apps/api/db.sqlite3
+
 storybook-static
 
 CLAUDE.md

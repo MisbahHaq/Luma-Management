@@ -9,26 +9,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterUniqueTogether(
-            name="deprecateddashboardwidget",
-            unique_together=None,
-        ),
-        migrations.RemoveField(
-            model_name="deprecateddashboardwidget",
-            name="created_by",
-        ),
-        migrations.RemoveField(
-            model_name="deprecateddashboardwidget",
-            name="dashboard",
-        ),
-        migrations.RemoveField(
-            model_name="deprecateddashboardwidget",
-            name="updated_by",
-        ),
-        migrations.RemoveField(
-            model_name="deprecateddashboardwidget",
-            name="widget",
-        ),
         migrations.DeleteModel(
             name="DeprecatedDashboard",
         ),

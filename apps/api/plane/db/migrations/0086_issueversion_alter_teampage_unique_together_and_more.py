@@ -175,30 +175,6 @@ class Migration(migrations.Migration):
                 "ordering": ("-created_at",),
             },
         ),
-        migrations.AlterUniqueTogether(
-            name="teampage",
-            unique_together=None,
-        ),
-        migrations.RemoveField(
-            model_name="teampage",
-            name="created_by",
-        ),
-        migrations.RemoveField(
-            model_name="teampage",
-            name="page",
-        ),
-        migrations.RemoveField(
-            model_name="teampage",
-            name="team",
-        ),
-        migrations.RemoveField(
-            model_name="teampage",
-            name="updated_by",
-        ),
-        migrations.RemoveField(
-            model_name="teampage",
-            name="workspace",
-        ),
         migrations.RemoveField(
             model_name="page",
             name="teams",

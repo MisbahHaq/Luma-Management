@@ -97,6 +97,7 @@ dev = [
     "django-debug-toolbar==6.0.0",
     # formatter
     "ruff==0.9.7",
+    "python-dotenv>=1.2.4",
 ]
 test = [
     # postgres prebuilt wheel (also in dev, so either group works on its own)

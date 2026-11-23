@@ -188,9 +188,12 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
                 # The lock is automatically released when the transaction ends
                 lock_key = convert_uuid_to_integer(self.project.id)
 
-                with connection.cursor() as cursor:
-                    # Get an exclusive transaction-level lock using the project ID as the lock key
-                    cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_key])
+                # pg_advisory_xact_lock is PostgreSQL-only. SQLite serializes writes
+                # itself, so skip the advisory lock when running on SQLite.
+                if connection.vendor != "sqlite":
+                    with connection.cursor() as cursor:
+                        # Get an exclusive transaction-level lock using the project ID as the lock key
+                        cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_key])
 
                 # Get the last sequence for the project
                 last_sequence = IssueSequence.objects.filter(project=self.project).aggregate(

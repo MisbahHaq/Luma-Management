@@ -270,23 +270,27 @@ def _redis_ssl_kwargs(url=None):
 
 REDIS_SSL_KWARGS = _redis_ssl_kwargs(REDIS_URL)
 
-if REDIS_SSL:
+if REDIS_URL:
     CACHES = {
         "default": {
             "BACKEND": "django_redis.cache.RedisCache",
             "LOCATION": REDIS_URL,
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                "CONNECTION_POOL_KWARGS": REDIS_SSL_KWARGS,
-            },
+            "OPTIONS": (
+                {
+                    "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                    "CONNECTION_POOL_KWARGS": REDIS_SSL_KWARGS,
+                }
+                if REDIS_SSL
+                else {"CLIENT_CLASS": "django_redis.client.DefaultClient"}
+            ),
         }
     }
 else:
+    # No Redis configured — fall back to in-memory cache for local development
     CACHES = {
         "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": REDIS_URL,
-            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "plane-local-cache",
         }
     }
 
