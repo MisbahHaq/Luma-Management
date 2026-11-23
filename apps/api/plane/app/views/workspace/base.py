@@ -11,7 +11,7 @@ import uuid
 
 from dateutil.relativedelta import relativedelta
 from django.db import IntegrityError
-from django.db.models import Count, F, Func, OuterRef, Prefetch, Q
+from django.db.models import Count, F, Func, IntegerField, OuterRef, Prefetch, Q
 
 from django.db.models.fields import DateField
 from django.db.models.functions import Cast, ExtractDay, ExtractWeek
@@ -65,7 +65,7 @@ class WorkSpaceViewSet(BaseViewSet):
         member_count = (
             WorkspaceMember.objects.filter(workspace=OuterRef("id"), member__is_bot=False, is_active=True)
             .order_by()
-            .annotate(count=Func(F("id"), function="Count"))
+            .annotate(count=Func(F("id"), function="Count", output_field=IntegerField()))
             .values("count")
         )
 
@@ -144,11 +144,23 @@ class WorkSpaceViewSet(BaseViewSet):
             )
 
         except IntegrityError as e:
-            if "already exists" in str(e):
+            # PostgreSQL reports "already exists", SQLite reports "UNIQUE
+            # constraint failed". A soft-deleted workspace still holds its
+            # slug in the database, so either message means the slug is taken.
+            error_message = str(e)
+            if "slug" in error_message and (
+                "already exists" in error_message or "UNIQUE constraint failed" in error_message
+            ):
                 return Response(
                     {"slug": "The workspace with the slug already exists"},
                     status=status.HTTP_409_CONFLICT,
                 )
+            # Always return a Response: falling through would make DRF's
+            # finalize_response() raise an AssertionError and surface as a 500.
+            return Response(
+                {"error": "Something went wrong please try again later"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE")
     def list(self, request, *args, **kwargs):
@@ -183,7 +195,7 @@ class UserWorkSpacesEndpoint(BaseAPIView):
         member_count = (
             WorkspaceMember.objects.filter(workspace=OuterRef("id"), member__is_bot=False, is_active=True)
             .order_by()
-            .annotate(count=Func(F("id"), function="Count"))
+            .annotate(count=Func(F("id"), function="Count", output_field=IntegerField()))
             .values("count")
         )
 
@@ -222,7 +234,10 @@ class WorkSpaceAvailabilityCheckEndpoint(BaseAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        workspace = Workspace.objects.filter(slug=slug).exists() or slug in RESTRICTED_WORKSPACE_SLUGS
+        # Use all_objects so soft-deleted workspaces still reserve their slug:
+        # the database unique constraint applies to them too, and the check
+        # must agree with what `create()` will accept.
+        workspace = Workspace.all_objects.filter(slug=slug).exists() or slug in RESTRICTED_WORKSPACE_SLUGS
         return Response({"status": not workspace}, status=status.HTTP_200_OK)
 
 
