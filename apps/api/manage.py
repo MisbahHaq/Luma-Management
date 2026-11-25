@@ -17,47 +17,9 @@ except ImportError:
     pass
 
 # --- SQLite compatibility shims -------------------------------------------
-# This project uses PostgreSQL-specific fields (ArrayField) that SQLite does
-# not support.  When running locally with `DATABASE_URL=sqlite:///...`, patch
-# them in place so the app works without PostgreSQL.
-try:
-    import django.contrib.postgres.fields as _pg_fields
-    import django.contrib.postgres.operations as _pg_ops
-    from django.db import models
-    from django.db.migrations.operations import models as _migration_models
+from plane.settings.sqlite_compat import apply_sqlite_compat_shims
 
-    class _SQLiteArrayField(models.JSONField):
-        """Drop-in replacement for ArrayField that stores JSON on SQLite."""
-
-        def __init__(self, *args, **kwargs):
-            # base_field / size are Postgres-only; drop them for SQLite.
-            kwargs.pop("base_field", None)
-            kwargs.pop("size", None)
-            super().__init__(*args, **kwargs)
-
-    _pg_fields.ArrayField = _SQLiteArrayField
-
-    # Replace AddIndexConcurrently (Postgres-only) with plain AddIndex.
-    _pg_ops.AddIndexConcurrently = _migration_models.AddIndex
-
-    # COUNT() always returns an integer, but `Func(F("id"), function="Count")`
-    # inherits UUIDField from the counted id. SQLite then tries
-    # uuid.UUID(<count>) and raises "'int' object has no attribute 'replace'".
-    # Give every unannotated Count Func an IntegerField output on SQLite.
-    _original_func_init = models.Func.__init__
-
-    def _sqlite_func_init(self, *expressions, output_field=None, **extra):
-        if extra.get("function") == "Count" and output_field is None:
-            output_field = models.IntegerField()
-        _original_func_init(self, *expressions, output_field=output_field, **extra)
-
-    models.Func.__init__ = _sqlite_func_init
-
-    print("[sqlite-shim] Patched ArrayField, AddIndexConcurrently and Count output for SQLite", flush=True)
-
-except Exception as exc:
-    print(f"[sqlite-shim] Patching failed: {exc}", flush=True)
-    raise
+apply_sqlite_compat_shims()
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
