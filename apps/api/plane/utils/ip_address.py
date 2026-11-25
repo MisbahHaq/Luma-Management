@@ -173,7 +173,7 @@ def validate_url(url, allowed_ips=None, allowed_hosts=None):
                        (exact, case-insensitive match against the URL hostname).
                        Typically sourced from the WEBHOOK_ALLOWED_HOSTS setting and
                        used for trusted internal services (e.g. Silo) whose IPs are
-                       dynamic in containerised deployments.
+                       dynamic in service-discovery deployments.
 
     Raises:
         ValueError: If the URL is invalid or resolves to a blocked IP.

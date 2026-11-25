@@ -115,7 +115,7 @@ export class InstanceStore implements IInstanceStore {
       });
       return instanceInfo;
     } catch (error) {
-      console.error("Error fetching the instance info");
+      console.error("Error fetching the instance info", error);
       this.isLoading = false;
       this.error = { message: "Failed to fetch the instance info" };
       this.instanceStatus = {
@@ -140,7 +140,7 @@ export class InstanceStore implements IInstanceStore {
       }
       return instanceResponse;
     } catch (error) {
-      console.error("Error updating the instance info");
+      console.error("Error updating the instance info", error);
       throw error;
     }
   };
@@ -155,7 +155,7 @@ export class InstanceStore implements IInstanceStore {
       if (instanceAdmins) runInAction(() => (this.instanceAdmins = instanceAdmins));
       return instanceAdmins;
     } catch (error) {
-      console.error("Error fetching the instance admins");
+      console.error("Error fetching the instance admins", error);
       throw error;
     }
   };
@@ -170,7 +170,7 @@ export class InstanceStore implements IInstanceStore {
       if (instanceConfigurations) runInAction(() => (this.instanceConfigurations = instanceConfigurations));
       return instanceConfigurations;
     } catch (error) {
-      console.error("Error fetching the instance configurations");
+      console.error("Error fetching the instance configurations", error);
       throw error;
     }
   };
@@ -184,14 +184,14 @@ export class InstanceStore implements IInstanceStore {
       const response = await this.instanceService.updateConfigurations(data);
       runInAction(() => {
         this.instanceConfigurations = this.instanceConfigurations?.map((config) => {
-          const item = response.find((item) => item.key === config.key);
-          if (item) return item;
+          const updatedItem = response.find((item) => item.key === config.key);
+          if (updatedItem) return updatedItem;
           return config;
         });
       });
       return response;
     } catch (error) {
-      console.error("Error updating the instance configurations");
+      console.error("Error updating the instance configurations", error);
       throw error;
     }
   };

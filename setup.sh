@@ -98,13 +98,29 @@ corepack enable pnpm || success=false
 # Install Node dependencies
 pnpm install || success=false
 
+# Bootstrap the API database so admin authentication methods are available on first run.
+echo -e "\n${YELLOW}Bootstrapping the API database...${NC}"
+if command -v uv >/dev/null 2>&1; then
+    (
+        cd ./apps/api || exit 1
+        uv sync || exit 1
+        uv run python manage.py migrate --noinput || exit 1
+        uv run python manage.py register_instance local-machine || exit 1
+        uv run python manage.py configure_instance || exit 1
+    ) || success=false
+else
+    echo -e "${YELLOW}uv not found; skipping database bootstrap. Run the commands in README.md manually.${NC}"
+fi
+
 # Summary
 echo -e "\n${YELLOW}Setup status:${NC}"
 if [ "$success" = true ]; then
     echo -e "${GREEN}✓${NC} Environment setup completed successfully!\n"
     echo -e "${BOLD}Next steps:${NC}"
-    echo -e "1. Review the .env files in each folder if needed"
-    echo -e "2. Start the services with: ${BOLD}docker compose -f docker-compose-local.yml up -d${NC}"
+    echo -e "1. Review the .env files in each folder (use DATABASE_URL=sqlite:///db.sqlite3 and leave REDIS_URL unset for a minimal local run)"
+    echo -e "2. Start the API: ${BOLD}cd apps/api && uv run python manage.py runserver 0.0.0.0:8000${NC}"
+    echo -e "3. Start the frontends: ${BOLD}pnpm dev${NC}"
+    echo -e "4. Open ${BOLD}http://localhost:3001/god-mode/${NC} to create the instance admin"
     echo -e "\n${GREEN}Happy coding! 🚀${NC}"
 else
     echo -e "${RED}✗${NC} Some issues occurred during setup. Please check the errors above.\n"

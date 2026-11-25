@@ -55,7 +55,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "apps/api/uv.lock"
 
-      # Same dependency set as the production image (Dockerfile.api).
+      # Same dependency set used for production-style checks.
       - name: Install API dependencies
         working-directory: apps/api
         run: uv sync --locked --no-default-groups --group production

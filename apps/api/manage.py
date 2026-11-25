@@ -7,9 +7,8 @@ import os
 import sys
 from pathlib import Path
 
-# Load environment variables from .env file (for local development without Docker).
-# In Docker, env vars are injected via docker-compose `env_file:`, so dotenv is
-# optional there. Import defensively so the file works in both environments.
+# Load environment variables from .env for local development. Import defensively
+# so environments that inject variables directly work without python-dotenv.
 try:
     from dotenv import load_dotenv
 

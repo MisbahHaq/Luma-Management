@@ -39,6 +39,22 @@ export abstract class APIService {
       }
       return config;
     });
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (!error.response) {
+          const method = error.config?.method?.toUpperCase() ?? "UNKNOWN";
+          const url = error.config?.url ?? "unknown URL";
+          console.error(`[APIService] Cannot reach ${method} ${url}`, {
+            baseURL: this.baseURL,
+            message: error.message,
+            hint: "Start the API with: cd apps/api && uv run python manage.py runserver 0.0.0.0:8000",
+          });
+        }
+        return Promise.reject(error);
+      }
+    );
   }
 
   /**

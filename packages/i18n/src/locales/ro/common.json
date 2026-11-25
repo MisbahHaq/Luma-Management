@@ -837,8 +837,7 @@
     "edited_by": "Editat de"
   },
   "self_hosted_maintenance_message": {
-    "plane_didnt_start_up_this_could_be_because_one_or_more_plane_services_failed_to_start": "Luma nu a pornit. Aceasta ar putea fi din cauza că unul sau mai multe servicii Luma au eșuat să pornească.",
-    "choose_view_logs_from_setup_sh_and_docker_logs_to_be_sure": "Alegeți View Logs din setup.sh și logurile Docker pentru a fi siguri."
+    "plane_didnt_start_up_this_could_be_because_one_or_more_plane_services_failed_to_start": "Luma nu a pornit. Aceasta ar putea fi din cauza că unul sau mai multe servicii Luma au eșuat să pornească."
   },
   "customize_navigation": "Personalizează navigarea",
   "personal": "Personal",

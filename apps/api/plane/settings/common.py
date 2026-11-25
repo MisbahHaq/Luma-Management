@@ -70,8 +70,7 @@ for _cidr in _webhook_allowed_ips_raw.split(","):
 
 # Webhook hostname allowlist — comma-separated hostnames that bypass the
 # private-IP SSRF check. Useful for trusted internal services whose IPs are
-# dynamic in containerised deployments (e.g. docker-compose service DNS,
-# kubernetes service hostnames).
+# dynamic in proxied or service-discovery deployments (e.g. internal DNS names).
 # Example: "silo,silo.namespace.svc.cluster.local,internal-api.lan"
 _webhook_allowed_hosts_raw = os.environ.get("WEBHOOK_ALLOWED_HOSTS", "")
 WEBHOOK_ALLOWED_HOSTS = [

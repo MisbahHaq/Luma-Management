@@ -108,7 +108,7 @@ class TestValidateUrlAllowlist:
     def test_allowed_hosts_bypasses_private_ip_check(self):
         """Hostnames in WEBHOOK_ALLOWED_HOSTS skip IP-based blocking — used for
         trusted internal services (e.g. Silo) whose IPs are dynamic in
-        containerised deployments."""
+        service-discovery deployments."""
         with patch("plane.utils.ip_address.socket.getaddrinfo") as mock_dns:
             mock_dns.return_value = [(None, None, None, None, ("172.18.0.5", 0))]
             validate_url("http://silo:3000/hook", allowed_hosts=["silo"])  # Should not raise

@@ -70,13 +70,20 @@ Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), pnpm (en
    ./setup.sh
    ```
 
-   This copies every `.env.example` into place, generates a Django `SECRET_KEY` and object-storage credentials, and installs Node dependencies.
+   This copies every `.env.example` into place, generates a Django `SECRET_KEY` and object-storage credentials, installs Node dependencies, and bootstraps the API database (migrations, instance registration, and default auth config).
 
 2. **Start the API**
 
    ```bash
-   cd apps/api && uv sync && uv run python manage.py runserver 0.0.0.0:8000
+   cd apps/api
+   uv sync
+   uv run python manage.py migrate --noinput
+   uv run python manage.py register_instance local-machine
+   uv run python manage.py configure_instance
+   uv run python manage.py runserver 0.0.0.0:8000
    ```
+
+   The bootstrap commands are safe to rerun. If `setup.sh` could not bootstrap the database, run them once manually.
 
 3. **Start the web apps**
 

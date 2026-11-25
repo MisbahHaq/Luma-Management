@@ -209,7 +209,7 @@ class TestPinnedFetch:
     @patch("plane.utils.url_security.requests.Session")
     @patch("plane.utils.url_security.resolve_and_validate")
     def test_allowed_host_skips_block_check_but_still_pins(self, mock_resolve, mock_session_cls):
-        # Trusted host (e.g. internal docker service) whose IP is private: the
+        # Trusted internal service whose IP is private: the
         # block check is skipped, but the connection is STILL pinned to the
         # resolved IP so it cannot be rebound to a different internal target.
         mock_resolve.return_value = ["172.18.0.5"]

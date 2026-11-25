@@ -24,11 +24,11 @@
 
 ## Backend dependencies (uv)
 
-`apps/api` dependencies are managed with [uv](https://docs.astral.sh/uv/): declared in `apps/api/pyproject.toml`, pinned in `apps/api/uv.lock` (commit both). Groups: `dev` and `test` (installed by default; they use `psycopg-binary`), `production` (gunicorn + the source-built `psycopg-c`; production image and migration-check only). Lint config lives in `apps/api/ruff.toml`.
+`apps/api` dependencies are managed with [uv](https://docs.astral.sh/uv/): declared in `apps/api/pyproject.toml`, pinned in `apps/api/uv.lock` (commit both). Groups: `dev` and `test` (installed by default; they use `psycopg-binary`), `production` (gunicorn + the source-built `psycopg-c`; CI migration checks only). Lint config lives in `apps/api/ruff.toml`.
 
-- uv must be exactly the `required-version` in `apps/api/pyproject.toml` (`uv self update <version>`); bump it together with the uv image in both Dockerfiles
+- uv must be exactly the `required-version` in `apps/api/pyproject.toml` (`uv self update <version>`); keep that pin in sync with CI
 - Set up a local env: `cd apps/api && uv sync`
-- Inside the dev/test containers, always pass `--inexact` (`uv sync --inexact`): uv targets the image's system Python there, and an exact sync would uninstall pip
+- When syncing into a pre-provisioned Python environment, pass `--inexact` (`uv sync --inexact`) so uv does not uninstall system tools such as pip
 - Add/upgrade a dependency: `uv add <pkg>==<version>` (or `--group test`/`--group dev`), or edit `pyproject.toml` and run `uv lock`
 - Run tools: `uv run python manage.py ...`, `uv run ruff check .`
 
@@ -38,14 +38,13 @@
 - A merge conflict in the lockfile means another PR added a migration to the same app first: merge `preview`, delete your migration, and run `makemigrations` again
 - `migration-check.yml` fails a PR that touches migrations when the lockfile does not match the migration graph
 
-## Backend tests (Docker)
+## Backend tests
 
-The Django/pytest suite for `apps/api` runs in an isolated stack defined by `docker-compose-test.yml` at the repo root.
+The Django/pytest suite for `apps/api` runs in a local `uv` environment.
 
 Prereq (once): `./setup.sh` — generates `apps/api/.env` from `.env.example`.
 
-- Full suite: `docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests`
-- Subset: `docker compose -f docker-compose-test.yml run --rm --build api-tests pytest -m unit`
-- Teardown: `docker compose -f docker-compose-test.yml down -v`
+- Full suite: `cd apps/api && uv run pytest`
+- Unit tests: `cd apps/api && uv run pytest -m unit`
 
 See `apps/api/tests/RUNNING_TESTS.md` for the full walkthrough and troubleshooting; see `apps/api/tests/TESTING_GUIDE.md` for test conventions and fixtures.

@@ -37,7 +37,7 @@ export const ONE_PLAN_FEATURES = [
   "Real-time collab + public views and page",
   "Link pages in issues and vice-versa",
   "Time-tracking + limited bulk ops",
-  "Docker, Kubernetes and more",
+  "Flexible deployment options",
 ];
 
 export const FREE_PLAN_UPGRADE_FEATURES = [

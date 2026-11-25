@@ -43,11 +43,20 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
+This also bootstraps the API database when `uv` is available. If it reports that the bootstrap was skipped, run the commands below manually.
+
 3. Start the API
 
 ```bash
-cd apps/api && uv sync && uv run python manage.py runserver 0.0.0.0:8000
+cd apps/api
+uv sync
+uv run python manage.py migrate --noinput
+uv run python manage.py register_instance local-machine
+uv run python manage.py configure_instance
+uv run python manage.py runserver 0.0.0.0:8000
 ```
+
+The bootstrap commands are safe to rerun.
 
 4. Start web apps:
 
