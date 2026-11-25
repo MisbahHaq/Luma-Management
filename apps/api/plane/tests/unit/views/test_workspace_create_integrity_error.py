@@ -78,6 +78,34 @@ def test_other_integrity_error_always_returns_a_response():
 
 
 @pytest.mark.unit
+def test_broker_failure_does_not_fail_workspace_creation():
+    """A broker outage must not turn a persisted workspace into a 500.
+
+    The UI reports "Workspace could not be created" for any non-2xx response,
+    so dispatching the seed task has to be best-effort: fall back to seeding
+    inline and still return 201.
+    """
+    with (
+        patch("plane.app.views.workspace.base.get_configuration_value", return_value=("0",)),
+        patch("plane.app.views.workspace.base.WorkSpaceSerializer") as serializer,
+        patch("plane.app.views.workspace.base.WorkspaceMember") as member_model,
+        patch(
+            "plane.app.views.workspace.base.workspace_seed.delay",
+            side_effect=ConnectionError("broker unavailable"),
+        ),
+        patch("plane.app.views.workspace.base.workspace_seed.apply") as seed_inline,
+    ):
+        serializer.return_value.is_valid.return_value = True
+        serializer.return_value.data = {"id": "workspace-id"}
+        member_model.objects.filter.return_value.count.return_value = 1
+
+        response = WorkSpaceViewSet().create(_post_request({"name": "Fresh", "slug": "fresh"}))
+
+    assert response.status_code == status.HTTP_201_CREATED
+    seed_inline.assert_called_once_with(args=["workspace-id"], throw=False)
+
+
+@pytest.mark.unit
 def test_soft_deleted_slug_is_reported_as_unavailable():
     """The availability check must include soft-deleted workspaces."""
     request = APIRequestFactory().get("/api/workspace-slug-check/", {"slug": "taken"})

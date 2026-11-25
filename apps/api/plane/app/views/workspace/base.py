@@ -5,6 +5,7 @@
 # Python imports
 import csv
 import io
+import logging
 import os
 from datetime import date
 import uuid
@@ -49,6 +50,8 @@ from plane.license.utils.instance_value import get_configuration_value
 from plane.bgtasks.workspace_seed_task import workspace_seed
 from plane.utils.url import contains_url
 from plane.utils.csv_utils import sanitize_csv_row
+
+logger = logging.getLogger(__name__)
 
 
 class WorkSpaceViewSet(BaseViewSet):
@@ -135,7 +138,28 @@ class WorkSpaceViewSet(BaseViewSet):
                 data["total_members"] = total_members
                 data["role"] = 20
 
-                workspace_seed.delay(serializer.data["id"])
+                # Seeding is best-effort. The workspace is already persisted at
+                # this point, so a missing/unreachable task broker must not turn
+                # a successful creation into a 500 — the UI would then report
+                # "Workspace could not be created" even though it exists.
+                try:
+                    workspace_seed.delay(serializer.data["id"])
+                except Exception as exc:
+                    logger.warning(
+                        "Could not enqueue workspace seed task for %s: %s",
+                        serializer.data["id"],
+                        exc,
+                    )
+                    # Fall back to seeding inline so a new workspace still gets
+                    # its starter project/data when no broker is available.
+                    try:
+                        workspace_seed.apply(args=[serializer.data["id"]], throw=False)
+                    except Exception as inline_exc:
+                        logger.warning(
+                            "Could not seed workspace %s inline: %s",
+                            serializer.data["id"],
+                            inline_exc,
+                        )
 
                 return Response(data, status=status.HTTP_201_CREATED)
             return Response(

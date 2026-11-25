@@ -64,10 +64,10 @@ chmod +x setup.sh
 ./setup.sh
 ```
 
-3. Start the containers
+3. Start the API
 
 ```bash
-docker compose -f docker-compose-local.yml up
+cd apps/api && uv sync && uv run python manage.py runserver 0.0.0.0:8000
 ```
 
 4. Start web apps:
