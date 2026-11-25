@@ -11,38 +11,17 @@ While we want to fix all the [issues](https://github.com/MisbahHaq/Luma-Manageme
 - 3rd-party libraries being used and their versions
 - a use-case that fails
 
-Without said minimal reproduction, we won't be able to investigate all [issues](https://github.com/MisbahHaq/Luma-Management/issues), and the issue might not be resolved.
-
-You can open a new issue with this [issue form](https://github.com/MisbahHaq/Luma-Management/issues/new).
-
-### Naming conventions for issues
-
-When opening a new issue, please use a clear and concise title that follows this format:
-
-- For bugs: `🐛 Bug: [short description]`
-- For features: `🚀 Feature: [short description]`
-- For improvements: `🛠️ Improvement: [short description]`
-- For documentation: `📘 Docs: [short description]`
-
-**Examples:**
-
-- `🐛 Bug: API token expiry time not saving correctly`
-- `📘 Docs: Clarify RAM requirement for local setup`
-- `🚀 Feature: Allow custom time selection for token expiration`
-
-This helps us triage and manage issues more efficiently.
+Without said minimal reproduction, we won't be able to investigate all [issues](https://github.com/MisbahHaq/Luma-Management/issues), and the issue might no longer be relevant by the time we get to it. Please include the version of Luma you are using and the steps needed to reproduce the problem.
 
 ## Projects setup and Architecture
 
 ### Requirements
 
-- Docker Engine installed and running
 - Node.js version 22+ (see [.node-version](./.node-version))
-- Python version 3.12 and [uv](https://docs.astral.sh/uv/) (only needed to run the API outside Docker)
-- Postgres version 15+
-- Redis version 7+ (or Valkey 7.2+, which the local stack uses)
+- Python version 3.12 and [uv](https://docs.astral.sh/uv/)
+- PostgreSQL 15+ and Redis 7+ (or Valkey 7.2+) for integration work; SQLite and an in-process cache are supported for minimal local API runs
 - **Memory**: Minimum **12 GB RAM** recommended
-  > ⚠️ Running the project on a system with only 8 GB RAM may lead to setup failures or memory crashes (especially during Docker container build/start or dependency install). Use cloud environments like GitHub Codespaces or upgrade local RAM if possible.
+  > ⚠️ Running the project on a system with only 8 GB RAM may lead to setup failures or memory crashes, especially during dependency installation. Use cloud environments like GitHub Codespaces or upgrade local RAM if possible.
 
 ### Setup the project
 
@@ -72,6 +51,8 @@ cd apps/api && uv sync && uv run python manage.py runserver 0.0.0.0:8000
 
 4. Start web apps:
 
+From the repository root:
+
 ```bash
 pnpm dev
 ```
@@ -79,7 +60,7 @@ pnpm dev
 5. Open your browser to http://localhost:3001/god-mode/ and register yourself as instance admin
 6. Open up your browser to http://localhost:3000 then log in using the same credentials from the previous step
 
-That’s it! You’re all set to begin coding. Remember to refresh your browser if changes don’t auto-reload. Happy contributing! 🎉
+That’s it! You’re all set to begin coding. Remember to refresh your browser if changes don't auto-reload. Happy contributing! 🎉
 
 ## Missing a Feature?
 
@@ -95,7 +76,7 @@ To ensure consistency throughout the source code, please keep these rules in min
 
 ## Ways to contribute
 
-- Run the self-hosted stack locally and give feedback
+- Run Luma locally and give feedback
 - Add new integrations
 - Add or update translations
 - Help with open [issues](https://github.com/MisbahHaq/Luma-Management/issues) or [create your own](https://github.com/MisbahHaq/Luma-Management/issues/new/choose)
@@ -156,6 +137,7 @@ We use [IntlMessageFormat](https://formatjs.github.io/docs/intl-messageformat/) 
   ```
 
 - **Pluralization**
+
   ```json
   {
     "items": "{count, plural, one {Work item} other {Work items}}"

@@ -32,7 +32,7 @@ Luma has two types of API endpoints:
 
 ## Running Tests
 
-The Docker test stack is the source of truth; from the repo root see [RUNNING_TESTS.md](../../tests/RUNNING_TESTS.md). The commands below assume you are in `apps/api` with `uv sync` already run. Contract and smoke tests expect the Postgres, Valkey, RabbitMQ, and MinIO services from that stack.
+See [RUNNING_TESTS.md](../../tests/RUNNING_TESTS.md) for setup. The commands below assume you are in `apps/api` with `uv sync` already run. Unit tests use SQLite by default; contract and smoke tests expect local Postgres, Valkey, RabbitMQ, and MinIO services when they are not mocked.
 
 To run all tests:
 
@@ -128,7 +128,7 @@ When writing tests, follow these guidelines:
 Tests for components that interact with external services should:
 
 1. Use the `mock_redis`, `mock_elasticsearch`, and `mock_celery` fixtures for unit and most contract tests.
-2. For more comprehensive contract tests, use Docker-based test containers (optional).
+2. For more comprehensive contract tests, use local instances of the external services (optional).
 
 ## Coverage Reports
 

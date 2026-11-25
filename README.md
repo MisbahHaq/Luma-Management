@@ -20,7 +20,7 @@ Luma keeps the feature set and AGPL lineage of Plane, but is maintained with a d
 
 - **Data control** — run the whole stack on infrastructure you own instead of a hosted service.
 - **Private by default** — instance telemetry is disabled unless an administrator enables it.
-- **Low-friction local development** — the API can run with SQLite, an in-process cache, and eager Celery tasks when PostgreSQL and Redis are not available, while Docker remains the production-shaped path.
+- **Low-friction local development** — the API can run with SQLite, an in-process cache, and eager Celery tasks when PostgreSQL and Redis are not available.
 - **Upstream-compatible internals** — the `plane` Python module and `@plane/*` package names are intentionally preserved so upstream fixes can be followed without a fork-wide import rewrite. You will still see those names in code and package READMEs.
 
 ### Highlights
@@ -33,7 +33,7 @@ Luma keeps the feature set and AGPL lineage of Plane, but is maintained with a d
 - **Analytics** — Real-time insights and trends across all your project data.
 - **Intake / Inbox** — Triage incoming work before it lands in a project.
 - **Internationalization** — Translated into multiple languages via `packages/i18n`.
-- **Self-hostable** — Run the entire stack on your own infrastructure with Docker.
+- **Self-hostable** — Run the entire stack on infrastructure you control.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ A pnpm + Turborepo monorepo:
 | `apps/space` | Public-facing site on port 3002 for published work         |
 | `apps/live`  | Realtime collaboration service on port 3100                |
 | `apps/api`   | Django REST backend                                        |
-| `apps/proxy` | Caddy reverse proxy for the self-hosted stack              |
+| `apps/proxy` | Caddy reverse proxy configuration                          |
 | `packages/*` | Shared types, utils, state, i18n, editor, blocks, and more |
 
 ## Technology stack
@@ -57,13 +57,12 @@ A pnpm + Turborepo monorepo:
 | Frontend           | TypeScript, React 19, React Router 8, MobX, Tailwind CSS 4, `@makeplane/propel`                                        | Typed apps with reactive stores and shared design primitives   |
 | Collaborative docs | Tiptap/ProseMirror, Yjs, Hocuspocus (`apps/live`)                                                                      | Rich text pages with realtime collaboration                    |
 | Backend            | Python 3.12, Django 5.2, Django REST Framework, Celery, Django Channels                                                | REST API, background jobs, and websocket-capable services      |
-| Data and services  | PostgreSQL (SQLite fallback locally), Redis/Valkey (in-memory fallback locally), RabbitMQ, S3-compatible storage/MinIO | Production-grade Docker stack with a lighter local path        |
-| Deployment         | Docker Compose, Caddy proxy; inherited Helm/AIO guides under `deployments/`                                            | Self-hosting on your own infrastructure                        |
+| Data and services  | PostgreSQL (SQLite fallback locally), Redis/Valkey (in-memory fallback locally), RabbitMQ, S3-compatible storage/MinIO | Production-grade services with a lighter local path            |
 | Tooling and tests  | uv + ruff, pytest/pytest-django, Vitest, oxlint/oxfmt, TypeScript, Husky/lint-staged                                   | Reproducible Python deps and fast checks across both languages |
 
-## Quick start (self-hosting with Docker)
+## Quick start
 
-Requirements: Docker Engine installed and running, and **12 GB RAM** recommended.
+Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), pnpm (enabled automatically via `corepack`), and Python 3.12 with [uv](https://docs.astral.sh/uv/). **12 GB RAM** is recommended.
 
 1. **Prepare the environment**
 
@@ -73,29 +72,25 @@ Requirements: Docker Engine installed and running, and **12 GB RAM** recommended
 
    This copies every `.env.example` into place, generates a Django `SECRET_KEY` and object-storage credentials, and installs Node dependencies.
 
-2. **Start the stack**
+2. **Start the API**
 
    ```bash
-   docker compose up -d
+   cd apps/api && uv sync && uv run python manage.py runserver 0.0.0.0:8000
    ```
 
-3. **Set up your instance**
+3. **Start the web apps**
 
-   Open `http://localhost` (or the port set via `LISTEN_HTTP_PORT` in `.env`) in your browser, register the instance admin through **God mode**, then create your workspace and start working.
+   From the repository root:
 
-## Local development
+   ```bash
+   pnpm dev
+   ```
 
-Requirements: [Node.js 22+](https://nodejs.org/) (see `.node-version`), pnpm (enabled automatically via `corepack`), and Python 3.12 with [uv](https://docs.astral.sh/uv/) for running the API outside Docker. Docker Engine is needed for the full backing-services stack, but not for the minimal local API path.
+4. **Set up your instance**
 
-```bash
-./setup.sh                                        # env files + dependencies
-docker compose -f docker-compose-local.yml up -d   # optional: db, redis/valkey, mq, storage
-pnpm dev                                          # web :3000, admin :3001, space :3002, live :3100
-```
+   Register yourself as the instance admin at <http://localhost:3001/god-mode/>, then sign in at <http://localhost:3000> with the same credentials.
 
-- Register yourself as the instance admin at <http://localhost:3001/god-mode/>, then sign in at <http://localhost:3000> with the same credentials.
-- Without Docker, set `DATABASE_URL=sqlite:///db.sqlite3` in `apps/api/.env` and leave `REDIS_URL` unset. The API then falls back to an in-memory cache and runs Celery tasks eagerly. Use the Docker services for integration and production-shaped testing.
-- Backend only: `cd apps/api && uv sync`, then `uv run python manage.py ...`
+A minimal local API path is available without PostgreSQL and Redis. Set `DATABASE_URL=sqlite:///db.sqlite3` in `apps/api/.env` and leave `REDIS_URL` unset; the API then falls back to an in-memory cache and runs Celery tasks eagerly. Install and run PostgreSQL, Valkey/Redis, RabbitMQ, and MinIO yourself when you need integration or production-shaped testing.
 
 ## Common commands
 
@@ -111,13 +106,19 @@ Run from the repository root:
 
 ## Testing
 
-The Django/pytest suite runs in an isolated Docker stack:
+From the repository root, with `./setup.sh` already run:
 
 ```bash
-docker compose -f docker-compose-test.yml up --build --abort-on-container-exit --exit-code-from api-tests
+cd apps/api
+uv sync
+uv run pytest
 ```
 
-With a local `uv sync` in `apps/api`, use `uv run pytest` for focused unit runs.
+For focused unit runs:
+
+```bash
+uv run pytest -m unit
+```
 
 See [apps/api/tests/RUNNING_TESTS.md](./apps/api/tests/RUNNING_TESTS.md) for the full walkthrough.
 
@@ -128,7 +129,6 @@ See [apps/api/tests/RUNNING_TESTS.md](./apps/api/tests/RUNNING_TESTS.md) for the
 - [Linting](./docs/linting.md)
 - [API test layout](./apps/api/plane/tests/README.md)
 - [API testing guide](./apps/api/plane/tests/TESTING_GUIDE.md)
-- [Self-hosting guides](./deployments/)
 
 ## Acknowledgements and license
 
